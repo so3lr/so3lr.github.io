@@ -233,9 +233,9 @@
   margin: 0.85em 0;
 }
 
-/* Headings: large and confident, but doc-scale rather than book-scale. */
+/* Headings: bold but compact, doc-scale rather than book-scale. */
 .md-typeset h1 {
-  font-size: 2.1rem;
+  font-size: 1.7rem;
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -244,7 +244,7 @@
 }
 
 .md-typeset h2 {
-  font-size: 1.45rem;
+  font-size: 1.2rem;
   font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.015em;
@@ -252,7 +252,7 @@
 }
 
 .md-typeset h3 {
-  font-size: 1.08rem;
+  font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: -0.005em;
   margin: 0.9rem 0 0.3rem;
