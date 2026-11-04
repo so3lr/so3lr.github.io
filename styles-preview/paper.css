@@ -1,0 +1,164 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Variant A — "Paper"
+   Maximum minimal. No colored header bar: white, separated by a hairline.
+   Monochrome throughout; the SO3LR green appears only on links and the
+   active nav item. Closest in spirit to Stripe / Linear / Tailwind docs.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --md-primary-fg-color:        #ffffff;
+  --md-primary-fg-color--light: #ffffff;
+  --md-primary-fg-color--dark:  #f2f2f2;
+  --md-primary-bg-color:        #16181d;
+  --md-primary-bg-color--light: #5b6070;
+
+  --md-accent-fg-color:         #2e7d32;
+  --md-accent-fg-color--transparent: #2e7d3214;
+
+  --so3lr-link:                 #2e7d32;
+  --md-typeset-a-color:         #2e7d32;
+
+  --md-default-fg-color:        #1c1e24;
+  --md-default-fg-color--light: #5b6070;
+  --md-default-fg-color--lighter: #8b8f9c;
+  --md-default-fg-color--lightest: #e4e6ea;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 225;
+
+  --md-primary-fg-color:        #0e1014;
+  --md-primary-fg-color--light: #171a20;
+  --md-primary-fg-color--dark:  #0a0c0f;
+  --md-primary-bg-color:        #e9ebef;
+  --md-primary-bg-color--light: #9aa0ad;
+
+  --md-accent-fg-color:         #6cc070;
+  --md-accent-fg-color--transparent: #6cc07018;
+  --so3lr-link:                 #6cc070;
+  --md-typeset-a-color:         #6cc070;
+
+  --md-default-bg-color:        #0e1014;
+  --md-default-fg-color:        #dfe2e7;
+  --md-default-fg-color--light: #a3a8b4;
+  --md-default-fg-color--lightest: #23262d;
+}
+
+/* Flat header: a hairline instead of a shadow, and no colored fill. */
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-header[data-md-state="shadow"],
+.md-header--shadow {
+  box-shadow: none;
+}
+
+/* Search field reads as an inset well rather than a translucent overlay. */
+.md-search__form {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 0.2rem;
+}
+
+.md-search__form:hover {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+
+[data-md-color-scheme="slate"] .md-search__form {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-md-color-scheme="slate"] .md-search__form:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Restrained type: lighter, tighter headings. */
+.md-typeset h1 {
+  font-size: 1.85rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--md-default-fg-color);
+  margin-bottom: 1.2rem;
+}
+
+.md-typeset h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 2.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Quiet nav. */
+.md-nav {
+  font-size: 0.68rem;
+}
+
+.md-nav__title {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--lighter);
+}
+
+/* Hairline cards, square corners. */
+.so3lr-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 2px;
+  padding: 0.9rem 1rem;
+  transition: border-color 125ms;
+}
+
+.so3lr-card:hover {
+  border-color: var(--md-default-fg-color--lighter);
+}
+
+/* Code and tables: flat, hairline-ruled. */
+.md-typeset pre > code,
+.md-typeset code {
+  border-radius: 2px;
+}
+
+.md-typeset table:not([class]) {
+  border: none;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset table:not([class]) th {
+  background: transparent;
+  font-weight: 600;
+  border-bottom: 1px solid var(--md-default-fg-color--lighter);
+}
+
+.md-typeset table:not([class]) td {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Admonitions as a left rule only — no fill, no heavy border. */
+.md-typeset .admonition,
+.md-typeset details {
+  border: none;
+  border-left: 2px solid var(--md-default-fg-color--lighter);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: 0.72rem;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background: transparent !important;
+  font-weight: 600;
+}
+
+.md-typeset .admonition-title::before,
+.md-typeset summary::before {
+  background-color: var(--md-default-fg-color--light);
+}

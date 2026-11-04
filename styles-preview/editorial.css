@@ -1,0 +1,159 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Variant C — "Editorial"
+   Minimal, but typographic rather than austere: serif headings, generous
+   whitespace, a muted teal accent. Reads like a journal or a well-set
+   methods paper — appropriate for a scientific code.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --md-primary-fg-color:        #fdfdfc;
+  --md-primary-fg-color--light: #ffffff;
+  --md-primary-fg-color--dark:  #f0efec;
+  --md-primary-bg-color:        #1a1c1e;
+  --md-primary-bg-color--light: #62666b;
+
+  --md-accent-fg-color:         #1f6f6b;
+  --md-accent-fg-color--transparent: #1f6f6b12;
+  --so3lr-link:                 #1f6f6b;
+  --md-typeset-a-color:         #1f6f6b;
+
+  /* Warm paper stock. */
+  --md-default-bg-color:        #fdfdfc;
+  --md-default-fg-color:        #21242a;
+  --md-default-fg-color--light: #575c63;
+  --md-default-fg-color--lighter: #8a8f96;
+  --md-default-fg-color--lightest: #e7e5e0;
+
+  --md-code-bg-color:           #f5f4f0;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 210;
+
+  --md-primary-fg-color:        #14171a;
+  --md-primary-bg-color:        #ecebe7;
+
+  --md-accent-fg-color:         #5ab3ae;
+  --md-accent-fg-color--transparent: #5ab3ae18;
+  --so3lr-link:                 #5ab3ae;
+  --md-typeset-a-color:         #5ab3ae;
+
+  --md-default-bg-color:        #14171a;
+  --md-default-fg-color:        #e3e2de;
+  --md-default-fg-color--light: #a2a6ab;
+  --md-default-fg-color--lightest: #262a2f;
+
+  --md-code-bg-color:           #1c2024;
+}
+
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-search__form {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 0.2rem;
+}
+
+[data-md-color-scheme="slate"] .md-search__form {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Serif headings — the one decorative move, used consistently. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.so3lr-card h3 {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Charter,
+               Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.md-typeset h1 {
+  font-size: 2rem;
+  color: var(--md-default-fg-color);
+  margin-bottom: 1.4rem;
+}
+
+.md-typeset h2 {
+  font-size: 1.4rem;
+  margin-top: 2.6rem;
+}
+
+.md-typeset h3 {
+  font-size: 1.08rem;
+}
+
+/* Roomier measure and leading. */
+.md-typeset {
+  line-height: 1.75;
+}
+
+.md-typeset p {
+  margin: 0.9em 0;
+}
+
+.md-nav {
+  font-size: 0.68rem;
+}
+
+.md-nav__title {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--lighter);
+}
+
+/* Cards: hairline, warm, generous padding. */
+.so3lr-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 3px;
+  padding: 1.1rem 1.2rem;
+  background: var(--md-default-bg-color);
+  transition: border-color 125ms, background 125ms;
+}
+
+.so3lr-card:hover {
+  border-color: var(--md-accent-fg-color);
+  background: var(--md-accent-fg-color--transparent);
+}
+
+.so3lr-card h3 {
+  font-size: 0.95rem;
+}
+
+/* Tables: rule-only, like a printed table. */
+.md-typeset table:not([class]) {
+  border: none;
+  border-top: 2px solid var(--md-default-fg-color);
+  border-bottom: 2px solid var(--md-default-fg-color);
+}
+
+.md-typeset table:not([class]) th {
+  background: transparent;
+  font-weight: 600;
+  border-bottom: 1px solid var(--md-default-fg-color--light);
+}
+
+.md-typeset table:not([class]) td {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Admonitions: quiet, italic title, left rule. */
+.md-typeset .admonition,
+.md-typeset details {
+  border: none;
+  border-left: 2px solid var(--md-accent-fg-color);
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--md-code-bg-color);
+  font-size: 0.73rem;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background: transparent !important;
+  font-weight: 600;
+}

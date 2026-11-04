@@ -1,0 +1,408 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Variant D — "Scaling"
+   Adapted from the typographic feel of jax-ml.github.io/scaling-book:
+   quiet flat chrome, true-neutral near-black, a generous 17px/1.7 reading
+   setting, a constrained prose measure, and large confident headings.
+
+   Deliberately NOT a 1:1 copy. That site is a linear book; this is reference
+   documentation, so:
+     - the persistent left nav stays (24 pages need it) but is restyled quiet
+     - headings are scaled down from book display sizes (50/36px) to doc sizes,
+       because pages here are short and dense rather than chapter-length
+     - tables and code deliberately break out past the prose measure
+     - accent is the SO3LR logo green, not the book's teal-blue
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --md-primary-fg-color:        #ffffff;
+  --md-primary-fg-color--light: #ffffff;
+  --md-primary-fg-color--dark:  #f4f4f4;
+  --md-primary-bg-color:        #1c1c1d;
+  --md-primary-bg-color--light: #6a6a6c;
+
+  --so3lr-link:                 #2f7a37;
+  --md-typeset-a-color:         #2f7a37;
+  --md-accent-fg-color:         #24632b;
+  --md-accent-fg-color--transparent: #2f7a3714;
+
+  /* True neutral greys — no blue cast. */
+  --md-default-bg-color:        #ffffff;
+  --md-default-fg-color:        #1c1c1d;
+  --md-default-fg-color--light: #5a5a5c;
+  --md-default-fg-color--lighter: #8d8d90;
+  --md-default-fg-color--lightest: #e6e6e6;
+
+  --md-code-bg-color:           #f4f4f4;
+  /* Neutral, not accent-coloured: with dozens of code chips per page, tinting
+     them all the link colour is noisy AND destroys the link affordance, since
+     a linked chip then looks identical to a plain one. */
+  --md-code-fg-color:           #33353a;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 0;
+
+  --md-primary-fg-color:        #1c1c1d;
+  --md-primary-fg-color--light: #262627;
+  --md-primary-bg-color:        #e8e8e8;
+  --md-primary-bg-color--light: #9b9b9e;
+
+  --so3lr-link:                 #6fc077;
+  --md-typeset-a-color:         #6fc077;
+  --md-accent-fg-color:         #8ad091;
+  --md-accent-fg-color--transparent: #6fc07718;
+
+  --md-default-bg-color:        #1c1c1d;
+  --md-default-fg-color:        #e8e8e8;
+  --md-default-fg-color--light: #a6a6a8;
+  --md-default-fg-color--lighter: #7a7a7c;
+  --md-default-fg-color--lightest: #2e2e30;
+
+  --md-code-bg-color:           #2c3037;
+  --md-code-fg-color:           #d2d4d8;
+}
+
+/* ── Chrome: slim, flat, hairline-separated ───────────────────────────── */
+
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-header--shadow {
+  box-shadow: none;
+}
+
+.md-header__title {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.md-search__form {
+  background-color: rgba(128, 128, 128, 0.1);
+  border-radius: 0.2rem;
+  box-shadow: none;
+}
+
+.md-search__form:hover {
+  background-color: rgba(128, 128, 128, 0.16);
+}
+
+/* A single hairline divides nav from content — the one structural rule
+   on the page, echoing the book's column rule. */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary {
+    border-right: 1px solid var(--md-default-fg-color--lightest);
+  }
+}
+
+.md-nav {
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+/* The header already says SO3LR; repeating it atop the sidebar is noise.
+   Desktop only -- on mobile this label is the drawer heading. */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary .md-nav--primary > .md-nav__title {
+    display: none;
+  }
+}
+
+/* Home is the only ungrouped top-level entry (every other one is a section),
+   so this styles it without needing a hook in the nav config. Match the
+   section labels exactly -- weight 700, the muted label colour, no top margin
+   -- so the top of the sidebar reads as one consistent list of headings. */
+.md-nav--primary > .md-nav__list > .md-nav__item:not(.md-nav__item--section)
+  > .md-nav__link {
+  font-weight: 700;
+  color: var(--md-default-fg-color--light);
+  margin-top: 0;
+}
+
+/* Unlike a section label, Home is clickable -- keep the active/hover states,
+   at the same weight so it does not shift when you land on it. */
+.md-nav--primary > .md-nav__list > .md-nav__item:not(.md-nav__item--section)
+  > .md-nav__link--active {
+  color: var(--so3lr-link);
+  font-weight: 700;
+}
+
+/* Material spaces nav entries with `margin-top: .625em` on every link, which
+   at this font size leaves the sidebars looking airier than the content.
+   Tighten the rhythm so the nav reads as a list rather than a menu. */
+.md-nav__link {
+  margin-top: 0.25em;
+}
+
+.md-nav__item {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.md-sidebar--secondary .md-nav__link {
+  margin-top: 0.2em;
+}
+
+.md-nav__title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--md-default-fg-color--lighter);
+  padding-top: 0.75rem;
+  padding-bottom: 0.1rem;
+  line-height: 1.3;
+}
+
+/* Group labels (Usage / Advanced / …) need air ABOVE to separate groups, but
+   not below — the gap belongs between groups, not inside one. */
+.md-nav__item--section {
+  margin-top: 0.9rem;
+}
+
+.md-nav__item--section > .md-nav__link {
+  margin-top: 0;
+}
+
+.md-nav__link {
+  color: var(--md-default-fg-color--light);
+}
+
+.md-nav__link:hover {
+  color: var(--so3lr-link);
+}
+
+.md-nav__link--active,
+.md-nav__item .md-nav__link--active {
+  color: var(--so3lr-link);
+  font-weight: 600;
+}
+
+/* Table of contents: quiet, no rail. */
+.md-sidebar--secondary .md-nav__title {
+  font-size: 0.6rem;
+}
+
+/* ── Reading setting ──────────────────────────────────────────────────── */
+
+.md-typeset {
+  font-size: 0.78rem;      /* ~17px at Material's 16px root scaling */
+  line-height: 1.72;
+}
+
+/* Prose sits on a comfortable measure; tables, code and images below are
+   deliberately allowed to break out past it.
+   Measured in `em`, not `rem`: em tracks the element's own font size, which is
+   what a reading measure should follow. rem here would be at the mercy of
+   Material's viewport-dependent root scaling. */
+.md-typeset p,
+.md-typeset ul,
+.md-typeset ol,
+.md-typeset blockquote {
+  max-width: 42em;
+}
+
+.md-typeset p {
+  margin: 0.85em 0;
+}
+
+/* Headings: large and confident, but doc-scale rather than book-scale. */
+.md-typeset h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--md-default-fg-color);
+  margin: 0 0 1.15rem;
+}
+
+.md-typeset h2 {
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin: 1.2rem 0 0.55rem;
+}
+
+.md-typeset h3 {
+  font-size: 1.08rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0.9rem 0 0.3rem;
+}
+
+.md-typeset h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Links: colored, underlined only on hover — as in the source. */
+.md-typeset a {
+  text-decoration: none;
+}
+
+.md-typeset a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/* Inline code: tinted well, accent-colored text. */
+.md-typeset code {
+  border-radius: 3px;
+  padding: 0.12em 0.35em;
+  font-size: 0.86em;
+}
+
+/* A `code chip` inside a link must still read as a link — otherwise
+   [`to_jax_md`](...) is visually identical to plain `to_jax_md` and nobody
+   discovers it is clickable. */
+.md-typeset a code {
+  color: var(--so3lr-link);
+}
+
+.md-typeset a:hover code {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/* 0.72rem rather than 0.75: at the narrower content column a 68-character
+   line (e.g. the `git clone` URL) would otherwise clip behind the copy
+   button and force a scroll on the very first page people read. */
+.md-typeset pre > code {
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.md-typeset pre {
+  max-width: 54em;
+}
+
+/* ── Content elements ─────────────────────────────────────────────────── */
+
+/* Tables: rule-only, breaking out past the prose measure. */
+.md-typeset table:not([class]) {
+  border: none;
+  border-top: 1px solid var(--md-default-fg-color--lighter);
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.md-typeset table:not([class]) th {
+  background: transparent;
+  font-weight: 600;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  padding: 0.6em 1em 0.6em 0;
+}
+
+.md-typeset table:not([class]) td {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  padding: 0.6em 1em 0.6em 0;
+}
+
+.md-typeset table:not([class]) tr:last-child td {
+  border-bottom: 1px solid var(--md-default-fg-color--lighter);
+}
+
+/* Admonitions: a left rule, no box, no fill.
+   The left padding matters — with only the rule for structure, text butting
+   up against it reads as broken rather than minimal. */
+.md-typeset .admonition,
+.md-typeset details {
+  border: none;
+  border-left: 2px solid var(--md-default-fg-color--lighter);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: 0.74rem;
+  padding: 0.1rem 0.4rem 0.2rem 1.5rem;
+  /* No measure on the box itself — its paragraphs are already constrained by
+     the `.md-typeset p` rule, and capping the container instead forces code
+     samples inside it to scroll horizontally for no reason. */
+  max-width: none;
+}
+
+/* Material stacks admonitions with `margin: 1.5625em 0`. On the FAQ, which is
+   a run of a dozen collapsed `???` blocks, that reads as a sparse list of
+   disconnected items rather than one index. Tighten it, and tighten it further
+   between adjacent collapsibles, where only the summary line is visible. */
+.md-typeset .admonition,
+.md-typeset details {
+  margin: 0.7em 0;
+}
+
+.md-typeset details + details {
+  margin-top: 0.45em;
+}
+
+.md-typeset details:not([open]) {
+  padding-bottom: 0.2rem;
+}
+
+/* Material gives the title negative side margins so a filled title bar can
+   bleed to the box edges, and indents the title text to clear the icon. With
+   the fill removed both just misalign the title against the body text.
+   Reset them and hang the icon out in the container's left padding, so the
+   title and every paragraph below it share one left edge. */
+.md-typeset .admonition-title,
+.md-typeset details > summary {
+  background: transparent !important;
+  font-weight: 600;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  margin-bottom: 0.15rem;
+}
+
+.md-typeset .admonition-title::before,
+.md-typeset details > summary::before {
+  left: -1.2rem;
+}
+
+/* Paragraph rhythm inside an admonition should be tighter than body prose --
+   these are two-line asides, and the body margin leaves the title stranded
+   from its own text. Zero the last child so the box does not gain a phantom
+   line of padding at the bottom. */
+.md-typeset .admonition > p,
+.md-typeset details > p,
+.md-typeset .admonition > ul,
+.md-typeset details > ul {
+  margin: 0.35em 0;
+}
+
+.md-typeset .admonition > :last-child,
+.md-typeset details > :last-child {
+  margin-bottom: 0;
+}
+
+/* Collapsible blocks also carry a marker on the right by default; keep it
+   from drifting away from the text now the box is narrower. */
+.md-typeset details > summary::after {
+  right: 0.2rem;
+}
+
+.md-typeset .admonition-title::before,
+.md-typeset summary::before {
+  background-color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .admonition-title:hover,
+.md-typeset summary:hover {
+  color: var(--so3lr-link);
+}
+
+/* Content tabs: understated underline, not a filled pill. */
+.md-typeset .tabbed-labels > label {
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+/* ── Landing page ─────────────────────────────────────────────────────── */
+
+.so3lr-tagline {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 40em;
+  margin: 0.8rem auto 2rem;
+}
+

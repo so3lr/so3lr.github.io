@@ -1,0 +1,135 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Variant B — "Graphite"
+   Minimal but with weight. Near-black header in both themes, warm neutral
+   body, and the logo's orange as the single accent. High contrast, no
+   large color fields. Feels like a systems/infra doc site.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --md-primary-fg-color:        #1b1d22;
+  --md-primary-fg-color--light: #2a2d34;
+  --md-primary-fg-color--dark:  #121317;
+  --md-primary-bg-color:        #f4f4f3;
+  --md-primary-bg-color--light: #a8abb3;
+
+  --md-accent-fg-color:         #d1701a;
+  --md-accent-fg-color--transparent: #d1701a14;
+  --so3lr-link:                 #c2650f;
+  --md-typeset-a-color:         #c2650f;
+
+  /* Warm neutrals rather than pure grey. */
+  --md-default-bg-color:        #fbfaf9;
+  --md-default-fg-color:        #23252a;
+  --md-default-fg-color--light: #5d6068;
+  --md-default-fg-color--lighter: #8e9199;
+  --md-default-fg-color--lightest: #e6e4e1;
+
+  --md-code-bg-color:           #f3f1ee;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 30;
+
+  --md-primary-fg-color:        #131418;
+  --md-primary-fg-color--light: #1e2026;
+  --md-primary-bg-color:        #eceae7;
+
+  --md-accent-fg-color:         #f0954a;
+  --md-accent-fg-color--transparent: #f0954a18;
+  --so3lr-link:                 #f0954a;
+  --md-typeset-a-color:         #f0954a;
+
+  --md-default-bg-color:        #17181c;
+  --md-default-fg-color:        #e2e0dc;
+  --md-default-fg-color--light: #a5a29c;
+  --md-default-fg-color--lightest: #2b2d33;
+
+  --md-code-bg-color:           #1e2026;
+}
+
+.md-header {
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.md-search__form {
+  background-color: rgba(255, 255, 255, 0.07);
+  border-radius: 0.2rem;
+}
+
+.md-search__form:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Type: tight, confident, no decoration. */
+.md-typeset h1 {
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h2 {
+  font-size: 1.2rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin-top: 2.4rem;
+}
+
+.md-typeset h3 {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.md-nav {
+  font-size: 0.68rem;
+}
+
+.md-nav__title {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--lighter);
+}
+
+/* Cards: filled, borderless — separation by tone, not by line. */
+.so3lr-card {
+  background: var(--md-code-bg-color);
+  border: none;
+  border-radius: 3px;
+  padding: 0.95rem 1.05rem;
+  transition: transform 125ms ease;
+}
+
+.so3lr-card:hover {
+  transform: translateY(-1px);
+}
+
+.so3lr-card h3 {
+  font-size: 0.84rem;
+}
+
+/* Tables: banded, no outer border. */
+.md-typeset table:not([class]) {
+  border: none;
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--md-code-bg-color);
+  font-weight: 650;
+  border-bottom: 2px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset table:not([class]) tr:hover {
+  background: var(--md-accent-fg-color--transparent);
+}
+
+/* Admonitions: solid left bar, tinted fill. */
+.md-typeset .admonition,
+.md-typeset details {
+  border: none;
+  border-left: 3px solid var(--md-default-fg-color--lighter);
+  border-radius: 0 3px 3px 0;
+  box-shadow: none;
+  font-size: 0.72rem;
+}

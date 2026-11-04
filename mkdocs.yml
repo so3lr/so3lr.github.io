@@ -1,0 +1,145 @@
+site_name: SO3LR
+site_description: >-
+  SO3LR (pronounced Solar) — a pretrained machine-learned force field for
+  (bio)molecular simulations, combining the SO3krates neural network with
+  universal pairwise force fields for repulsion, electrostatics and dispersion.
+site_url: https://so3lr.github.io/
+repo_url: https://github.com/general-molecular-simulations/so3lr
+repo_name: general-molecular-simulations/so3lr
+edit_uri: ""
+
+theme:
+  name: material
+  # The full logo is a wide grey wordmark that disappears in a header bar.
+  # logo-mark.png is the orbital glyph cropped out of it — square, transparent,
+  # and legible at 24px in both themes. The wordmark carries the landing page.
+  logo: assets/logo-mark.png
+  favicon: assets/logo-mark.png
+  language: en
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.caret
+  - pymdownx.tilde
+  - pymdownx.keys
+  # Renders :material-xxx: / :fontawesome-xxx: shortcodes as inline SVG.
+  # Without this they leak into the page as literal text.
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/general-molecular-simulations/so3lr
+      name: SO3LR on GitHub
+    - icon: fontawesome/solid/book
+      link: https://doi.org/10.1021/jacs.5c09558
+      name: SO3LR paper (JACS)
+  generator: false
+
+# Organised by what the reader is doing, not by which module implements it.
+#
+# Every page belongs to a group. Loose top-level entries (Examples, Contributing,
+# How to cite used to be) get rendered by `navigation.sections` as floating links
+# between the grouped blocks, which reads as an unexplained gap — so `Home` is
+# the only ungrouped item, because it is the root.
+#
+#   Getting started — read once, roughly in order
+#   Usage           — what you do on an ordinary day
+#   Advanced        — optional specialist capabilities
+#   Training        — adapting the model
+#   Reference       — lookup, not reading
+#   Project         — meta: contributing, citation
+nav:
+  - Home: index.md
+  - Getting started:
+      - Quick start: quickstart.md
+      - Installation: installation.md
+      - Models: models.md
+      - Examples: examples.md
+  - Usage:
+      - Command line: usage/cli.md
+      # Settings file sits with the CLI, not in Reference: it is not an
+      # optional deep-dive but the recommended way to drive any long run, and
+      # the CLI page defers to it for every flag that has no command-line form.
+      - Settings file: usage/settings.md
+      - Molecular dynamics: usage/md.md
+      - ASE calculator: usage/ase.md
+      - Dataset evaluation: usage/evaluation.md
+  - Advanced:
+      - Long-range electrostatics: advanced/electrostatics.md
+      - Enhanced sampling: advanced/enhanced-sampling.md
+      - Observables: advanced/observables.md
+      - Gradients and Hessians: advanced/derivatives.md
+      - Binding energies: advanced/binding-energies.md
+      - Custom integrations: advanced/integrations.md
+      - For AI agents: advanced/llm-agents.md
+  - Training:
+      - Fine-tuning: training/finetuning.md
+      - Training from scratch: training/from-scratch.md
+  - Reference:
+      - Python API: reference/api.md
+      - Datasets: reference/datasets.md
+      - Changelog: reference/changelog.md
+      - FAQ: reference/faq.md
+  - Project:
+      - Contributing: contributing.md
+      - How to cite: cite.md

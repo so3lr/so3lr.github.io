@@ -1,0 +1,87 @@
+/* Shared layout rules used by every style variant.
+   Variant files define colors and type; this file defines structure. */
+
+/* Material declares `--md-typeset-a-color: var(--md-primary-fg-color)` on the
+   <body> element (via [data-md-color-primary]). For an *inherited* custom
+   property the nearer ancestor wins regardless of specificity, so a :root
+   declaration in a variant file is silently ignored — which turns links white
+   on a white header. Re-assert it at the same level, reading a variable the
+   variants own. */
+[data-md-color-primary] {
+  --md-typeset-a-color: var(--so3lr-link);
+}
+
+/* Landing-page hero */
+.so3lr-hero {
+  text-align: center;
+  padding: 1.2rem 0 0.4rem;
+}
+
+.so3lr-hero img {
+  max-width: min(560px, 90%);
+  height: auto;
+}
+
+.so3lr-tagline {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 46rem;
+  margin: 0.6rem auto 1.4rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* The landing page's real <h1> is the logo wordmark. Keep a text h1 in the DOM
+   for screen readers and search engines, but out of sight. */
+.so3lr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Wide reference tables scroll inside their own container. */
+.md-typeset table:not([class]) {
+  font-size: 0.72rem;
+}
+
+.md-typeset table:not([class]) td code,
+.md-typeset table:not([class]) th code {
+  white-space: nowrap;
+}
+
+.md-typeset__table {
+  min-width: 100%;
+}
+
+/* Outer measure.
+   Material scales the root font size (125% at >=100em, 137.5% at >=125em), so
+   a rem-based max-width silently grows on large screens — 68rem was rendering
+   as 1360px, not 1088px, leaving almost no gutter. Pin it in px, with a vw
+   ceiling so narrower laptops still get sensible margins. Trimming the
+   sidebars buys that gutter back for the content column rather than the
+   navigation, which needs less width than Material gives it. */
+@media screen and (min-width: 76.25em) {
+  .md-grid {
+    max-width: min(1120px, 86vw);
+  }
+
+  .md-sidebar {
+    width: 10.5rem;
+  }
+}
+
+/* Header mark: the orbital glyph lifted from the wordmark. */
+.md-header__button.md-logo img {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.md-header__topic:first-child {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}

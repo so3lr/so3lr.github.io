@@ -1,0 +1,64 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow GITHUB_TOKEN to deploy to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; don't cancel a run that is mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # Static-checks the code blocks: Python that does not parse, snippets
+      # using a name they never define, and CLI flags documented nowhere.
+      # Nothing is executed — SO3LR is not installed here.
+      - name: Check code snippets
+        run: python scripts/check_snippets.py
+
+      # --strict turns broken internal links and nav references into build
+      # failures, so a bad link never reaches the published site.
+      - run: mkdocs build --strict
+
+      # Anchors are not covered by --strict: a link to #a-heading-that-moved
+      # builds fine and 404s in the browser.
+      - name: Check cross-page anchors
+        run: python scripts/check_anchors.py
+
+      # llms.txt (the curated index) is copied straight from docs/ by mkdocs;
+      # llms-full.txt is the generated whole-site dump it points at.
+      - name: Generate llms-full.txt
+        run: python scripts/build_llms_full.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

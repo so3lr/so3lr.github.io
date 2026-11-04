@@ -1,0 +1,7 @@
+# Pinned to the MkDocs 1.x line on purpose.
+#
+# MkDocs 2.0 removes the plugin system and rewrites theming, with no migration
+# path — an unpinned `mkdocs` would break this site the day it releases.
+# Bump these deliberately, not by accident.
+mkdocs>=1.6,<2.0
+mkdocs-material>=9.7,<10.0
