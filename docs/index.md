@@ -18,16 +18,33 @@ for short-range repulsion, long-range electrostatics, and dispersion interaction
 
 ## Install
 
-```shell
-git clone https://github.com/general-molecular-simulations/so3lr.git
-cd so3lr
-uv sync --locked --extra cuda12   # GPU; drop --extra cuda12 for CPU
-uv run so3lr --help
-```
+SO3LR supports Python 3.12 and 3.13.
 
-SO3LR supports Python 3.12 and 3.13, and we recommend installing it with
-[uv](https://docs.astral.sh/uv/) (it's magical). See [Installation](installation.md) for
-pip and optional extras.
+=== "uv"
+
+    We recommend installing SO3LR with [uv](https://docs.astral.sh/uv/)
+    (it's magical):
+
+    ```shell
+    git clone https://github.com/general-molecular-simulations/so3lr.git
+    cd so3lr
+    uv sync --locked --extra cuda12   # GPU; drop --extra cuda12 for CPU
+    uv run so3lr --help
+    ```
+
+=== "pip"
+
+    If JAX is already installed on your cluster (CUDA or ROCm), install SO3LR
+    into that environment:
+
+    ```shell
+    git clone https://github.com/general-molecular-simulations/so3lr.git
+    cd so3lr
+    pip install .
+    so3lr --help
+    ```
+
+See [Installation](installation.md) for optional extras.
 
 ## Example
 
