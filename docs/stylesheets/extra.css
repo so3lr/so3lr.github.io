@@ -196,6 +196,15 @@
   }
 }
 
+/* The site name in the header links home (docs/javascripts/home-link.js). */
+.md-header__title .so3lr-home-link {
+  color: inherit;
+}
+
+.md-header__title .so3lr-home-link:hover {
+  opacity: 0.7;
+}
+
 /* Search sits under the page text; the theme toggle sits next to GitHub. */
 .md-header__option {
   order: 2;

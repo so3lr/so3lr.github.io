@@ -50,6 +50,9 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+extra_javascript:
+  - javascripts/home-link.js
+
 markdown_extensions:
   - abbr
   - admonition
