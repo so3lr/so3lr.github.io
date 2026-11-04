@@ -18,8 +18,6 @@ for short-range repulsion, long-range electrostatics, and dispersion interaction
 
 ## Install
 
-SO3LR supports Python 3.12 and 3.13.
-
 === "uv"
 
     We recommend installing SO3LR with [uv](https://docs.astral.sh/uv/)

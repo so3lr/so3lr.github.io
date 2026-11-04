@@ -27,7 +27,7 @@
 ??? question "Which elements are supported?"
     The `so3lr-tauri-s/m/l` models cover H to At (Z = 1–85), and the original
     `so3lr` covers H, C, N, O, F, P, S and Cl. See
-    [Supported elements](../models.md#supported-elements).
+    [Models](../models.md#the-current-family).
 
 ??? question "Why did my results change after upgrading?"
     Usually this is because `so3lr-tauri-s` / `-m` / `-l` point to the newest

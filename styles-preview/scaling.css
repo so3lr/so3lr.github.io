@@ -88,11 +88,37 @@
   background-color: rgba(128, 128, 128, 0.16);
 }
 
-/* A single hairline divides nav from content — the one structural rule
-   on the page, echoing the book's column rule. */
+/* Copy button: a neutral grey at rest. Material uses the hairline colour,
+   which on the blue-grey dark code background reads as a reddish smudge. */
+.md-code__button,
+.md-clipboard {
+  color: var(--md-default-fg-color--lighter);
+}
+
+/* Search sits under the page text; the theme toggle sits next to GitHub. */
+.md-header__option {
+  order: 2;
+  margin-left: auto;
+}
+
+.md-header__source {
+  order: 3;
+}
+
 @media screen and (min-width: 76.25em) {
-  .md-sidebar--primary {
-    border-right: 1px solid var(--md-default-fg-color--lightest);
+  .md-header__inner {
+    position: relative;
+  }
+
+  /* Left edge of the page text: primary sidebar plus the content margin. */
+  .md-search {
+    position: absolute;
+    left: calc(10.5rem + 1.2rem);
+  }
+
+  /* Keep the header title clear of the search box. */
+  .md-header__title {
+    flex: 0 0 7.2rem;
   }
 }
 

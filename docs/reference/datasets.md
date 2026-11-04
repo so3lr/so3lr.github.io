@@ -58,7 +58,7 @@ Missing labels give `NaN` metrics in [evaluation](../usage/evaluation.md) and
 are skipped in training.
 
 Structures with elements a model does not cover are rejected with an error (see
-[Supported elements](../models.md#supported-elements)).
+[Models](../models.md#the-current-family)).
 
 ## Bundled sample data
 

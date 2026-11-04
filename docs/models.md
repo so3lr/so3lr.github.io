@@ -6,16 +6,14 @@ The models are bundled with the package and selected by name.
 
 The SO3LR Tauri models come in three sizes:
 
-| Model | Layers | Features | Heads | Cutoff (Å) | `params.pkl` |
-|---|---|---|---|---|---|
-| `so3lr-tauri-s` | 2 | 128 | 4 | 4.5 | 1.6 MB |
-| `so3lr-tauri-m` *(default)* | 3 | 128 | 4 | 4.5 | 2.1 MB |
-| `so3lr-tauri-l` | 3 | 256 | 8 | 5.0 | 7.2 MB |
-
 - **`so3lr-tauri-m`** *(default)*: start here; the model we use for biomolecular MD.
 - **`so3lr-tauri-l`**: the most accurate, recommended for reactions; 3.7× slower
   than `-m`.
 - **`so3lr-tauri-s`**: 1.4× faster than `-m`.
+
+The Tauri models cover H to At (Z = 1–85), and the original `so3lr` covers H,
+C, N, O, F, P, S and Cl. Structures with any other element are rejected with
+an error.
 
 <!-- TODO (needs numbers): add a speed/accuracy table so the choice is
      quantitative rather than a rule of thumb. Suggested columns:
@@ -29,12 +27,6 @@ The SO3LR Tauri models come in three sizes:
      Errors on a named held-out set; throughput as ns/day for a stated system
      size on a stated GPU. Relative numbers (s = 1.8x m) are fine if absolute
      ones are awkward to publish. -->
-
-### Supported elements
-
-The Tauri models cover H to At (Z = 1–85), and the original `so3lr` covers H,
-C, N, O, F, P, S and Cl. Structures with any other element are rejected with
-an error.
 
 ## Legacy SO3LR model
 
