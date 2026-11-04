@@ -295,6 +295,9 @@
 /* Table of contents: quiet, no rail. */
 .md-sidebar--secondary .md-nav__title {
   font-size: 0.6rem;
+  /* Material gives the sticky title a glow in the page colour, which washes
+     out the top of the first entry beneath it. */
+  box-shadow: none;
 }
 
 /* ── Reading setting ──────────────────────────────────────────────────── */
