@@ -93,6 +93,9 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/general-molecular-simulations/so3lr
       name: SO3LR on GitHub
+    - icon: simple/arxiv
+      link: https://doi.org/10.48550/arXiv.2611.06237
+      name: SO3LR Tauri preprint (arXiv)
     - icon: fontawesome/solid/book
       link: https://doi.org/10.1021/jacs.5c09558
       name: SO3LR paper (JACS)

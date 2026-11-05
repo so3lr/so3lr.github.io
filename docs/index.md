@@ -112,6 +112,9 @@ Try SO3LR without any local installation using our
 
 ## Relevant references
 
+- [*SO3LR Tauri: Generally Applicable Force Fields for Reactive (Bio)Molecular
+  Simulations Covering the Periodic Table*](https://doi.org/10.48550/arXiv.2611.06237),
+  arXiv:2611.06237 (2026)
 - SO3LR: [*Molecular Simulations with a Pretrained Neural Network and
   Universal Pairwise Force Fields*](https://doi.org/10.1021/jacs.5c09558),
   JACS 147, 33723 (2025)

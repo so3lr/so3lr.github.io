@@ -4,7 +4,8 @@ The models are bundled with the package and selected by name.
 
 ## The current family
 
-The SO3LR Tauri models come in three sizes:
+The SO3LR Tauri models, described in the
+[SO3LR Tauri preprint](https://doi.org/10.48550/arXiv.2611.06237), come in three sizes:
 
 - **`so3lr-tauri-m`** *(default)*: start here; the model we use for biomolecular MD.
 - **`so3lr-tauri-l`**: the most accurate, recommended for reactions; 3.7× slower
@@ -54,11 +55,11 @@ The currently bundled releases are:
 | Release | Canonical names |
 |---|---|
 | 2606 *(current, default)* | `so3lr-tauri-{s,m,l}-2606` |
-| 2602 | `so3lr-tauri-{s,m,l}-2602` <!-- TODO: link the preprint --> |
+| 2602 | `so3lr-tauri-{s,m,l}-2602` |
 | Original | `so3lr` |
 
 The 2602 models are the models after stage 4 of training, and 2606 the final
-models after stage 5 (see the preprint).
+models after stage 5 (see the [preprint](https://doi.org/10.48550/arXiv.2611.06237)).
 
 To pin a release for papers and benchmarks, use its dated name, e.g.
 `so3lr-tauri-m-2606`, because the short names give different numbers after an

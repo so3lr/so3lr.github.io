@@ -1,11 +1,20 @@
 # How to cite
 
-If you use SO3LR, please cite the SO3LR paper and the SO3krates paper, and give
-the software version and the dated model you used.
+If you use SO3LR, please cite the SO3LR Tauri preprint, the SO3LR paper and the
+SO3krates paper, and give the software version and the dated model you used.
 
 ## Papers
 
 ```bibtex
+@article{kabylda2026so3lr,
+  title = {{SO3LR Tauri: Generally Applicable Force Fields for Reactive (Bio)Molecular Simulations Covering the Periodic Table}},
+  author = {Kabylda, Adil and Br{\"{u}}nig, Florian N. and Gallegos, Miguel and Frank, J. Thorben and Moerman, Evgeny and Unke, Oliver T. and Chmiela, Stefan and M{\"{u}}ller, Klaus-Robert and Tkatchenko, Alexandre},
+  journal = {arXiv preprint arXiv:2611.06237},
+  year = {2026},
+  doi = {10.48550/arXiv.2611.06237},
+  url = {https://arxiv.org/abs/2611.06237},
+}
+
 @article{kabylda2025molecular,
   title={Molecular Simulations with a Pretrained Neural Network and Universal Pairwise Force Fields},
   author={Kabylda, Adil and Frank, J Thorben and Su{\'a}rez-Dou, Sergio and Khabibrakhmanov, Almaz and Medrano Sandonas, Leonardo and Unke, Oliver T and Chmiela, Stefan and M{\"u}ller, Klaus-Robert and Tkatchenko, Alexandre},

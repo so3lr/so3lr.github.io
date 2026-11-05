@@ -61,5 +61,5 @@ read it first.
 
 - [Examples](https://so3lr.github.io/examples/): runnable notebooks, including a zero-install Colab.
 - [Contributing](https://so3lr.github.io/contributing/): repository layout, the lockfile, tests and CI, adding a model release or a settings key, licence.
-- [How to cite](https://so3lr.github.io/cite/): BibTeX for the JACS and SO3krates papers, and how to name the software version and dated model.
+- [How to cite](https://so3lr.github.io/cite/): BibTeX for the SO3LR Tauri preprint and the JACS and SO3krates papers, and how to name the software version and dated model.
 - [llms-full.txt](https://so3lr.github.io/llms-full.txt): every page concatenated into one file.
