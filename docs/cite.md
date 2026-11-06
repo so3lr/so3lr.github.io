@@ -46,8 +46,7 @@ Give the software version and the dated model together, for example:
 SO3LR v0.2.0 (so3lr-tauri-m-2606)
 ```
 
-You can take the version from your installation (`so3lr.__version__`). For
-reproducibility, also give the release tag or commit you used.
+You can take the version from your installation (`so3lr.__version__`).
 
 Write the dated name, e.g. `so3lr-tauri-m-2606`, not a short name such as
 `so3lr-tauri-m`, which changes when a new release lands (see
