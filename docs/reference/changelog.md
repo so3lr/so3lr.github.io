@@ -65,6 +65,16 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   see [Verifying the bundled files](../models.md#verifying-the-bundled-files).
 - The Apache-2.0 licence text and a third-party notice for the vendored Google
   Research robust loss.
+- Enhanced sampling on the flash engine: with `--engine auto` on a GPU,
+  PySAGES runs in NVT or NVE on one GPU in a periodic box run on flash. See
+  [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
+- The proton-transfer CVs `chargeseparation` and `ionsitedistance`, and
+  `r0_multiplier` for `coordinationnumber` (default 1.6, the value used
+  before). PySAGES is pinned to a newer commit of the same fork.
+- A cylindrical restraint (`cylinder_restraint_*`) on a group's centre of mass,
+  for host–guest binding with enhanced sampling.
+- A PySAGES restart warns about every `pysages_input` setting that differs from
+  the method in the `.pkl`, which the run keeps.
 
 #### Changed
 
@@ -119,6 +129,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   vacuum instead of periodically.
 - Pre-MD relaxation frames go to `<output>_opt.xyz` instead of the start of the
   MD trajectory.
+- On a GPU, enhanced-sampling runs move to the flash engine under
+  `--engine auto`. Their trajectories match the neighbour-list engine's only up
+  to rounding; `engine: standard` reproduces runs of earlier versions.
 
 #### Fixed
 
@@ -133,6 +146,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - `restart_pysages_load_path` without `restart_load_path`, or with a restart
   into another ensemble, is now an error up front. It previously crashed after
   setup.
+- A second enhanced-sampling run in the same Python process reused the first
+  run's compiled MD step. Runs from the command line, one per process, were
+  unaffected.
 - `--engine standard` writes an `Engine:` line to the log, as auto and flash do.
 - HDF5 trajectories store `a0_ratios` and `dispersion_energy_kspace` per atom.
   They were previously skipped with a warning.
