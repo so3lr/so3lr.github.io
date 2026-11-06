@@ -151,6 +151,7 @@ Several pages mirror what the code actually accepts:
 | `usage/settings.md` | `YAML_DEFAULTS`, `KNOWN_YAML_KEYS_EXTRA`, `YAML_KEY_ALIASES` |
 | `advanced/observables.md` | `OBSERVABLES` in `so3lr/cli/so3lr_eval.py` and the `--observable` choices |
 | `models.md` | `so3lr/model_registry.py` |
+| `advanced/enhanced-sampling.md` | `process_cv` and `get_pysages_method` in `so3lr/cli/so3lr_pysages_interface.py`, `parse_cylinder_settings` in `so3lr/cli/so3lr_md.py`, and the enhanced-sampling rules in `so3lr/flash/check.py` |
 | `training/from-scratch.md`, `training/finetuning.md` | `so3lr/config/*.yaml` and `run_training` / `run_fine_tuning` in `from_config.py` — these are **separate** loops and honour different keys |
 
 When those change in the code, update the matching table here.
