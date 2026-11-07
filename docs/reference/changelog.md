@@ -45,6 +45,18 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
+- `--precision mixed`, now the default: a float32 model around a float64 MD
+  state (positions, momenta, box, energy sums). `--precision` takes
+  `float32`, `mixed` or `float64` for MD, `opt`, `eval` and `tune-ewald`, on both
+  engines, and as `precision:` in settings files. Every MD and `opt` run logs
+  its precision with the model's and the MD state's dtypes.
+- `precision=` on `So3lrCalculator` and `FlashCalculator`, with the same three
+  values. Unset, it is `mixed` with `jax_enable_x64` and `float32` without.
+  `dtype=` keeps working as the model's dtype.
+- `so3lr.flash.domains.FlashDomains`: flash energies and forces for systems
+  larger than one GPU holds, a domain at a time, with the same result as one
+  call. Real-space long range only; see the
+  [API reference](api.md#flashdomains).
 - **The flash MD engine**: GPU kernels (JAX Pallas) that evaluate
   `so3lr-tauri-s/m/l` with no per-edge arrays. They give the same energy and
   forces as the neighbour-list potential in a few KiB per atom. `so3lr nve`, `nvt`,
@@ -68,6 +80,15 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Changed
 
+- `--flash-mixed` / `flash_mixed` is deprecated in favour of `--precision`:
+  on means `mixed` and off `float32`. It still works, with a warning.
+- An explicit `--precision float32` now runs float32 throughout. It
+  previously kept a float64 MD state unless `--no-flash-mixed` was given.
+  The default run is unchanged.
+- `tune-ewald` builds positions and the box in the MD state's dtype, float64
+  by default, as MD does.
+- `So3lrCalculator` and `FlashCalculator` raise an error for an explicit
+  `mixed` or `float64` without `jax_enable_x64`, before the model loads.
 - `so3lr tune-ewald`'s error estimates and search are SO3LR's own implementation
   of the Kolafa–Perram (Ewald) and Petersen (PME) estimates, with the same
   results. No torch-pme or JAX MD code remains, so the BSD-3-Clause licence is
@@ -82,9 +103,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   the backward pass's filter matmuls run as TF32×3 on tensor cores. The
   `so3lr-tauri-l` force call is 1.9× faster, `so3lr-tauri-s/m` about 10%; float32 errors and
   float64 results are unchanged.
-- The JAX stack is capped (`jax<0.11`, `jaxlib<0.11`, `flax<0.12.9`) with no
-  lower bound, so a compatible existing cluster install is kept, and Python is
-  limited to 3.12 and 3.13.
+- The JAX stack is capped (`jax<0.11`, `jaxlib<0.11`, `flax<0.12.9`), so a
+  compatible existing cluster install is kept. Flax has a floor of 0.12.1:
+  older releases fail to import JAX MD. Python is limited to 3.12 and 3.13.
 - Weights & Biases is opt-in and installed through the `wandb` extra, not the
   base environment.
 - TFDS-backed training uses finite, unit-consistent epochs and checkpoints the

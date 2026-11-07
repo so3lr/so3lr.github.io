@@ -147,7 +147,7 @@ sampling run on the neighbour-list engine.
 |---|---|---|---|
 | `--engine` | `engine` | `auto` | `auto`, `flash` or `standard`. |
 | `--flash-mode` | `flash_mode` | `auto` | Memory/recomputation trade-off: `fast`, `default`, `lean`, `leanest` or `minimal`; `auto` picks the fastest that fits. |
-| `--flash-mixed` / `--no-flash-mixed` | `flash_mixed` | on | With `--precision float32`, integrate positions and momenta in float64. |
+| `--flash-mixed` / `--no-flash-mixed` | `flash_mixed` | | Deprecated: use `--precision mixed` (on) or `--precision float32` (off). |
 | `--flash-devices` | `flash_devices` | `1` | Run on this many GPUs of one node. |
 
 `--flash-devices N` speeds up a system that fits on one GPU (3.2–4.0× on 4

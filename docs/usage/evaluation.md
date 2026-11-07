@@ -138,7 +138,7 @@ In that case, every structure must be periodic in all three directions. See
 | `--model` | `so3lr-tauri-m-2606` | Bundled name or path. |
 | `--lr-cutoff` | `12.0` | Use `100` for gas phase. |
 | `--dispersion-damping` | `2.0` | Dispersion switches off from `lr_cutoff - dispersion_damping` Å. |
-| `--precision` | `float32` | `float64` for tight comparisons. |
+| `--precision` | `mixed` | `float32`, `mixed` or `float64`; `float64` for tight comparisons. |
 | `--total-charge`, `--spin` | from file | Override per-structure values. |
 | `--charge-embed-total-charge` | follows the charge | Charge seen by the charge embedding only. |
 | `--charge-equilibration-total-charge` | follows the charge | Charge that charge equilibration conserves to. |

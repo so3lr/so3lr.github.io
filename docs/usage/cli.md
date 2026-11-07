@@ -52,7 +52,7 @@ These options are accepted by `opt`, the four MD commands and `tune-ewald`.
 | Flag | Default | Meaning |
 |---|---|---|
 | `--model`, `--model-path` | `so3lr-tauri-m-2606` | Bundled name or path to a custom model. See [Models](../models.md). |
-| `--precision` | `float32` | `float32` (the model in float32, the MD state in float64) or `float64`. |
+| `--precision` | `mixed` | `float32` or `float64` throughout, or `mixed`: a float32 model around a float64 MD state (positions, momenta, box, energy sums). |
 | `--lr-cutoff` | `12.0` | Long-range cutoff in Å. |
 | `--dispersion-damping` | `2.0` | Dispersion switches off starting at `lr_cutoff - dispersion_damping` Å. |
 | `--buffer-sr` | `1.25` | Short-range neighbour-list buffer multiplier. |
@@ -115,7 +115,7 @@ See [MD engines](md.md#md-engines).
 |---|---|---|
 | `--engine` | `auto` | `auto`, `flash` or `standard`. |
 | `--flash-mode` | `auto` | `fast`, `default`, `lean`, `leanest` or `minimal` (fastest first); `auto` picks the fastest that fits in memory. |
-| `--flash-mixed` / `--no-flash-mixed` | on | With `--precision float32`, keep positions and momenta in float64. |
+| `--flash-mixed` / `--no-flash-mixed` | | Deprecated: use `--precision mixed` (on) or `--precision float32` (off). |
 | `--flash-devices` | `1` | Number of GPUs on one node to run flash on. |
 
 ### Thermostat — `nvt` and `npt`
@@ -237,7 +237,7 @@ Initial geometry:          geometry.xyz
 Output file:               geometry_nvt.xyz
 Log file:                  geometry_nvt.log
 Force field:               so3lr-tauri-m-2606 (bundled)
-Precision:                 float32
+Precision:                 mixed
 Long-range cutoff:         12.0 Å
 Dispersion damping:        2.0 Å
 Short-range buffer:        1.25

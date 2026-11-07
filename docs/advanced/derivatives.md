@@ -13,7 +13,7 @@ respect to the atomic positions:
 ```python
 from jax import config
 
-# Enable 64-bit arrays before importing SO3LR when using dtype=np.float64.
+# Enable 64-bit arrays before importing SO3LR; precision="float64" needs them.
 config.update("jax_enable_x64", True)
 
 import numpy as np
@@ -25,7 +25,7 @@ atoms = Atoms("OH2", positions=[(0, 0, 0), (0.96, 0, 0), (-0.24, 0.93, 0)])
 calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=100,          # gas phase
-    dtype=np.float64,
+    precision="float64",
     calculate_hessian=True,
 )
 
@@ -46,9 +46,9 @@ eigenvalues = np.linalg.eigvalsh(h2d)
 ```
 
 !!! warning
-    Use `dtype=np.float64` for Hessians; in `float32` the low-frequency
-    eigenvalues are dominated by noise. `float64` also needs `jax_enable_x64`,
-    as above, or the arrays silently stay `float32`.
+    Use `precision="float64"` for Hessians; with a float32 model (`float32` or
+    `mixed`) the low-frequency eigenvalues are dominated by noise. `float64`
+    also needs `jax_enable_x64`, as above, or the calculator raises an error.
 
 ### Subsystem Hessians
 
@@ -60,7 +60,7 @@ calculation to a contiguous block of atoms with `output_atom_indices`:
 calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=12.0,
-    dtype=np.float64,
+    precision="float64",
     calculate_hessian=True,
     output_atom_indices=list(range(10)),   # atoms 0-9, must be contiguous
 )
@@ -85,7 +85,7 @@ append `_grad` (for scalars) or `_jac` (for vectors) to its name and give
 calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=100,
-    dtype=np.float64,
+    precision="float64",
     has_aux=True,
     observables=["nn_energy_grad", "partial_charges_jac"],
     output_atom_indices=[0, 1, 2],      # required

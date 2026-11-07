@@ -35,14 +35,14 @@
     must stay reproducible. If you already do, check the
     [changelog](changelog.md).
 
-??? question "`float32` or `float64`?"
-    `float32` is mixed precision: the model runs in float32, while MD keeps
-    positions, momenta and energy sums in float64. It is roughly twice as fast
-    as `float64` and is what we recommend for MD. Use
-    `float64` for Hessians and tight force convergence. On the command line,
-    pass `--precision float64`. In Python, enable JAX's 64-bit mode before
-    importing SO3LR, otherwise `dtype=np.float64` has no effect (see the
-    [API reference](api.md)).
+??? question "`float32`, `mixed` or `float64`?"
+    The default, `mixed`, runs the model in float32 and keeps positions,
+    momenta, the box and energy sums in float64. It is roughly twice as fast as
+    `float64` and is what we recommend for MD. `float32` keeps everything in
+    float32. Use `float64` for Hessians and tight force convergence. On the
+    command line, pass `--precision`. In Python, pass `precision=` to the
+    calculators; `mixed` and `float64` need JAX's 64-bit mode, enabled before
+    importing SO3LR (see the [API reference](api.md)).
 
 ??? question "Can I use a fine-tuned or custom model?"
     Yes. Pass the directory path anywhere a model name is accepted. It needs a

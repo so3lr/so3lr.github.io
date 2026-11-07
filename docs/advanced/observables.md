@@ -12,7 +12,7 @@ observables you want:
 ```python
 from jax import config
 
-# Needed for dtype=np.float64; must run before SO3LR is imported.
+# Needed for precision="float64"; must run before SO3LR is imported.
 config.update("jax_enable_x64", True)
 
 import numpy as np
@@ -25,7 +25,7 @@ atoms.info["charge"] = 0.0
 calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=100,
-    dtype=np.float64,
+    precision="float64",
     has_aux=True,
     observables=[
         "nn_energy",             # neural-network energy
@@ -155,8 +155,8 @@ assert np.isclose(total, energy, atol=1e-6)
 ```
 
 With k-space electrostatics on, add `electrostatic_energy_kspace` as well.
-Use `dtype=np.float64`; in `float32` the residual can look like a real
-discrepancy.
+Use `precision="float64"`; with a float32 model the residual can look like a
+real discrepancy.
 
 ## Related
 

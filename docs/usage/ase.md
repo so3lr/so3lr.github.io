@@ -10,10 +10,9 @@ vibrational analysis, NEB and `ase.md`.
 ```python
 from jax import config
 
-# Needed for dtype=np.float64; must run before SO3LR is imported.
+# Needed for precision="float64" or "mixed"; must run before SO3LR is imported.
 config.update("jax_enable_x64", True)
 
-import numpy as np
 from ase import Atoms
 from so3lr import So3lrCalculator
 
@@ -24,16 +23,17 @@ atoms.calc = So3lrCalculator(
     model="so3lr-tauri-m-2606",   # bundled name or path; this is the default
     lr_cutoff=100,          # 100 for gas phase; ~12 for periodic systems
     calculate_stress=False,
-    dtype=np.float64,
+    precision="float64",
 )
 
 energy = atoms.get_potential_energy()   # eV
 forces = atoms.get_forces()             # eV/Å
 ```
 
-!!! warning "`float64` needs `jax_enable_x64`"
-    Without the `config.update` line above, JAX truncates `float64` arrays to
-    `float32` with only a warning. The CLI sets it for you.
+!!! warning "`mixed` and `float64` need `jax_enable_x64`"
+    Without the `config.update` line above, an explicit `precision="mixed"` or
+    `"float64"` raises an error before the model loads, and an unset precision
+    runs in `float32`. The CLI sets it for you.
 
 Units are eV and Å. The legacy `so3lr` model was not trained on energies, so
 only its relative energies are meaningful.
@@ -45,7 +45,8 @@ only its relative energies are meaningful.
 | `model` | `so3lr-tauri-m-2606` | Bundled name or path to a custom model. See [Models](../models.md). |
 | `lr_cutoff` | `12.0` | Long-range cutoff, Å. Use `100` for isolated molecules. |
 | `dispersion_energy_cutoff_lr_damping` | `2.0` | Dispersion switch-off width, Å. |
-| `dtype` | `np.float32` | `np.float32` or `np.float64`. |
+| `precision` | `"mixed"` | `"float32"` or `"float64"` throughout, or `"mixed"`: a float32 model with float64 positions and results. Unset, `"mixed"` with `jax_enable_x64`, `"float32"` without. See [Choosing precision](#choosing-precision). |
+| `dtype` | `None` | Older spelling of the model's dtype: `np.float64` means `precision="float64"`. A `dtype` that contradicts `precision` raises. |
 | `calculate_stress` | `False` | Also return the stress tensor (periodic systems only). |
 | `calculate_hessian` | `False` | Return the Hessian. See [Gradients and Hessians](../advanced/derivatives.md). |
 | `has_aux` | `False` | Expose intermediate quantities in `calc.results["aux"]`. |
@@ -82,7 +83,7 @@ atoms = read("water_box.xyz")           # carries a cell and pbc
 atoms.calc = So3lrCalculator(
     lr_cutoff=12.0,
     calculate_stress=True,
-    dtype=np.float64,
+    precision="float64",
 )
 
 energy = atoms.get_potential_energy()
@@ -123,10 +124,18 @@ large systems.
 
 ## Choosing precision
 
-`float32` is roughly twice as fast as `float64` and is fine for MD. Use `float64`
-(with `jax_enable_x64`, see [above](#basic-use)) for tight force convergence,
-clean Hessians, or [`tune-ewald`](../advanced/electrostatics.md#automatic-tuning)
-accuracy estimates.
+`precision` takes the same three values as the CLI's `--precision`:
+
+| `precision` | Model | Positions, displacements and results |
+|---|---|---|
+| `"float32"` | float32 | float32 |
+| `"mixed"` *(default)* | float32 | float64 |
+| `"float64"` | float64 | float64 |
+
+A float32 model is roughly twice as fast as a float64 one and is fine for MD.
+Use `"float64"` (with `jax_enable_x64`, see [above](#basic-use)) for tight force
+convergence, clean Hessians, or
+[`tune-ewald`](../advanced/electrostatics.md#automatic-tuning) accuracy estimates.
 
 ## Related
 

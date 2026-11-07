@@ -79,7 +79,7 @@ k-grid from the cell:
 ```python
 from jax import config
 
-# Enable 64-bit arrays before importing SO3LR when using dtype=np.float64.
+# Enable 64-bit arrays before importing SO3LR; precision="float64" needs them.
 config.update("jax_enable_x64", True)
 
 import numpy as np
@@ -91,7 +91,7 @@ atoms = read("water_box.xyz")
 atoms.calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=12.0,
-    dtype=np.float64,
+    precision="float64",
     kspace_electrostatics="pme",     # 'ewald', 'pme' or 'p3m'
     kspace_smearing=4.0,
     kspace_spacing=0.5,
@@ -130,7 +130,7 @@ atoms.info["k_smearing"] = np.array([smearing])
 atoms.calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=12.0,
-    dtype=np.float64,
+    precision="float64",
     coulomb_kspace_method="pme",   # must match the grid you built above
 )
 ```
@@ -157,7 +157,7 @@ separately, request them as observables:
 calc = So3lrCalculator(
     model="so3lr-tauri-m",
     lr_cutoff=12.0,
-    dtype=np.float64,
+    precision="float64",
     kspace_electrostatics="pme",
     kspace_smearing=4.0,
     kspace_spacing=0.5,

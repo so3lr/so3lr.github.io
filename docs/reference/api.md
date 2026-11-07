@@ -3,19 +3,21 @@
 The public Python API is small. Everything below is importable from `so3lr`.
 
 ```python
-from so3lr import So3lrCalculator, So3lrPotential, to_jax_md, Graph, So3lr
+from so3lr import So3lrCalculator, FlashCalculator, So3lrPotential, to_jax_md, Graph, So3lr
 ```
 
-!!! warning "`float64` needs x64 enabled first"
-    To use `dtype=np.float64` or float64 positions, enable 64-bit arrays
-    before importing SO3LR:
+!!! warning "`mixed` and `float64` need x64 enabled first"
+    For `precision="mixed"` or `"float64"`, or float64 positions, enable
+    64-bit arrays before importing SO3LR:
 
     ```python
     from jax import config
     config.update("jax_enable_x64", True)
     ```
 
-    The CLI does this for you.
+    Without it, the calculators raise an error for an explicit `mixed` or
+    `float64` and run an unset precision in `float32`. The CLI does this for
+    you.
 
 ## `So3lrCalculator`
 
@@ -28,7 +30,8 @@ So3lrCalculator(
     dispersion_energy_cutoff_lr_damping=2.0,
     calculate_stress=False,
     calculate_hessian=False,
-    dtype=np.float32,
+    precision=None,                            # 'float32' | 'mixed' | 'float64'; None -> 'mixed' ('float32' without x64)
+    dtype=None,                                # older spelling: np.float64 -> precision='float64'
     has_aux=False,
     observables=None,
     output_atom_indices=None,
@@ -54,6 +57,7 @@ Results are stored in `calc.results`:
 
 | Keyword | Meaning |
 |---|---|
+| `precision` | `float32` or `float64` throughout, or `mixed`: a float32 model with float64 positions, displacements and results. See [Choosing precision](../usage/ase.md#choosing-precision). A `dtype` that contradicts it raises. |
 | `charge_embed_total_charge` | Overrides the total charge the network's charge embedding sees. |
 | `charge_equilibration_total_charge` | Overrides the total charge that charge equilibration conserves. |
 | `neighbor_backend` | `auto` uses explicit periodic images when the minimum image would be wrong; `glp` forces the minimum image, `exact` forces explicit images. The [`matscipy` extra](../installation.md#optional-extras) speeds up the explicit search. |
@@ -65,6 +69,68 @@ This name is an alias for `so3lr.ase_utils.make_ase_calculator`. The legacy
 keyword `workdir=` takes precedence over `model=`. Unknown keywords are
 forwarded into the long-range setup, not rejected, so a misspelling is not
 reported.
+
+## `FlashCalculator`
+
+An ASE calculator on the [flash engine](../usage/md.md#md-engines): energy and
+forces only, faster than `So3lrCalculator` on large systems.
+
+```python
+FlashCalculator(
+    model=None,                                # bundled name or path; None -> so3lr-tauri-m-2606
+    lr_cutoff=12.0,
+    dispersion_damping=2.0,
+    precision=None,                            # as So3lrCalculator
+    kspace_electrostatics=None,                # None | 'pme'
+    kspace_smearing=None,
+    kspace_spacing=None,
+    kspace_dispersion=None,                    # None | 'pme'
+    kspace_dispersion_smearing=None,
+    kspace_dispersion_spacing=None,
+    charge_embed_total_charge=None,
+    charge_equilibration_total_charge=None,
+    flash_mode="auto",                         # memory mode, as --flash-mode
+    flash_devices=1,                           # GPUs of this node
+    matmul_precision="highest",
+)
+```
+
+It takes orthorhombic periodic cells at least twice `lr_cutoff` across, or no
+cell (`pbc=False`), on a GPU where flash runs (see
+[When flash runs](../usage/md.md#when-flash-runs)). Anything else raises an
+error that names the reason; `So3lrCalculator` takes any structure. Charge
+and spin come from `atoms.info`, as for `So3lrCalculator`. There is no
+stress. `flash_mixed` is still accepted but deprecated: use `precision`.
+
+## `FlashDomains`
+
+For a system too large for one GPU, `so3lr.flash.domains.FlashDomains`
+computes the energy and forces one domain at a time. The box is cut into
+domains with halos, and the result equals one whole-system call. The domains
+can be shared over several GPUs of one node. It is a Python API only; the CLI
+does not use it.
+
+```python
+import jax.numpy as jnp
+from ase.io import read
+from so3lr.flash.loader import load_params
+from so3lr.flash.domains import FlashDomains, pick_splits
+
+atoms = read("large_box.xyz")                  # orthorhombic, periodic
+params, statics = load_params("so3lr-tauri-m", precision="float32", lr_cutoff=12.0)
+domains = FlashDomains(
+    params, statics, atoms.get_atomic_numbers(), atoms.cell[:],
+    splits=(2, 2, 2),                          # domains per axis
+    devices=1,                                 # or several GPUs of this node
+)
+energy, forces = domains.energy_forces(jnp.asarray(atoms.get_positions()))
+```
+
+- Long range is real space only; PME is refused.
+- Each domain must be at least as wide as its halo, and at least one axis must
+  be split. `pick_splits` suggests a split for a given GPU memory.
+- Force calls run at matmul precision `"highest"` by default, so the float32
+  energy does not depend on the split.
 
 ## `So3lrPotential`
 
