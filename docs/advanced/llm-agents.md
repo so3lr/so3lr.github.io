@@ -31,7 +31,7 @@ UNITS AND DEFAULTS
   gamma = 1 / (md_dt * langevin_thermo).
 - Energies are eV, lengths Angstrom, forces eV/A.
 - --precision is mixed (default: float32 model, float64 MD state),
-  float32 or float64. --flash-mixed is deprecated.
+  float32 or float64.
 - mixed or float64 in Python: call jax.config.update("jax_enable_x64", True)
   BEFORE importing so3lr, or the calculators raise. The CLI does it.
 

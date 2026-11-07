@@ -155,8 +155,6 @@ assert np.isclose(total, energy, atol=1e-6)
 ```
 
 With k-space electrostatics on, add `electrostatic_energy_kspace` as well.
-Use `precision="float64"`; with a float32 model the residual can look like a
-real discrepancy.
 
 ## Related
 

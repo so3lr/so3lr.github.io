@@ -115,7 +115,6 @@ See [MD engines](md.md#md-engines).
 |---|---|---|
 | `--engine` | `auto` | `auto`, `flash` or `standard`. |
 | `--flash-mode` | `auto` | `fast`, `default`, `lean`, `leanest` or `minimal` (fastest first); `auto` picks the fastest that fits in memory. |
-| `--flash-mixed` / `--no-flash-mixed` | | Deprecated: use `--precision mixed` (on) or `--precision float32` (off). |
 | `--flash-devices` | `1` | Number of GPUs on one node to run flash on. |
 
 ### Thermostat — `nvt` and `npt`

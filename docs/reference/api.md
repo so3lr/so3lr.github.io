@@ -31,7 +31,6 @@ So3lrCalculator(
     calculate_stress=False,
     calculate_hessian=False,
     precision=None,                            # 'float32' | 'mixed' | 'float64'; None -> 'mixed' ('float32' without x64)
-    dtype=None,                                # older spelling: np.float64 -> precision='float64'
     has_aux=False,
     observables=None,
     output_atom_indices=None,
@@ -57,7 +56,7 @@ Results are stored in `calc.results`:
 
 | Keyword | Meaning |
 |---|---|
-| `precision` | `float32` or `float64` throughout, or `mixed`: a float32 model with float64 positions, displacements and results. See [Choosing precision](../usage/ase.md#choosing-precision). A `dtype` that contradicts it raises. |
+| `precision` | `float32` or `float64` throughout, or `mixed`: a float32 model with float64 positions, displacements and results. See [Choosing precision](../usage/ase.md#choosing-precision). |
 | `charge_embed_total_charge` | Overrides the total charge the network's charge embedding sees. |
 | `charge_equilibration_total_charge` | Overrides the total charge that charge equilibration conserves. |
 | `neighbor_backend` | `auto` uses explicit periodic images when the minimum image would be wrong; `glp` forces the minimum image, `exact` forces explicit images. The [`matscipy` extra](../installation.md#optional-extras) speeds up the explicit search. |
@@ -100,7 +99,7 @@ cell (`pbc=False`), on a GPU where flash runs (see
 [When flash runs](../usage/md.md#when-flash-runs)). Anything else raises an
 error that names the reason; `So3lrCalculator` takes any structure. Charge
 and spin come from `atoms.info`, as for `So3lrCalculator`. There is no
-stress. `flash_mixed` is still accepted but deprecated: use `precision`.
+stress.
 
 ## `FlashDomains`
 
