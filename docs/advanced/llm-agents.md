@@ -30,8 +30,10 @@ UNITS AND DEFAULTS
 - --langevin-thermo is a dimensionless timescale, NOT gamma:
   gamma = 1 / (md_dt * langevin_thermo).
 - Energies are eV, lengths Angstrom, forces eV/A.
-- float64 in Python: call jax.config.update("jax_enable_x64", True)
-  BEFORE importing so3lr. The CLI's --precision float64 does it.
+- --precision is mixed (default: float32 model, float64 MD state),
+  float32 or float64.
+- mixed or float64 in Python: call jax.config.update("jax_enable_x64", True)
+  BEFORE importing so3lr, or the calculators raise. The CLI does it.
 
 MODEL GENERATIONS EMIT DIFFERENT KEYS
 - so3lr-tauri-s / so3lr-tauri-m / so3lr-tauri-l  ->  a0_ratios, c6_ratios,

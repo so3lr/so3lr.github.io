@@ -29,7 +29,7 @@ log_file: run.log
 
 # --- model -------------------------------------------------------------
 model: so3lr-tauri-m-2606              # pin the dated name for reproducibility
-precision: float32
+precision: mixed                       # float32, mixed or float64
 lr_cutoff: 12.0
 dispersion_damping: 2.0
 total_charge: 0
@@ -96,7 +96,7 @@ If both an alias and its canonical key are given, the canonical key wins.
 | Key | Default | Meaning |
 |---|---|---|
 | `model_path` (`model`) | `so3lr-tauri-m-2606` | Bundled name or path. See [Models](../models.md). |
-| `precision` | `float32` | `float32` (the model in float32, the MD state in float64) or `float64`. |
+| `precision` | `mixed` | `float32` or `float64` throughout, or `mixed`: a float32 model around a float64 MD state (positions, momenta, box, energy sums). |
 | `lr_cutoff` | `12.0` | Long-range cutoff in Å; use `100` for gas phase. |
 | `dispersion_damping` | `2.0` | Dispersion switches off starting at `lr_cutoff - dispersion_damping` Å. |
 | `total_charge` | `0` | Total charge of the system. |
@@ -114,7 +114,6 @@ If both an alias and its canonical key are given, the canonical key wins.
 |---|---|---|
 | `engine` | `auto` | `auto` / `flash` / `standard`. See [MD engines](md.md#md-engines). |
 | `flash_mode` | `auto` | `auto` / `fast` / `default` / `lean` / `leanest` / `minimal`. |
-| `flash_mixed` | `true` | In a float32 run, keep the MD state in float64. |
 | `flash_devices` | `1` | Number of GPUs on one node to run flash on. |
 
 The buffer and cell-list keys above apply to the neighbour-list engine only.

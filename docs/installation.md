@@ -131,5 +131,6 @@ See [Contributing](contributing.md) for the test layout and the lockfile.
     [Molecular dynamics](usage/md.md).
 
 ??? failure "Importing `jax_md` fails inside `flax`, or PME hangs on CPU"
-    JAX was upgraded past SO3LR's supported versions. Bring it back with
-    `uv sync --locked`, or `pip install "jax<0.11" "jaxlib<0.11" "flax<0.12.9"`.
+    JAX was upgraded past SO3LR's supported versions, or an older Flax
+    (0.12.0 or earlier) was kept. Fix it with `uv sync --locked`, or
+    `pip install "jax<0.11" "jaxlib<0.11" "flax>=0.12.1,<0.12.9"`.

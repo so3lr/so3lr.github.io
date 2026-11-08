@@ -89,9 +89,6 @@ print(atoms.get_potential_energy())  # eV
 print(atoms.get_forces())            # eV/Å
 ```
 
-To use `dtype=np.float64`, enable JAX's 64-bit mode before importing SO3LR
-(see the [API reference](reference/api.md)).
-
 ## Longer runs
 
 For production runs, we recommend a settings file. It also gives access to
