@@ -79,15 +79,22 @@ Only neighbours within the model's short-range cutoff count: 4.5 Å for
 `so3lr-tauri-s/m` and the legacy `so3lr`, 5.0 Å for `so3lr-tauri-l`. Keep r₀
 well inside it, or the CV jumps where a neighbour crosses the cutoff.
 
+The CV builds its neighbour list again at every step, over the whole system
+and without a cell list, so its cost and memory grow with the square of the
+number of atoms. That is cheap for a few thousand atoms; for tens of thousands
+it can dominate the step.
+
 ### Proton-transfer CVs
 
 `chargeseparation` and `ionsitedistance` follow the proton that an acid gives
 to the surrounding water (or the proton a base takes from it). Both share every
 H atom among the heavy atoms with Gaussian weights of width `sigma`, so that a
 water oxygen owns about 2 H, an H₃O⁺ 3 and an OH⁻ 1. Both need a periodic
-orthorhombic box. The water oxygens are `water_indices` if given, otherwise
-every O atom with no other heavy atom within 1.7 Å at the start of the run.
-The log lists the atoms each CV was built from.
+orthorhombic box at constant volume: they keep the box of the start of the run,
+so they are refused under NPT. The water oxygens are `water_indices` if given,
+otherwise every O atom with no other heavy atom within 1.7 Å at the start of
+the run; with none, both CVs stop with an error. The log lists the atoms each
+CV was built from.
 
 `chargeseparation` ([Xu et al., arXiv:2610.13265](https://arxiv.org/abs/2610.13265))
 is s = Σᵢ qᵢ dᵢ, where qᵢ is the H count of charge site i minus its neutral
@@ -102,7 +109,7 @@ with an OH⁻.
 | `owner_species` | `[6, 7, 8, 15, 16]` | Elements whose atoms own H (C, N, O, P, S). |
 | `water_indices` | automatic | The water oxygens. |
 | `charge_sites` | `water` | Whose charge enters s: `water` (the water oxygens), `all` (also every other owner atom except `reference`), or a list of atoms to add to the water oxygens. |
-| `neutral_reference` | the input structure | With `charge_sites` other than `water`: an undissociated structure that gives each site's neutral H count. |
+| `neutral_reference` | the input structure (after the relaxation before MD, if one runs) | With `charge_sites` other than `water`: an undissociated structure that gives each site's neutral H count. |
 | `pair_guard` | `false` | Map configurations with both an H₃O⁺ and an OH⁻ in the water (autoionisation) onto s = 0. Not recommended with ABF. |
 | `n_hydronium`, `n_hydroxide` | `2.1`, `1.9` | Pair guard: H counts above / below which a water starts to count as H₃O⁺ / OH⁻. |
 | `guard_width`, `guard_x0` | `0.8`, `0.5` | Pair guard: width of that step, and where s reaches 0. |
@@ -129,8 +136,9 @@ with a `coordinationnumber` of the same site, which drives the proton transfer.
 ## Supported ensembles
 
 `abf`, `spectralabf` and `metad` require NVT (Nosé–Hoover, `ensemble: "nvt"`).
-`harmonic` and `unbiased` also run under `npt` and `nve`. `nvt-langevin` is
-not supported by any method.
+`harmonic` and `unbiased` also run under `npt` and `nve`, except with
+`chargeseparation` or `ionsitedistance`, which need a constant volume.
+`nvt-langevin` is not supported by any method.
 
 ## Engines
 
@@ -270,8 +278,11 @@ cylinder_restraint_axis: [0.0, 0.0, 1.0]           # default: z
 ```
 
 The axis and origin are fixed in space, so freeze the host with
-[fixed atoms](../usage/md.md#freezing-atoms) to keep it on the axis. In a
-periodic box, the guest's distance from the origin uses the minimum image;
+[fixed atoms](../usage/md.md#freezing-atoms) to keep it on the axis. The atoms
+are a list, a single index or a range string such as `"120-135"` (inclusive);
+an atom listed twice is an error. In a periodic box, the guest is made whole
+around its first atom before its centre of mass is taken, so it must span less
+than half the box, and its distance from the origin uses the minimum image;
 without a box, set the origin. The restraint energy is part of the potential
 energy in the log. The restraint is not applied during the relaxation before
 MD, and it runs on the neighbour-list engine. The keys are listed in the
@@ -310,8 +321,10 @@ working directory: one row per step, one column per CV in the order of
 `pysages_input`. The file is never overwritten, so a continuation adds to it,
 and runs started in the same directory write into the same file; give each
 replica or window its own directory. A cycle that is repeated (the log reports
-a neighbour-list overflow or, on flash, "cycle repeated") leaves the rows of
-the discarded attempt in the file, so there are then more rows than steps.
+a neighbour-list overflow or, on flash, "cycle repeated") adds no rows for the
+discarded attempt: they go to `cv_vs_timestep_discarded.txt`, under a comment
+line giving the steps, the attempt and the reason, so `cv_vs_timestep.txt`
+keeps one row per step.
 
 ## Getting the free energy out
 
@@ -351,8 +364,8 @@ These two come from PySAGES itself, not from SO3LR's interface to it:
 - `spectralabf` with two CVs fails in PySAGES with JAX 0.10, the version in
   SO3LR's lock file; with one CV it works.
 
-Use the CVs that take the box (the `_pbc` variants, `coordinationnumber`,
-`chargeseparation` and `ionsitedistance`) at constant volume. Under NPT, which
-`harmonic` and `unbiased` allow, they keep the box of the start of the run, so
-distances between atoms on opposite sides of the box edge are off by the change
-in box length.
+The CVs that take the box keep the box of the start of the run. Under NPT,
+which `harmonic` and `unbiased` allow, the `_pbc` variants and
+`coordinationnumber` then measure distances between atoms on opposite sides of
+the box edge off by the change in box length, so use them at constant volume.
+`chargeseparation` and `ionsitedistance` are refused under NPT.

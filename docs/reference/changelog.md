@@ -149,6 +149,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - A second enhanced-sampling run in the same Python process reused the first
   run's compiled MD step. Runs from the command line, one per process, were
   unaffected.
+- A PySAGES cycle repeated after a neighbour-list overflow left the CV values
+  of the discarded attempt in `cv_vs_timestep.txt`, which then had more rows
+  than steps. They now go to `cv_vs_timestep_discarded.txt`.
 - `--engine standard` writes an `Engine:` line to the log, as auto and flash do.
 - HDF5 trajectories store `a0_ratios` and `dispersion_energy_kspace` per atom.
   They were previously skipped with a warning.
