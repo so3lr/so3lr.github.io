@@ -78,8 +78,14 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - The Apache-2.0 licence text and a third-party notice for the vendored Google
   Research robust loss.
 - Enhanced sampling on the flash engine: with `--engine auto` on a GPU,
-  PySAGES runs in NVT or NVE on one GPU in a periodic box run on flash. See
+  PySAGES runs on flash in NVT or NVE, on one GPU, in a periodic box. See
   [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
+- CUDA kernels for flash's `fast` memory mode on H100/H200 (compute capability
+  9.0), built with `nvcc` on first use: a `so3lr-tauri-m` force call is 3.3×
+  faster than on the Pallas kernels. `--flash-kernels` / `flash_kernels` /
+  `FlashCalculator(flash_kernels=)` chooses `auto`, `pallas` or `cuda`. See
+  [CUDA kernels](../usage/md.md#cuda-kernels).
+- Semi-isotropic NPT on the flash engine.
 - The proton-transfer CVs `chargeseparation` and `ionsitedistance`, and
   `r0_multiplier` for `coordinationnumber` (default 1.6, the value used
   before). PySAGES is pinned to a newer commit of the same fork.
@@ -153,9 +159,13 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - On a GPU, enhanced-sampling runs move to the flash engine under
   `--engine auto`. Their trajectories match the neighbour-list engine's only up
   to rounding; `engine: standard` reproduces runs of earlier versions.
+- The same holds for semi-isotropic NPT, and on an H100/H200 for flash runs that
+  move to the CUDA kernels (`--flash-kernels pallas` keeps the Pallas ones).
 
 #### Fixed
 
+- Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
+  start instead of taking the input structure's momenta.
 - `so3lr tune-ewald --kspace-electrostatics pme` searches with 4 interpolation
   nodes by default. The previous default of 3 failed in jax-pme, whose PME
   only takes 4.

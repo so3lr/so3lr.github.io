@@ -6,7 +6,7 @@
 > repulsion, long-range electrostatics and dispersion. Three model sizes ship
 > inside the Python package. Simulations run through JAX on CPU or GPU, driven
 > by a `so3lr` command-line tool, an ASE calculator, or a plain JAX potential
-> function. MD runs on the "flash" engine (Pallas GPU kernels) wherever it
+> function. MD runs on the "flash" engine (Pallas or CUDA GPU kernels) wherever it
 > applies, and on a JAX-MD neighbour-list engine otherwise.
 
 Key facts an agent is likely to get wrong, because they differ from other
