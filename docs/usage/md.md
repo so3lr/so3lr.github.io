@@ -166,7 +166,8 @@ CUDA kernels in place of the Pallas ones, for `so3lr-tauri-s/m/l` and `so3lr`
 in `float32` or `mixed` precision. A force call of `so3lr-tauri-m` is 3.3×
 faster than on the Pallas kernels, at float32-level accuracy, and every sum runs
 in a fixed order. Several GPUs and
-[`FlashDomains`](../reference/api.md#flashdomains) use them too.
+[`FlashDomains`](../reference/api.md#flashdomains) use them too. Other GPUs,
+such as the A100, run the Pallas kernels as before.
 
 `nvcc` builds the kernels on first use, once per model, GPU architecture,
 compiler and JAX version, into `$SO3LR_CUDA_CACHE` (default
@@ -174,10 +175,10 @@ compiler and JAX version, into `$SO3LR_CUDA_CACHE` (default
 the `PATH`. With `--flash-kernels auto`, a run that the kernels do not cover
 (another GPU, model, precision or memory mode, no `nvcc`, or too little free
 memory for their per-pair arrays) uses the Pallas kernels, and the log says
-why:
+why, for example on an A100:
 
 ```text
-Flash: CUDA kernels not used (a memory mode other than fast); Pallas kernels
+Flash: CUDA kernels not used (a sm_80 GPU (the kernels are written for sm_90)); Pallas kernels
 ```
 
 `--flash-kernels cuda` raises instead, and `pallas` never uses the CUDA kernels.
