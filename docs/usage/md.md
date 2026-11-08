@@ -138,8 +138,9 @@ Flash runs only when all of the following hold:
 | Long range | Real space, or PME (`--kspace-electrostatics pme`, `kspace_dispersion: pme`) |
 
 NPT and k-space need a box. Semi-isotropic NPT, the dispersion tail correction,
-`kspace_npt_cycles`, Ewald and P3M, fixed atoms, observables and enhanced
-sampling run on the neighbour-list engine.
+`kspace_npt_cycles`, Ewald and P3M, fixed atoms and observables run on the
+neighbour-list engine, and so does enhanced sampling outside the cases listed
+in [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
 
 ### Flash options
 
@@ -190,7 +191,7 @@ Root attributes:
 
 | Attribute | Content |
 |---|---|
-| `fractional_coordinates` | Whether `positions` are fractional (true for periodic runs unless `output_cartesian_positions: true`) |
+| `fractional_coordinates` | Whether `positions` are fractional (true for periodic runs unless `output_cartesian_positions: true`, or with enhanced sampling outside NPT) |
 | `trajectory_layout` | `frame-major-v1` |
 | `box_convention` | `ase-cell-vectors-as-rows` |
 | `atomic_numbers`, `cell_a0` | Species of the written atoms, and the initial cell in Å |

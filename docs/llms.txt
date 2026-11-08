@@ -39,7 +39,7 @@ read it first.
 ## Advanced
 
 - [Long-range electrostatics](https://so3lr.github.io/advanced/electrostatics/): Ewald, PME and P3M; the two differently-scoped k-space arguments.
-- [Enhanced sampling](https://so3lr.github.io/advanced/enhanced-sampling/): PySAGES, collective variables, free-energy extraction.
+- [Enhanced sampling](https://so3lr.github.io/advanced/enhanced-sampling/): PySAGES, collective variables, the cylindrical restraint, free-energy extraction.
 - [Observables](https://so3lr.github.io/advanced/observables/): energy components, partial charges, embeddings, and which names each interface accepts.
 - [Gradients and Hessians](https://so3lr.github.io/advanced/derivatives/): second derivatives and observable Jacobians.
 - [Binding energies](https://so3lr.github.io/advanced/binding-energies/): dimer interaction energies.
