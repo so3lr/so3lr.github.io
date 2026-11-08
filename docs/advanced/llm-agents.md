@@ -119,7 +119,7 @@ LOG FILE
   may not use the same one:
 
     ```text
-    Engine: neighbour-list potential (flash cannot: its NPT is isotropic, not semi-isotropic)
+    Engine: neighbour-list potential (flash cannot: it has no fixed atoms)
     ```
 
     With `--engine flash`, the run fails instead of falling back. See

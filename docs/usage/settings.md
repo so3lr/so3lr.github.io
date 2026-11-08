@@ -115,6 +115,7 @@ If both an alias and its canonical key are given, the canonical key wins.
 | `engine` | `auto` | `auto` / `flash` / `standard`. See [MD engines](md.md#md-engines). |
 | `flash_mode` | `auto` | `auto` / `fast` / `default` / `lean` / `leanest` / `minimal`. |
 | `flash_devices` | `1` | Number of GPUs on one node to run flash on. |
+| `flash_kernels` | `auto` | `auto` / `pallas` / `cuda`. See [CUDA kernels](md.md#cuda-kernels). |
 
 The buffer and cell-list keys above apply to the neighbour-list engine only.
 

@@ -116,6 +116,7 @@ See [MD engines](md.md#md-engines).
 | `--engine` | `auto` | `auto`, `flash` or `standard`. |
 | `--flash-mode` | `auto` | `fast`, `default`, `lean`, `leanest` or `minimal` (fastest first); `auto` picks the fastest that fits in memory. |
 | `--flash-devices` | `1` | Number of GPUs on one node to run flash on. |
+| `--flash-kernels` | `auto` | `auto`, `pallas` or `cuda`: flash's [CUDA kernels](md.md#cuda-kernels) on an H100/H200 where they apply. |
 
 ### Thermostat — `nvt` and `npt`
 
@@ -332,6 +333,8 @@ These JAX/XLA variables are useful on shared nodes.
 | `XLA_PYTHON_CLIENT_PREALLOCATE=false` | Allocate memory on demand, which suits a shared GPU but is slower. |
 | `CUDA_VISIBLE_DEVICES` | GPUs visible to the process. |
 | `JAX_PLATFORMS=cpu` | Force CPU even when a GPU is available. |
+| `SO3LR_CUDA_CACHE` | Where flash's [CUDA kernels](md.md#cuda-kernels) are built (default `~/.cache/so3lr/flash_cuda`). |
+| `SO3LR_NVCC`, `CUDA_HOME` | Locate `nvcc` for the CUDA kernels when it is not on the `PATH`. |
 
 If a run is unexpectedly slow, check the backend and device at the start of
 the log.

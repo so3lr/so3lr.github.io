@@ -90,6 +90,7 @@ FlashCalculator(
     charge_equilibration_total_charge=None,
     flash_mode="auto",                         # memory mode, as --flash-mode
     flash_devices=1,                           # GPUs of this node
+    flash_kernels="auto",                      # 'auto' | 'pallas' | 'cuda', as --flash-kernels
     matmul_precision="highest",
 )
 ```
