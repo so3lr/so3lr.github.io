@@ -45,6 +45,18 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
+- [Guided MD setup](../usage/cli.md#guided-setup) with arrow-key structure and
+  model menus, explicit review, and a portable structure/YAML/shell-script
+  bundle. The first review action saves the bundle and starts MD locally;
+  saving for later remains available.
+- Live terminal MD plots and optimization status, plus offline
+  [`so3lr show`](../usage/cli.md#offline-monitoring) views for individual runs
+  and folders. Plain output is automatic when stderr is redirected; direct
+  commands, YAML and shell/scheduler launchers remain supported.
+- Per-invocation JSONL journals and resolved-settings YAML beside MD and
+  optimization logs, including in plain and quiet modes. Text logs keep their
+  numeric MD tables and add run boundaries, artifact paths and final summaries.
+
 - `--precision mixed`, now the default: a float32 model around a float64 MD
   state (positions, momenta, box, energy sums). `--precision` takes
   `float32`, `mixed` or `float64` for MD, `opt`, `eval` and `tune-ewald`, on both
@@ -95,6 +107,14 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   the method in the `.pkl`, which the run keeps.
 
 #### Changed
+
+- Bare `so3lr` opens guided setup in an interactive terminal outside recognized
+  scheduler jobs; otherwise it prints help. Explicit simulation commands and
+  `--settings` do not open the wizard. Help is grouped by purpose; `--help-full`
+  remains an alias for the command overview.
+- Optimization's completion message is now `Optimization execution finished.`
+  The summary distinguishes reaching the force criterion from exhausting the
+  step budget; successful command completion alone does not establish convergence.
 
 - `--flash-mixed` / `flash_mixed` is deprecated in favour of `--precision`:
   on means `mixed` and off `float32`. It still works, with a warning.
@@ -163,6 +183,22 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   move to the CUDA kernels (`--flash-kernels pallas` keeps the Pallas ones).
 
 #### Fixed
+
+- Guided setup validates supported periodic cells, reserves the backend's 3%
+  initial NPT contraction margin, and couples the small-cell 2 Å electrostatic
+  smearing to an explicit 1 Å PME mesh spacing. Dispersion keeps its 2 Å
+  smearing and 3 Å mesh spacing. These remain starting proposals rather than
+  convergence guarantees; direct flags and existing YAML defaults are unchanged.
+- Setup exports create files exclusively, recover from malformed XYZ elements,
+  and use the CLI's shared save-buffer default. Logs and journals use consistent
+  float32 energy reporting, and startup warnings target the current invocation.
+- Terminal output supports ASCII fallback, restores state after interrupted
+  initialization, and keeps controls visible in short optimization views.
+  Saved-run readers tolerate malformed or excessively nested JSON records.
+- MD/optimization errors retain the actual exception type and cause chain;
+  unexpected errors in other commands retain their traceback. Default
+  `SIGTERM`/`SIGHUP` handling restores the terminal before preserving signal
+  termination. Custom signal handlers are unchanged; `SIGKILL` cannot be handled.
 
 - Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
   start instead of taking the input structure's momenta.

@@ -39,7 +39,10 @@ For `.sh` and scheduler jobs, use `so3lr show <output-directory>` in another
 terminal to plot the local metrics journal. The observer works offline and can
 be closed while the simulation continues. Each MD or optimization invocation
 writes a separate `*.events.jsonl` beside its text log, including when output is
-redirected.
+redirected or `--display plain` or `--quiet` is selected. A separate
+`*.settings.resolved.yaml` records replay settings for the same invocation.
+These files support offline observation and replay independently of the console
+display.
 The time axis is local to that invocation, including restarted segments.
 With several journals, the viewer starts with a folder overview. Left/right
 visits individual runs and cycles back to the overview; `o` returns directly.
@@ -64,7 +67,9 @@ so3lr --display plain --settings settings.yaml
 ```
 
 Redirected stderr, including ordinary scheduler logs, uses plain output
-automatically. For additional diagnostics alongside the live display, use `so3lr --verbose
+automatically. Redirecting stdout alone leaves the live display available;
+an attached `.sh` launcher can still show it. For additional diagnostics
+alongside the live display, use `so3lr --verbose
 --settings settings.yaml`. Display options go before an MD subcommand and
 do not change the simulation settings. See [Terminal display](cli.md#terminal-display)
 for all controls.
@@ -120,6 +125,19 @@ for all controls.
 A run is `md_cycles × md_steps` steps long, with one frame written per cycle.
 Use many short cycles for frequent output, and a few long cycles for maximum
 throughput.
+
+All periodic CLI MD ensembles require a positive, axis-aligned orthorhombic
+cell. The neighbor-list cutoff cannot exceed half the minimum cell height.
+Guided NPT setup reserves a further 3% initial contraction margin for both the
+short-range and long-range cutoffs; fixed-cell setup keeps the ordinary bound.
+This does not guarantee that every later NPT cell fits, or that Flash's
+additional cell-grid requirements are met. Runtime validation remains active.
+
+For small periodic cells, guided setup proposes PME for both electrostatics and
+dispersion and exports explicit mesh settings. Electrostatics uses 2 Å smearing
+with 1 Å spacing; dispersion keeps its 2 Å smearing and 3 Å spacing defaults.
+These proposals need system-specific convergence checks. Direct commands and
+existing YAML runs are unchanged. See [Guided setup](cli.md#guided-setup).
 
 Velocities or momenta in the input file (as in an EXTXYZ frame from an earlier
 SO3LR trajectory) are used as the initial velocities. Otherwise, velocities

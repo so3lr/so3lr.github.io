@@ -21,7 +21,7 @@ molecular dynamics, evaluation, training and parameter tuning.
 
 ```shell
 so3lr --help          # command overview
-so3lr --help-full     # command overview with additional examples
+so3lr --help-full     # same overview; retained for compatibility
 so3lr nvt --help      # flags grouped by purpose (-h works too)
 so3lr --version       # installed SO3LR version
 ```
@@ -118,7 +118,13 @@ criterion. It also reports completed MD steps and physical time, final measured
 quantities with units, warnings/errors, wall time, the last successful checkpoint,
 and saved artifact paths. Unavailable information is not invented.
 
-Each run saves `<log-stem>.<run-id>.settings.resolved.yaml` alongside its journal.
+MD and optimization failures show the actual exception type and cause chain in
+the terminal and journal, with the traceback retained in the text log.
+Unexpected errors from other commands keep their normal traceback.
+
+Each MD or optimization invocation saves
+`<log-stem>.<run-id>.settings.resolved.yaml` alongside its journal, including
+with redirected stderr, `--display plain` or `--quiet`.
 It uses ordinary YAML values and input units (`md_dt` in fs), resolves input paths,
 and records the selected model, engine and precision when available. To repeat
 a run, copy this file, choose fresh output/log/checkpoint paths, and run:
@@ -144,6 +150,9 @@ and `--quiet` too. The journal records run metadata, phases, accepted-cycle
 samples or the latest optimization measurements, warnings, successful checkpoints
 and completion/failure. Each process owns a separate journal, including
 concurrent replicas in one scheduler job.
+These two sidecar files are intentional even without a live display: the journal
+supports offline observation, and the resolved YAML records the replay settings.
+Display controls change console output, not artifact creation.
 The numeric table columns and trajectory formats are retained; text logs also
 include the identity and final summary blocks described above.
 
@@ -216,7 +225,8 @@ Data arrives at accepted MD cycle boundaries, so large `md_steps` can leave a
 chart unchanged for minutes. The displayed state is the last state explicitly
 reported by the producer, not a scheduler or process-liveness check. Sample
 age and checkpoint information help distinguish recent work from saved work.
-A killed process can leave its last reported state as Running. A journal write
+Uncatchable termination such as `SIGKILL` can leave the last reported state as
+Running. A journal write
 failure warns once and disables metrics recording while the calculation
 continues; do not use the viewer as the sole check of a job's health.
 
@@ -243,11 +253,28 @@ charge/spin, seed, relaxation and cutoff. The model menu presents **M (default)*
 **S (faster)** and **L (recommended for reactions)** first. Open **Legacy models**
 to see the four older releases; exports retain each model's canonical name.
 The review explains mixed precision as float32 model calculations with float64
-dynamics. For small periodic cells, setup
-proposes a cutoff that fits and shows PME electrostatics and dispersion in the
-review. These are starting settings, not an accuracy-tuning result; the
-normal runtime still validates the evolving cell. The review shows the
-effective run length, checkpoint cadence and output files.
+dynamics. For periodic cells, the cutoff must fit the minimum-image neighbor
+list: twice the larger of the model's short-range cutoff and `lr_cutoff` must
+fit the minimum cell height. For **NPT**, setup checks against 97% of that
+height, reserving the backend's initial 3% contraction margin. It applies the
+same check to a cutoff you enter. Fixed-cell ensembles keep the ordinary
+half-cell bound. Later contraction can still invalidate a cutoff, and Flash
+has additional cell-grid requirements; the runtime checks both.
+
+When the usual cutoff does not fit, setup proposes a shorter cutoff with PME
+electrostatics and dispersion. The review and saved YAML include both smearing
+and mesh spacing:
+
+| Small-cell proposal | Smearing | Mesh spacing |
+|---|---|---|
+| PME electrostatics | 2 Å | 1 Å |
+| PME dispersion | 2 Å | 3 Å |
+
+The electrostatic mesh is refined with the narrower smearing, retaining the
+normal spacing-to-smearing ratio. These are starting settings, not a full
+accuracy-tuning result; check convergence for your system. Existing direct
+commands and YAML settings retain their defaults and validation. The review
+also shows the effective run length, checkpoint cadence and output files.
 **Save setup and start MD now** is the first and default review choice. Pressing
 Enter there writes the structure, YAML and shell script, then immediately runs
 MD in this terminal. **Save setup for later** writes those files only.
@@ -515,6 +542,12 @@ are not written into it.
 | `0` | Completed successfully |
 | `1` | The run failed; the error is printed to stderr. |
 | `2` | Usage error (unknown flag or model, bad choice, missing input); nothing runs. |
+
+For CLI MD and optimization, default `SIGTERM` and `SIGHUP` handlers unwind the
+display, restore terminal input/cursor state, and record the interruption before
+preserving the native signal exit status. Custom or ignored signal handlers are
+left alone. Cleanup can wait for native numerical code to return control to
+Python; it cannot run after `SIGKILL`.
 
 So you can chain commands in the shell or with scheduler dependencies:
 
