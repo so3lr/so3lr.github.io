@@ -265,8 +265,9 @@ executable `run.sh`. A single-frame input is copied byte-for-byte when no
 boundary or velocity change is selected; otherwise the reviewed frame is
 written as EXTXYZ. The launcher changes to its own directory before running
 `so3lr --settings settings.yaml`; activate your SO3LR environment before using
-it. Existing output directories are refused. NPT requires a fully periodic,
-axis-aligned orthorhombic cell. Guided setup does not submit scheduler jobs;
+it. Existing output directories are refused. All periodic CLI MD modes require
+a positive, axis-aligned orthorhombic cell. NPT additionally requires periodic
+boundaries in all three axes. Guided setup does not submit scheduler jobs;
 use the generated configuration from your existing submission script.
 
 A bare `so3lr` opens the same setup only when input and output are terminals,

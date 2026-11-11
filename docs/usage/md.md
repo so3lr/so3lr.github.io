@@ -234,7 +234,8 @@ the default of 12 Å), and flash needs more (see
   k-space electrostatics.
 - or use the [ASE calculator](ase.md#small-and-skewed-cells).
 
-The cell must be orthorhombic. Mixed periodicity, such as
+All periodic CLI MD modes require a positive, axis-aligned orthorhombic cell.
+NPT additionally requires periodic boundaries in all three axes. Mixed periodicity, such as
 `pbc=[True, True, False]`, is an error. A structure with a cell but
 `pbc=False` runs in vacuum.
 
