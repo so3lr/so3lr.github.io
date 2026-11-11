@@ -53,7 +53,7 @@ NO COMMAND-LINE FLAG EXISTS (settings YAML only)
   output_atom_indices, npt_coupling, do_enhanced_sampling,
   pysages_input, energy_drift_threshold, drift_warmup_ps, init_T,
   restart_reset, matmul_precision, dispersion_tail_correction,
-  minimum_cell_size_multiplier
+  minimum_cell_size_multiplier, cylinder_restraint_*
 
 ON BY DEFAULT (do not try to "enable" these)
 - Refusing to overwrite an existing output. Pass --overwrite to
@@ -119,7 +119,7 @@ LOG FILE
   may not use the same one:
 
     ```text
-    Engine: neighbour-list potential (flash cannot: its NPT is isotropic, not semi-isotropic)
+    Engine: neighbour-list potential (flash cannot: it has no fixed atoms)
     ```
 
     With `--engine flash`, the run fails instead of falling back. See

@@ -6,7 +6,7 @@
 > repulsion, long-range electrostatics and dispersion. Three model sizes ship
 > inside the Python package. Simulations run through JAX on CPU or GPU, driven
 > by a `so3lr` command-line tool, an ASE calculator, or a plain JAX potential
-> function. MD runs on the "flash" engine (Pallas GPU kernels) wherever it
+> function. MD runs on the "flash" engine (Pallas or CUDA GPU kernels) wherever it
 > applies, and on a JAX-MD neighbour-list engine otherwise.
 
 Key facts an agent is likely to get wrong, because they differ from other
@@ -39,7 +39,7 @@ read it first.
 ## Advanced
 
 - [Long-range electrostatics](https://so3lr.github.io/advanced/electrostatics/): Ewald, PME and P3M; the two differently-scoped k-space arguments.
-- [Enhanced sampling](https://so3lr.github.io/advanced/enhanced-sampling/): PySAGES, collective variables, free-energy extraction.
+- [Enhanced sampling](https://so3lr.github.io/advanced/enhanced-sampling/): PySAGES, collective variables, the cylindrical restraint, free-energy extraction.
 - [Observables](https://so3lr.github.io/advanced/observables/): energy components, partial charges, embeddings, and which names each interface accepts.
 - [Gradients and Hessians](https://so3lr.github.io/advanced/derivatives/): second derivatives and observable Jacobians.
 - [Binding energies](https://so3lr.github.io/advanced/binding-energies/): dimer interaction energies.

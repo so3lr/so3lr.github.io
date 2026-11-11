@@ -167,6 +167,8 @@ md_P: 1.0
 | `semi-isotropic` | *x* and *y* scale together, *z* independently (membranes and slabs) | Experimental; validate before production use. |
 | `anisotropic` | — | Rejected with an error. |
 
+Both couplings run on either [engine](#md-engines).
+
 ## MD engines
 
 `so3lr nve`, `nvt`, `nvt-langevin` and `npt` (and `so3lr --settings`) run one of
@@ -176,6 +178,7 @@ two engines, which compute the same energy and forces:
   `so3lr-tauri-m`, it is 3.7–4.0× faster than the neighbour-list engine and
   runs systems of up to 2.7 million atoms (9.0 million with the lowest-memory
   mode, `--flash-mode minimal`, and 84 million on one AMD MI355X with 288 GB).
+  On an H100 or H200, its fastest mode runs on [CUDA kernels](#cuda-kernels).
 - **standard**: the jax-md neighbour-list potential, which runs every setting on
   any JAX backend.
 
@@ -185,7 +188,7 @@ engine and the reason:
 
 ```text
 Engine: flash (auto)
-Engine: neighbour-list potential (flash cannot: its NPT is isotropic, not semi-isotropic)
+Engine: neighbour-list potential (flash cannot: it has no fixed atoms)
 Engine: neighbour-list potential (--engine standard)
 ```
 
@@ -203,12 +206,13 @@ Flash runs only when all of the following hold:
 | Device | An NVIDIA GPU with compute capability 8.0 or newer, or an AMD MI355X |
 | Model | `so3lr-tauri-s/m/l` (both releases) or the legacy `so3lr` |
 | Box | No box (an isolated molecule), or a periodic orthorhombic box at least 30 Å across at `lr_cutoff` 12 Å (25 Å at 10 Å; 31 Å under NPT) |
-| Ensemble | `nve`, `nvt`, `nvt-langevin`, or `npt` with isotropic coupling |
+| Ensemble | `nve`, `nvt`, `nvt-langevin`, or `npt` (isotropic or semi-isotropic) |
 | Long range | Real space, or PME (`--kspace-electrostatics pme`, `kspace_dispersion: pme`) |
 
-NPT and k-space need a box. Semi-isotropic NPT, the dispersion tail correction,
-`kspace_npt_cycles`, Ewald and P3M, fixed atoms, observables and enhanced
-sampling run on the neighbour-list engine.
+NPT and k-space need a box. The dispersion tail correction,
+`kspace_npt_cycles`, Ewald and P3M, fixed atoms and observables run on the
+neighbour-list engine, and so does enhanced sampling outside the cases listed
+in [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
 
 ### Flash options
 
@@ -217,11 +221,36 @@ sampling run on the neighbour-list engine.
 | `--engine` | `engine` | `auto` | `auto`, `flash` or `standard`. |
 | `--flash-mode` | `flash_mode` | `auto` | Memory/recomputation trade-off: `fast`, `default`, `lean`, `leanest` or `minimal`; `auto` picks the fastest that fits. |
 | `--flash-devices` | `flash_devices` | `1` | Run on this many GPUs of one node. |
+| `--flash-kernels` | `flash_kernels` | `auto` | `auto`, `pallas` or `cuda`. See [CUDA kernels](#cuda-kernels). |
 
 `--flash-devices N` speeds up a system that fits on one GPU (3.2–4.0× on 4
 A100s). `CUDA_VISIBLE_DEVICES` selects the GPUs. Several GPUs
 always run the `fast` memory mode. SO3LR raises `XLA_PYTHON_CLIENT_MEM_FRACTION`
 when flash may run (see [environment variables](cli.md#environment-variables)).
+
+### CUDA kernels
+
+On a GPU of compute capability 9.0 (H100, H200), the `fast` memory mode runs on
+CUDA kernels in place of the Pallas ones, for `so3lr-tauri-s/m/l` and `so3lr`
+in `float32` or `mixed` precision. A force call of `so3lr-tauri-m` is 3.3×
+faster than on the Pallas kernels, at float32-level accuracy, and every sum runs
+in a fixed order. Several GPUs and
+[`FlashDomains`](../reference/api.md#flashdomains) use them too. Other GPUs,
+such as the A100, run the Pallas kernels as before.
+
+`nvcc` builds the kernels on first use, once per model, GPU architecture,
+compiler and JAX version, into `$SO3LR_CUDA_CACHE` (default
+`~/.cache/so3lr/flash_cuda`). It is found through `SO3LR_NVCC`, `CUDA_HOME` or
+the `PATH`. With `--flash-kernels auto`, a run that the kernels do not cover
+(another GPU, model, precision or memory mode, no `nvcc`, or too little free
+memory for their per-pair arrays) uses the Pallas kernels, and the log says
+why, for example on an A100:
+
+```text
+Flash: CUDA kernels not used (a sm_80 GPU (the kernels are written for sm_90)); Pallas kernels
+```
+
+`--flash-kernels cuda` raises instead, and `pallas` never uses the CUDA kernels.
 
 ## Box size
 
@@ -260,7 +289,7 @@ Root attributes:
 
 | Attribute | Content |
 |---|---|
-| `fractional_coordinates` | Whether `positions` are fractional (true for periodic runs unless `output_cartesian_positions: true`) |
+| `fractional_coordinates` | Whether `positions` are fractional (true for periodic runs unless `output_cartesian_positions: true`, or with enhanced sampling outside NPT) |
 | `trajectory_layout` | `frame-major-v1` |
 | `box_convention` | `ase-cell-vectors-as-rows` |
 | `atomic_numbers`, `cell_a0` | Species of the written atoms, and the initial cell in Å |

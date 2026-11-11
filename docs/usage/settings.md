@@ -115,6 +115,7 @@ If both an alias and its canonical key are given, the canonical key wins.
 | `engine` | `auto` | `auto` / `flash` / `standard`. See [MD engines](md.md#md-engines). |
 | `flash_mode` | `auto` | `auto` / `fast` / `default` / `lean` / `leanest` / `minimal`. |
 | `flash_devices` | `1` | Number of GPUs on one node to run flash on. |
+| `flash_kernels` | `auto` | `auto` / `pallas` / `cuda`. See [CUDA kernels](md.md#cuda-kernels). |
 
 The buffer and cell-list keys above apply to the neighbour-list engine only.
 
@@ -220,6 +221,14 @@ The same methods can be applied to dispersion, for dense periodic systems.
 | `restart_pysages_save_path` | `null` | Where to write the PySAGES state (`.pkl`). |
 | `restart_pysages_load_path` | `null` | PySAGES state to resume from. |
 | `enforce_cartesian_coordinates` | `false` | Forced on for periodic enhanced-sampling runs, except under NPT. |
+| `cylinder_restraint_enabled` | `false` | Turn on the [cylindrical restraint](../advanced/enhanced-sampling.md#cylindrical-restraint). |
+| `cylinder_restraint_atom_indices` | `null` | 0-based indices of the restrained atoms (their centre of mass): a list, an index or a range string such as `"0-19"`; required. |
+| `cylinder_restraint_radius` | `null` | Cylinder radius in Å; required. |
+| `cylinder_restraint_force_constant` | `5.0` | Radial force constant, eV/Å². |
+| `cylinder_restraint_axis` | `[0.0, 0.0, 1.0]` | Axis direction (any length). |
+| `cylinder_restraint_axis_origin` | `null` | A point on the axis, Å; `null` is the box centre (required without a box). |
+| `cylinder_restraint_axial_min`, `cylinder_restraint_axial_max` | `null` | Optional bounds along the axis, Å from the origin. |
+| `cylinder_restraint_axial_force_constant` | `null` | Axial force constant, eV/Å²; `null` uses the radial one. |
 
 See [Enhanced sampling](../advanced/enhanced-sampling.md).
 
