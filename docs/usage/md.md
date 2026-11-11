@@ -6,6 +6,69 @@ The trajectories can be saved in `.hdf5` or `.xyz` format. In addition,
 checkpoints can be saved as `.npz` files throughout the simulation to restart
 if needed.
 
+## Following a run
+
+In an interactive terminal, the default MD display shows the current stage
+and updates progress at the simulation's reporting points. It includes the
+model and engine actually selected, device information, completed steps,
+simulated time, and stacked live temperature and **total energy** graphs. NPT also
+plots volume. Speed appears in `ns/day` and `s/atom/step`, with remaining-time
+estimates when timing data is available. Mixed precision is described as
+float32 model calculations with float64 dynamics. A saved-restart message means
+that checkpoint writing has completed.
+
+The initial compilation can take longer than subsequent cycles. The Tauri pulse
+and elapsed-time clock refresh twice per second during initialization and compilation using
+a frozen text snapshot and wall time, without numerical work. Measured values
+and graph samples update only at host reporting points, so a large `md_steps`
+value can leave a graph unchanged for a while. Keyboard controls are also
+handled at reporting boundaries.
+
+Time axes line up across the stacked plots and use the same time bounds.
+Reference guides are solid, muted grey lines behind the data; captions retain
+their exact values while the line positions use terminal-character rows.
+Temperature shows the requested thermostat target in NVT, NPT and Langevin.
+For NVE temperature, each energy plot and NPT volume, the guide is a measured
+mean over the latter half of the recorded time span. It is labeled as a
+reference, not a target; long-run binning marks approximate means explicitly.
+Use `e` to change the energy property and up/down to page through plots.
+During MD, `q` switches between graphs and compact status without stopping the
+run; Ctrl+C interrupts the calculation.
+
+For `.sh` and scheduler jobs, use `so3lr show <output-directory>` in another
+terminal to plot the local metrics journal. The observer works offline and can
+be closed while the simulation continues. Each MD or optimization invocation
+writes a separate `*.events.jsonl` beside its text log, including when output is
+redirected.
+The time axis is local to that invocation, including restarted segments.
+With several journals, the viewer starts with a folder overview. Left/right
+visits individual runs and cycles back to the overview; `o` returns directly.
+Mixed MD/optimization folders identify each mode, and optimization summaries
+show step, potential energy and maximum force rather than invented MD samples.
+See [Offline monitoring](cli.md#offline-monitoring) for controls and limitations,
+or [Guided setup](cli.md#guided-setup) to prepare YAML and a shell launcher.
+
+Guided setup moves through Structure, Dynamics and Review. At the final review,
+**Save setup and start MD now** is first and selected by default. **Save setup
+for later** writes only the structure, settings and launcher; no files are
+written before the review choice.
+
+The complete settings, diagnostics and per-cycle table remain in the text
+log. A final summary adds the execution outcome, completed steps/time, warnings,
+checkpoint and output paths. A separate resolved YAML file records replayable
+settings. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
+To see ordinary diagnostic output in the terminal as well, use:
+
+```shell
+so3lr --display plain --settings settings.yaml
+```
+
+Redirected stderr, including ordinary scheduler logs, uses plain output
+automatically. For additional diagnostics alongside the live display, use `so3lr --verbose
+--settings settings.yaml`. Display options go before an MD subcommand and
+do not change the simulation settings. See [Terminal display](cli.md#terminal-display)
+for all controls.
+
 ## Ensembles
 
 === "NVT (Nosé–Hoover)"
@@ -66,6 +129,12 @@ By default, the geometry is first relaxed with FIRE, capped at 10 × 10 steps
 from the command line. Raise the cap in a
 [settings file](settings.md#pre-run-relaxation), or skip the relaxation with
 `--no-relax`.
+
+Standalone `so3lr opt` shares the live stage display and journal lifecycle. Its
+latest step, potential energy and maximum force are shown at reporting points.
+The result distinguishes meeting a requested force criterion from finishing
+the step budget; a completed optimization command alone does not establish
+convergence. See [Geometry optimization](cli.md#geometry-optimization-opt).
 
 ### More NVT options
 

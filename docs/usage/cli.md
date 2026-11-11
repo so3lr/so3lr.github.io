@@ -7,6 +7,8 @@ molecular dynamics, evaluation, training and parameter tuning.
 
 | Command | What it does |
 |---|---|
+| `so3lr init` | Guide MD setup, review, then start now or save a run bundle |
+| `so3lr show PATH` | Browse local MD and optimization journals while jobs run, or inspect completed runs |
 | `so3lr opt` | Geometry optimization (FIRE) |
 | `so3lr nvt` | NVT molecular dynamics with the Nosé–Hoover chain thermostat |
 | `so3lr nvt-langevin` | NVT molecular dynamics with the Langevin thermostat |
@@ -19,8 +21,9 @@ molecular dynamics, evaluation, training and parameter tuning.
 
 ```shell
 so3lr --help          # command overview
-so3lr --help-full     # every command with full example commands
-so3lr nvt --help      # all flags for one command (-h works too)
+so3lr --help-full     # command overview with additional examples
+so3lr nvt --help      # flags grouped by purpose (-h works too)
+so3lr --version       # installed SO3LR version
 ```
 
 ## Two ways to drive a run
@@ -32,8 +35,8 @@ so3lr nvt --input geometry.xyz --temperature 300 \
     --dt 0.5 --md-cycles 100 --md-steps 100
 ```
 
-For production runs, use a settings file. It accepts every flag, plus
-features that have no flag:
+For production runs, use a settings file. It accepts simulation settings,
+including features that have no flag:
 
 ```shell
 so3lr --settings settings.yaml
@@ -41,6 +44,237 @@ so3lr --settings settings.yaml
 
 The keys are listed in the [Settings file reference](settings.md), and
 [Molecular dynamics](md.md) has examples of both.
+
+Use `--settings` without an MD subcommand. Display controls below are CLI
+options, rather than simulation settings in the YAML file.
+
+## Terminal display
+
+MD runs show a compact live display in an interactive terminal. It reports
+the current stage, model, engine, hardware, simulation progress and measured
+quantities, with temperature and **total energy** as the initial graphs. NPT also
+shows volume. Stacked plots have aligned time axes and update at accepted cycle
+boundaries, whether started with full command flags, `--settings settings.yaml`,
+or guided setup. Full commands and YAML runs never open the setup wizard. Speed shows both
+`ns/day` and `s/atom/step`; the
+latter divides measured seconds per step by the total simulation atom count.
+Mixed precision is labeled `mixed (float32 model; float64 dynamics)`.
+During initialization, compilation and other long stages, the Tauri pulse and
+elapsed-time clock refresh twice per second. The star expands and recedes in
+place over five seconds; terminals without Unicode use an ASCII pulse.
+This refresh uses a frozen text snapshot and a wall
+clock, without querying model arrays or running numerical work. Measured values
+and graphs remain at their latest reporting point.
+During MD, `e` changes the energy plot and up/down changes plot pages in a
+short terminal. Keys are handled at reporting boundaries. `q` toggles between
+plots and compact status; press it again to restore the graphs with the full
+recorded history. MD continues in either view; Ctrl+C still interrupts MD.
+The complete settings and per-cycle data still go to the text
+log. With redirected stderr (including ordinary scheduler logs) or `TERM=dumb`,
+the default is plain text output. Redirecting stdout alone does not disable the
+live display. A `.sh` script run directly in a terminal can still show it;
+use `--display plain` to explicitly request ordinary text logging.
+
+Put these global options **before the subcommand**:
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--display` | `auto` | `auto` uses the live MD/optimization display when stderr is a terminal; `rich` forces it; `plain` uses ordinary text logging. |
+| `--verbose`, `-v` | off | Also print detailed SO3LR diagnostics during the live display. Plain output already includes them. |
+| `--quiet`, `-q` | off | Suppress informational SO3LR log messages and the live display; keep warnings and errors. |
+| `--no-color` | off | Disable terminal colors; the `NO_COLOR` environment variable does the same. |
+| `--version` | — | Print the installed package version and exit. |
+
+```shell
+so3lr --display plain nvt --input geometry.xyz --temperature 300
+so3lr --verbose --settings settings.yaml
+so3lr --no-color nvt --input geometry.xyz
+```
+
+`--verbose` and `--quiet` cannot be combined. Color controls do not disable
+live updates; use `--display plain` for output with no terminal redraws.
+These options leave the saved log and simulation settings unchanged.
+
+The live display covers `nvt`, `nvt-langevin`, `npt`, `nve`, MD launched
+with `--settings`, and `opt`, including the standard and Flash engines.
+Optimization shows its latest reported step, potential energy and maximum
+force instead of MD plots. Its result states whether the force criterion was
+met or the step budget was reached. Evaluation, training and tuning retain
+their existing output and progress bars.
+
+## Logs and reproducibility
+
+MD and optimization logs retain their timestamped diagnostics and numeric
+tables, with additional run identity and final summary blocks. A run ID links
+the log to its journal and resolved settings, including when several invocations
+append to a log. Model/backend updates use the compact label
+`Model: ...; backend: ...`. Full run IDs appear in the `BEGIN RUN`, `RUN SUMMARY`
+and `END RUN` markers, journals and artifact paths. Use different `log_file`
+paths for concurrent jobs.
+
+The final summary separates execution status from scientific outcome. For
+example, an optimization can finish its step budget without meeting its force
+criterion. It also reports completed MD steps and physical time, final measured
+quantities with units, warnings/errors, wall time, the last successful checkpoint,
+and saved artifact paths. Unavailable information is not invented.
+
+Each run saves `<log-stem>.<run-id>.settings.resolved.yaml` alongside its journal.
+It uses ordinary YAML values and input units (`md_dt` in fs), resolves input paths,
+and records the selected model, engine and precision when available. To repeat
+a run, copy this file, choose fresh output/log/checkpoint paths, and run:
+
+```shell
+so3lr --settings repeat.yaml
+```
+
+Saved optimization settings include `operation: optimization`; the same command
+then uses the optimization command's normal option validation. Ordinary MD YAML
+files keep their existing behavior. Saved settings retain overwrite protection.
+Input and restart files are referenced, not archived; retain the original input
+and checkpoint contents if exact replay is required. Warning/error totals count
+logging records, including file-only diagnostics, rather than unrelated Python
+warnings printed outside the logger.
+
+## Offline monitoring
+
+Every CLI MD or optimization invocation also creates a unique
+`<log-stem>.<run-id>.events.jsonl` next to its text log. This happens with
+redirected output, `--display plain`,
+and `--quiet` too. The journal records run metadata, phases, accepted-cycle
+samples or the latest optimization measurements, warnings, successful checkpoints
+and completion/failure. Each process owns a separate journal, including
+concurrent replicas in one scheduler job.
+The numeric table columns and trajectory formats are retained; text logs also
+include the identity and final summary blocks described above.
+
+```shell
+# In your ordinary .sh script:
+so3lr --settings settings.yaml
+
+# In another terminal, on a machine that can read the output directory:
+so3lr show path/to/run-directory
+so3lr show path/to/experiment-directory
+so3lr show path/to/run-directory --once
+# From inside the run directory:
+so3lr show .
+```
+
+The native terminal viewer works offline and uses no W&B integration, account
+or server. It reads files only; closing it never sends a signal to the job.
+An existing directory works for both running and completed jobs. The viewer
+needs a `*.events.jsonl` journal from this CLI; older folders containing only
+the ordinary text log are not parsed as graph data. In live mode it checks
+for new samples every second by default; `--once` produces a static view.
+Use `j`/`k` or left/right to choose a run, `e` to switch the energy plot, and
+`q` to detach. Temperature and the selected energy are stacked vertically;
+total energy is selected initially.
+For a folder containing several runs, the first view is an overview with
+each run's reported state, progress, temperature and total energy. Wider
+terminals also show sample age. When optimization and MD share a folder, the
+overview labels OPT and MD explicitly. Optimization progress counts its own
+steps; its temperature and MD total-energy fields remain unavailable.
+Left/right steps through the individual runs and back to the overview;
+`o` returns directly to the overview. Up/down pages through a long run list.
+NPT runs add a volume plot in Å³ below them, using the recorded physical cell.
+Short terminals show complete plots on pages: use up/down to change pages;
+the footer shows the current page and controls. Full snapshots show all plots.
+These plots use recorded samples, with no extra model evaluations. Temperature
+uses the requested thermostat target for NVT, NPT and Langevin dynamics.
+Reference guides are solid, muted grey lines behind the trajectory. Captions
+retain the exact values; line positions use terminal-character rows.
+NVE has no thermostat: its temperature guide is a measured reference, as are
+the guides for each energy plot and NPT volume. These references are means of
+samples in the latter half of the recorded time span, not target values.
+For long runs, bounded time bins retain sums and counts independently of graph
+decimation; a reference marked approximate uses an estimated contribution
+from the bin crossing the midpoint. Time axes share the same bounds and aligned
+axis columns, with intermediate numbered ticks and fewer labels in narrow
+terminals. Each property keeps its own units and value scale. Conserved
+energy is absent for Langevin dynamics. Cycle throughput shows `ns/day` and
+`s/atom/step` (seconds per step divided by the total simulation atom count),
+excluding startup and output overhead. Unknown timing or atom counts are
+omitted rather than estimated.
+
+For an optimization journal, `show` displays the latest recorded optimization
+cycle: step count, potential energy, maximum force and any force target. A
+completed invocation does not imply convergence. The view distinguishes
+**Force criterion met**, **Step budget reached; force criterion not met**, and
+**Step budget finished (no force target)**.
+
+| Show option | Default | Meaning |
+|---|---|---|
+| `PATH` | current directory | One journal, or a directory searched up to three subdirectory levels. Discovery is bounded to 128 files and 512 directories; point at a narrower directory for large experiments. |
+| `--once` | off | Print one snapshot and exit. This is automatic if input/output is not an interactive terminal. |
+| `--interval` | `1.0` | Seconds between journal reads. |
+
+Graphs use **time within the current invocation**, starting at zero after a
+restart. Older checkpoints do not establish an unambiguous absolute physical
+time if the cycle size or timestep changed. Long histories are reduced only
+in the viewer, preserving extrema; the full samples remain in the journal.
+
+Data arrives at accepted MD cycle boundaries, so large `md_steps` can leave a
+chart unchanged for minutes. The displayed state is the last state explicitly
+reported by the producer, not a scheduler or process-liveness check. Sample
+age and checkpoint information help distinguish recent work from saved work.
+A killed process can leave its last reported state as Running. A journal write
+failure warns once and disables metrics recording while the calculation
+continues; do not use the viewer as the sole check of a job's health.
+
+## Guided setup
+
+Run `so3lr init` to follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
+and start**. Browse directories with the arrow keys and Enter, choose a supplied
+example, or explicitly paste
+a file path. Dynamics, model and review choices also use keyboard menus.
+In a source checkout the examples come from `tests/test_data`: Ala4 (`ac.xyz`)
+and DHA (`dha.xyz`). They are resolved relative to the
+checkout, so launching from another directory still finds them. An installation
+without those test files keeps the file browser and path entry available.
+
+For multi-frame XYZ/EXTXYZ input, choose the frame explicitly. Ala4's example
+contains 100 frames. The selected frame is exported into the new run bundle;
+the source is unchanged. If the input includes velocities, choose whether to
+keep them or initialize velocities at the requested temperature. The review
+shows the choice. DHA's input contains a 999.9 Å periodic box; the picker offers
+an explicit choice to keep it or export an isolated molecule.
+
+Next choose ensemble, model, temperature, timestep, duration, output cadence,
+charge/spin, seed, relaxation and cutoff. The model menu presents **M (default)**,
+**S (faster)** and **L (recommended for reactions)** first. Open **Legacy models**
+to see the four older releases; exports retain each model's canonical name.
+The review explains mixed precision as float32 model calculations with float64
+dynamics. For small periodic cells, setup
+proposes a cutoff that fits and shows PME electrostatics and dispersion in the
+review. These are starting settings, not an accuracy-tuning result; the
+normal runtime still validates the evolving cell. The review shows the
+effective run length, checkpoint cadence and output files.
+**Save setup and start MD now** is the first and default review choice. Pressing
+Enter there writes the structure, YAML and shell script, then immediately runs
+MD in this terminal. **Save setup for later** writes those files only.
+Nothing is written before this explicit review choice. Back revisits the prompts
+with the previous answers, and Cancel or Ctrl+C before export writes nothing.
+
+Water64 remains in `tests/test_data` and can be selected manually, but is not
+a featured preset: its 12.4 Å box does not fit the CLI's usual 12 Å real-space
+cutoff. Current CLI MD uses minimum-image neighbors with a half-cell cutoff
+limit. The ASE calculator separately supports explicit periodic images and
+can use cutoffs beyond that limit.
+
+The new bundle contains the selected structure, `settings.yaml` and an
+executable `run.sh`. A single-frame input is copied byte-for-byte when no
+boundary or velocity change is selected; otherwise the reviewed frame is
+written as EXTXYZ. The launcher changes to its own directory before running
+`so3lr --settings settings.yaml`; activate your SO3LR environment before using
+it. Existing output directories are refused. NPT requires a fully periodic,
+axis-aligned orthorhombic cell. Guided setup does not submit scheduler jobs;
+use the generated configuration from your existing submission script.
+
+A bare `so3lr` opens the same setup only when input and output are terminals,
+`TERM` is not `dumb`, and no recognized scheduler job environment is present.
+Otherwise it prints help. Simulation commands and `--settings` never open
+guided setup.
+`so3lr init` without a terminal gives a clear error instead of waiting for input.
+Help, drafting a run, and watching journals do not initialize JAX or load weights.
 
 ## Shared options
 
@@ -168,6 +402,13 @@ so3lr opt --input geometry.xyz --force-conv 0.05 --lr-cutoff 12.0
 is an EXTXYZ trajectory with one frame per cycle. See the
 [JAX-MD FIRE docs](https://jax-md.readthedocs.io/en/main/jax_md.minimize.html#jax_md.minimize.fire_descent).
 
+The live display and saved journal include the latest completed step, potential
+energy and maximum force (`Fmax`, in eV/Å). These values update at the existing
+optimization reporting points. Completion of the command and satisfaction of
+the force criterion are shown separately; reaching the step budget is not
+reported as convergence. Use `so3lr show <output-directory>` to inspect this
+summary later.
+
 ## Evaluation — `eval`
 
 Evaluate a model on a dataset:
@@ -225,8 +466,10 @@ defaults to `<input>_tune-kspace.log`.
 
 ## The log file
 
-Every MD run writes a log file next to its output. The header records the
-settings of the run:
+Every MD run writes a text log. For an MD subcommand it defaults to the output
+filename with a `.log` extension; for `--settings` it defaults to the YAML
+filename with a `.log` extension. `--log-file` or the YAML `log_file` key can
+choose another location. The header records the settings of the run:
 
 ```text
 ============================================================
@@ -258,6 +501,10 @@ used. The model is logged under the name you gave it, so pass a dated name such
 as `so3lr-tauri-m-2606` to identify the release.
 
 Please attach the header when reporting a problem.
+
+The log remains a complete plain text record regardless of `--display`,
+`--verbose`, `--quiet` or `--no-color`. Live progress redraws and color codes
+are not written into it.
 
 ## Exit codes
 
