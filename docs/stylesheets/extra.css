@@ -545,3 +545,77 @@
   margin: 0.8rem auto 2rem;
 }
 
+
+/* "How it works" energy diagram: inline SVG themed from Material's tokens, so
+   it follows the light/dark toggle with no second image. */
+.so3lr-equation {
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Material's figure is fit-content wide, which would shrink the SVG. On a
+   phone the diagram keeps a legible size and scrolls sideways instead. */
+.md-typeset .so3lr-diagram {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.so3lr-diagram svg {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  max-width: 850px;
+  height: auto;
+  margin: 0 auto;
+  font-family: var(--md-text-font-family, sans-serif);
+}
+
+.so3lr-diagram text {
+  fill: var(--md-default-fg-color--light);
+  font-size: 13px;
+  text-anchor: middle;
+}
+
+.so3lr-diagram .so3lr-diagram__title {
+  fill: var(--md-default-fg-color);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.so3lr-diagram__box rect,
+.so3lr-diagram__box circle {
+  fill: var(--md-code-bg-color);
+  stroke: var(--md-default-fg-color--lighter);
+  stroke-width: 1.5;
+}
+
+.so3lr-diagram__box--nn rect,
+.so3lr-diagram__box--sum circle {
+  stroke: var(--so3lr-link);
+  stroke-width: 2;
+}
+
+.so3lr-diagram a:hover rect,
+.so3lr-diagram a:focus rect {
+  stroke: var(--so3lr-link);
+  stroke-width: 2.5;
+}
+
+.so3lr-diagram__arrows path {
+  fill: none;
+  stroke: var(--md-default-fg-color--light);
+  stroke-width: 1.5;
+}
+
+.so3lr-diagram__head {
+  fill: var(--md-default-fg-color--light);
+}
+
+.so3lr-diagram .so3lr-diagram__free {
+  text-anchor: start;
+}
+
+.so3lr-diagram__labels text {
+  font-size: 12px;
+  font-style: italic;
+}
