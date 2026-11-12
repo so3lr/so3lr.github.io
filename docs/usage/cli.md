@@ -80,7 +80,7 @@ Put these global options **before the subcommand**:
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--display` | `auto` | `auto` uses the live MD/optimization display when stderr is a terminal; `rich` forces it; `plain` uses ordinary text logging. |
+| `--display` | `auto` | `auto` uses the live MD/optimization display when stderr is a terminal; `rich` explicitly requests it on a terminal; `plain` uses ordinary text logging. Redirected `rich` output falls back to plain with a warning (unless quiet). |
 | `--verbose`, `-v` | off | Also print detailed SO3LR diagnostics during the live display. Plain output already includes them. |
 | `--quiet`, `-q` | off | Suppress informational SO3LR log messages and the live display; keep warnings and errors. |
 | `--no-color` | off | Disable terminal colors; the `NO_COLOR` environment variable does the same. |
@@ -92,6 +92,8 @@ so3lr --verbose --settings settings.yaml
 so3lr --no-color nvt --input geometry.xyz
 ```
 
+`--settings` is a root command alternative to a simulation subcommand. Combining
+it with a subcommand is a usage error; the settings file is never silently ignored.
 `--verbose` and `--quiet` cannot be combined. Color controls do not disable
 live updates; use `--display plain` for output with no terminal redraws.
 These options leave the saved log and simulation settings unchanged.
@@ -119,11 +121,14 @@ criterion. It also reports completed MD steps and physical time, final measured
 quantities with units, warnings/errors, wall time, the last successful checkpoint,
 and saved artifact paths. Unavailable information is not invented.
 
-MD and optimization failures show the actual exception type and cause chain in
-the terminal and journal. The terminal error is shortened only after the
+MD and optimization failures retain the exception type and cause chain in
+the journal. The terminal error is shortened only after the
 traceback is confirmed in the current text log. If setup or log writing fails,
 the full terminal traceback remains available. Unexpected errors from other
-commands also keep their normal traceback.
+commands also keep their normal traceback. When preservation is verified, the
+terminal prints `Full traceback:` with the absolute log path. Multiline errors
+use a concise first line in the terminal; the complete diagnostic stays in the
+log and journal. A failed or unverifiable log write keeps the full terminal traceback.
 
 Warnings logged through SO3LR, including worker-thread warnings, reach the
 enabled journal and terminal without waiting for the next MD cycle. Attached plot
@@ -161,7 +166,10 @@ redirected output, `--display plain`,
 and `--quiet` too. The journal records run metadata, phases, accepted-cycle
 samples or the latest optimization measurements, warnings, successful checkpoints
 and completion/failure. Each process owns a separate journal, including
-concurrent replicas in one scheduler job.
+concurrent replicas in one scheduler job. The filename keeps its UUID-based
+run identity; it is not a chronological label. The viewer discovers files by
+the `.events.jsonl` suffix and orders them by path, so appending samples cannot
+move existing runs around. Existing journal filenames continue to work.
 These two sidecar files support runs without a live display: the journal
 supports offline observation, and the resolved YAML records the replay settings.
 Display controls change console output, not artifact creation. To disable both
@@ -196,14 +204,21 @@ or server. It reads files only; closing it never sends a signal to the job.
 An existing directory works for both running and completed jobs. The viewer
 needs a `*.events.jsonl` journal from this CLI; older folders containing only
 the ordinary text log are not parsed as graph data. In live mode it checks
-for new samples every second by default; `--once` produces a static view.
+for new samples every second by default. `--once` is a human-readable static
+snapshot with all plots and rows, without keyboard hints or paging controls.
+It exits zero when the snapshot is rendered, even if the recorded run failed,
+is stale, or is still being read. Its text is not a machine-readable status API.
+Explicit file inputs must be `*.events.jsonl`; passing a text log or trajectory
+gives an error and points to journal discovery instead.
 Use `j`/`k` or left/right to choose a run, `e` to switch the energy plot, and
 **Esc** or `q` to close the viewer, including from the folder overview. Closing
 it leaves the simulation running. Temperature and the selected energy are stacked vertically;
 total energy is selected initially.
 For a folder containing several runs, the first view is an overview with
-each run's reported state, progress, temperature and total energy. Wider
-terminals also show sample age. When optimization and MD share a folder, the
+each run's reported state, progress and age since its last journal update.
+Age stays visible in narrow views; other columns adapt to the available width.
+When present, the recorded host and Slurm job ID help identify batch runs.
+Individual views retain the full origin details. When optimization and MD share a folder, the
 overview labels OPT and MD explicitly. Optimization progress counts its own
 steps; its temperature and MD total-energy fields remain unavailable.
 Left/right steps through the individual runs and back to the overview;
@@ -237,7 +252,7 @@ completed invocation does not imply convergence. The view distinguishes
 | Show option | Default | Meaning |
 |---|---|---|
 | `PATH` | current directory | One journal, or a directory searched up to three subdirectory levels. Discovery is bounded to 128 files and 512 directories; point at a narrower directory for large experiments. |
-| `--once` | off | Print one snapshot and exit. This is automatic if input/output is not an interactive terminal. |
+| `--once` | off | Print a human snapshot without interactive controls and exit zero on successful rendering; this does not establish simulation success or liveness. Automatic for noninteractive input/output. |
 | `--interval` | `1.0` | Seconds between journal reads. |
 
 Graphs use **time within the current invocation**, starting at zero after a
@@ -247,9 +262,14 @@ in the viewer, preserving extrema; the full samples remain in the journal.
 
 Data arrives at accepted MD cycle boundaries, so large `md_steps` can leave a
 chart unchanged for minutes. The displayed state is the last state explicitly
-reported by the producer, not a scheduler or process-liveness check. Sample
-age and checkpoint information help distinguish recent work from saved work.
-An externally terminated process can leave its last reported state as Running:
+reported by the producer, not a scheduler or process-liveness check. A run without
+a final event is marked as potentially stale when no update has arrived for
+more than 10 minutes or 20 times its median recorded sample interval, whichever
+is longer. This is a freshness warning, not proof that a process has died.
+Missing timestamps remain unknown. A viewer still catching up with unread
+journal bytes says it is reading history rather than presenting an early state
+as current. Age and checkpoint information help distinguish recent work from saved work.
+An externally terminated process can leave its last lifecycle event as Running:
 plain and batch runs retain native signal handling, and `SIGKILL` cannot record
 a final event. A journal write
 failure warns once and disables metrics recording while the calculation
@@ -569,9 +589,16 @@ are not written into it.
 
 | Code | Meaning |
 |---|---|
-| `0` | Completed successfully |
+| `0` | Normal command completion, help, leaving guided setup, or successful snapshot rendering. An optimization may have exhausted its step budget without converging. |
 | `1` | The run failed; the error is printed to stderr. |
-| `2` | Usage error (unknown flag or model, bad choice, missing input); nothing runs. |
+| `2` | Usage/configuration error: unknown flag or model, bad choice, invalid root `--settings` YAML, or run options supplied without required input. Numerical execution does not start. |
+
+A bare subcommand such as `so3lr nvt` prints help and exits zero. Supplying run
+options without the required input, such as `so3lr nvt --temperature 300`, exits
+two. MD and optimization YAML validation use the same usage-error status;
+unknown MD YAML keys still warn rather than abort. Runtime failures remain
+distinct from input validation. An optimization exit of zero means execution
+completed; inspect its force-criterion result before treating it as converged.
 
 When a live display or keyboard owns an attached terminal, default `SIGTERM`
 and `SIGHUP` handlers unwind the UI and restore terminal input/cursor state before

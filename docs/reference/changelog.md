@@ -59,6 +59,13 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - `SO3LR_JOURNAL=0` disables both per-invocation sidecars while retaining text
   logs, trajectories, checkpoints and in-memory attached plots. The offline
   viewer requires an enabled journal.
+- YAML `operation: optimization` selects the optimization command with its
+  normal option validation. `so3lr --version` prints the installed package version.
+- The terminal interface adds the required dependency `rich>=14,<16`; existing
+  pinned environments must allow a compatible Rich version.
+- Saved-run views show the age of the latest journal update, recorded host and
+  Slurm identity, and qualified stale/history-loading states without querying
+  or signalling the scheduler or producer process.
 - Esc closes saved-run views and the folder overview, or hides attached MD
   plots without stopping the calculation. `q` retains its existing close/toggle
   behavior; Esc in guided selection menus cancels setup without exporting.
@@ -118,6 +125,19 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   scheduler jobs; otherwise it prints help. Explicit simulation commands and
   `--settings` do not open the wizard. Help is grouped by purpose; `--help-full`
   shows the overview with additional usage examples.
+- The former every-option `--help-full` output is replaced by that overview;
+  use `so3lr COMMAND --help` for a command's complete options and defaults.
+- Supplying command options without required input, malformed MD YAML, and
+  combining root `--settings` with a subcommand now produce usage errors (exit
+  two). Bare subcommands still show help (exit zero), runtime failures remain
+  nonzero, and optimization execution success does not imply force convergence.
+- `show` uses stable path ordering. `show --once` is a human snapshot without
+  interactive hints or paging controls; its successful exit means rendering
+  succeeded, independently of the recorded run state. Explicit non-journal
+  file inputs are rejected with guidance to the journal directory.
+- Redirected `--display rich` falls back to plain output, avoiding terminal
+  control frames in batch output. Verified failures identify the absolute
+  traceback log path and keep multiline detail in the log.
 - `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
   compatibility alias. Global display/verbosity/color options go before the
   subcommand. Plain and quiet modes keep per-invocation journal and resolved-YAML
