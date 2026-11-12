@@ -320,11 +320,10 @@ arrow keys and Enter, or paste a file path. Dynamics, model and review choices
 also use keyboard menus.
 
 Three small examples ship with the package, so they are available in any
-installation: an Ala4 peptide (42 atoms, gas phase), DHA (56 atoms) and a box
-of 64 water molecules (192 atoms, periodic, 12.4 Å). DHA's input contains a
-999.9 Å periodic box; setup offers an explicit choice to keep it or export an
-isolated molecule. The water box is too small for the usual 12 Å cutoff, so
-setup proposes a shorter cutoff with PME (see below).
+installation: an Ala4 peptide (42 atoms) and DHA (56 atoms), both in the gas
+phase, and a box of 64 water molecules (192 atoms, periodic, 12.4 Å). The water
+box is too small for the usual 12 Å cutoff, so setup proposes a shorter cutoff
+with PME (see below).
 
 For your own multi-frame XYZ/EXTXYZ input, choose the frame explicitly. The
 selected frame is exported into the new run bundle; the source is unchanged.
@@ -336,11 +335,11 @@ pressure for NPT), duration, how often to save a trajectory frame (in ps),
 total charge, unpaired electrons and the output directory. The duration is
 rounded up to whole frames, and setup says so (for example
 `Duration rounded up to 5.05 ps (101 whole frames)`); the frame interval must be
-a whole number of timesteps. When the XYZ comment line records `charge`,
-`total_charge`, `multiplicity` or `num_unpaired_electrons`, those values become
-the defaults. `spin` is ignored because files disagree on its meaning. An
-impossible combination, such as a neutral radical with no unpaired electron, is
-explained, and setup asks before keeping it. Timestep, random seed, initial
+a whole number of timesteps. When the XYZ comment line records `charge` or the
+spin multiplicity, those values become the defaults. Setup reads the
+multiplicity (2S+1) from `multiplicity`, or from `spin` as in OMol25 files, the
+same rule `so3lr eval` uses. An impossible combination, such as a neutral
+radical with no unpaired electron, is explained, and setup asks before keeping it. Timestep, random seed, initial
 relaxation and the long-range cutoff start from the defaults that setup prints.
 The default output directory is `so3lr-run`, or the next free name
 (`so3lr-run-2`, ...).
@@ -422,6 +421,10 @@ These options are accepted by `opt`, the four MD commands and `tune-ewald`.
 | `--spin` | `0` | Number of unpaired electrons (multiplicity − 1). |
 | `--charge-embed-total-charge` | follows `--total-charge` | Total charge seen only by the charge embedding. |
 | `--charge-equilibration-total-charge` | follows `--total-charge` | Total charge conserved by charge equilibration. |
+
+MD and `opt` keep the charge and spin you pass, but warn when they contradict
+the values recorded in the structure file (`charge`, `multiplicity` or `spin`,
+read as in `so3lr eval`) or describe an impossible electron count.
 
 The default 12 Å cutoff is meant for periodic systems. For gas phase, use
 `--lr-cutoff 100`, otherwise electrostatics and dispersion are truncated. A
