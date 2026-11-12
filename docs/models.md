@@ -8,26 +8,30 @@ The SO3LR Tauri models, described in the
 [SO3LR Tauri preprint](https://doi.org/10.48550/arXiv.2611.06237), come in three sizes:
 
 - **`so3lr-tauri-m`** *(default)*: start here; the model we use for biomolecular MD.
-- **`so3lr-tauri-l`**: the most accurate, recommended for reactions; 3.7× slower
-  than `-m`.
-- **`so3lr-tauri-s`**: 1.4× faster than `-m`.
+- **`so3lr-tauri-l`**: the most accurate, recommended for reactions, and the
+  slowest.
+- **`so3lr-tauri-s`**: the fastest.
 
 The Tauri models cover H to At (Z = 1–85), and the original `so3lr` covers H,
 C, N, O, F, P, S and Cl. Structures with any other element are rejected with
 an error.
 
-<!-- TODO (needs numbers): add a speed/accuracy table so the choice is
-     quantitative rather than a rule of thumb. Suggested columns:
+| Model | Parameters | µs/atom/step, 1 A100 | µs/atom/step, 1 MI355X | ns/day, 50k atoms, 1 MI355X |
+|---|---|---|---|---|
+| `so3lr-tauri-s` | 411k | 1.7 | 0.69 | 2.5 |
+| `so3lr-tauri-m` | 532k | 2.5 | 0.98 | 1.8 |
+| `so3lr-tauri-l` | 1.79M | 8.7 | 3.2 | 0.54 |
 
-     | Model | Force MAE (meV/Å) | Energy MAE (meV/atom) | Ideal throughput |
-     |---|---|---|---|
-     | so3lr-tauri-s-2606 |  |  |  |
-     | so3lr-tauri-m-2606 |  |  |  |
-     | so3lr-tauri-l-2606 |  |  |  |
+MD cost on the flash engine for periodic liquid water (NVT, PME), from the
+[SO3LR Tauri preprint](https://doi.org/10.48550/arXiv.2611.06237) (Computational
+Performance and Table S25; ns/day at a 1 fs timestep). The legacy `so3lr`
+(530k parameters) costs the same as `-m`. Test-set errors are given per subset
+in Fig. 2 and Tables S5–S7 of the preprint, as there is no single overall
+number.
 
-     Errors on a named held-out set; throughput as ns/day for a stated system
-     size on a stated GPU. Relative numbers (s = 1.8x m) are fine if absolute
-     ones are awkward to publish. -->
+The SO3LR Tauri weights are released under CC BY-NC 4.0 (non-commercial use);
+the code and the legacy `so3lr` weights are MIT. See
+[Licence](contributing.md#licence).
 
 ## Legacy SO3LR model
 

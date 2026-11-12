@@ -10,6 +10,8 @@ edit_uri: ""
 
 theme:
   name: material
+  # overrides/main.html adds the link-preview (Open Graph) tags.
+  custom_dir: overrides
   # The full logo is a wide grey wordmark that disappears in a header bar.
   # logo-mark.png is the orbital glyph cropped out of it — square, transparent,
   # and legible at 24px in both themes. The wordmark carries the landing page.

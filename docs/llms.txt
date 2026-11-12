@@ -23,43 +23,43 @@ read it first.
 
 ## Start here
 
-- [For AI agents](https://so3lr.github.io/advanced/llm-agents/): SO3LR-specific traps that plausible guesses get wrong. Read before generating settings files or API calls.
-- [Quick start](https://so3lr.github.io/quickstart/): install and run a first simulation.
-- [Installation](https://so3lr.github.io/installation/): locked uv install, pip into an existing JAX (capped at jax<0.11), optional extras, troubleshooting.
-- [Models](https://so3lr.github.io/models/): so3lr-tauri-s/m/l-2606 and -2602, the legacy so3lr, supported elements, checksum verification, and why to cite the dated name.
+- [For AI agents](https://so3lr.github.io/advanced/llm-agents.md): SO3LR-specific traps that plausible guesses get wrong. Read before generating settings files or API calls.
+- [Quick start](https://so3lr.github.io/quickstart.md): install and run a first simulation.
+- [Installation](https://so3lr.github.io/installation.md): locked uv install, pip into an existing JAX (capped at jax<0.11), optional extras, troubleshooting.
+- [Models](https://so3lr.github.io/models.md): so3lr-tauri-s/m/l-2606 and -2602, the legacy so3lr, supported elements, checksum verification, and why to cite the dated name.
 
 ## Running simulations
 
-- [Command line](https://so3lr.github.io/usage/cli/): every command and flag, exit codes, log file contents, SLURM and GPU environment variables.
-- [Settings file](https://so3lr.github.io/usage/settings/): every YAML key with defaults. Features with no command-line flag are set only here.
-- [Molecular dynamics](https://so3lr.github.io/usage/md/): ensembles, the flash and neighbour-list engines, the box-size rule, trajectory files, restarts, frozen atoms, trajectory subsetting, stability monitoring.
-- [ASE calculator](https://so3lr.github.io/usage/ase/): the Python interface, `So3lrCalculator`.
-- [Dataset evaluation](https://so3lr.github.io/usage/evaluation/): `so3lr eval`, metrics and prediction output.
+- [Command line](https://so3lr.github.io/usage/cli.md): every command and flag, exit codes, log file contents, SLURM and GPU environment variables.
+- [Settings file](https://so3lr.github.io/usage/settings.md): every YAML key with defaults. Features with no command-line flag are set only here.
+- [Molecular dynamics](https://so3lr.github.io/usage/md.md): ensembles, the flash and neighbour-list engines, the box-size rule, trajectory files, restarts, frozen atoms, trajectory subsetting, stability monitoring.
+- [ASE calculator](https://so3lr.github.io/usage/ase.md): the Python interface, `So3lrCalculator`.
+- [Dataset evaluation](https://so3lr.github.io/usage/evaluation.md): `so3lr eval`, metrics and prediction output.
 
 ## Advanced
 
-- [Long-range electrostatics](https://so3lr.github.io/advanced/electrostatics/): Ewald, PME and P3M; the two differently-scoped k-space arguments.
-- [Enhanced sampling](https://so3lr.github.io/advanced/enhanced-sampling/): PySAGES, collective variables, the cylindrical restraint, free-energy extraction.
-- [Observables](https://so3lr.github.io/advanced/observables/): energy components, partial charges, embeddings, and which names each interface accepts.
-- [Gradients and Hessians](https://so3lr.github.io/advanced/derivatives/): second derivatives and observable Jacobians.
-- [Binding energies](https://so3lr.github.io/advanced/binding-energies/): dimer interaction energies.
-- [Custom integrations](https://so3lr.github.io/advanced/integrations/): the bare JAX potential and the JAX-MD binding, for embedding SO3LR elsewhere.
+- [Long-range electrostatics](https://so3lr.github.io/advanced/electrostatics.md): Ewald, PME and P3M; the two differently-scoped k-space arguments.
+- [Enhanced sampling](https://so3lr.github.io/advanced/enhanced-sampling.md): PySAGES, collective variables, the cylindrical restraint, free-energy extraction.
+- [Observables](https://so3lr.github.io/advanced/observables.md): energy components, partial charges, embeddings, and which names each interface accepts.
+- [Gradients and Hessians](https://so3lr.github.io/advanced/derivatives.md): second derivatives and observable Jacobians.
+- [Binding energies](https://so3lr.github.io/advanced/binding-energies.md): dimer interaction energies.
+- [Custom integrations](https://so3lr.github.io/advanced/integrations.md): the bare JAX potential and the JAX-MD binding, for embedding SO3LR elsewhere.
 
 ## Training
 
-- [Fine-tuning](https://so3lr.github.io/training/finetuning/): strategies, and why forces-only data needs `freeze_long_range`.
-- [Training from scratch](https://so3lr.github.io/training/from-scratch/): config, multiple datasets, robust loss, opt-in W&B logging.
+- [Fine-tuning](https://so3lr.github.io/training/finetuning.md): strategies, and why forces-only data needs `freeze_long_range`.
+- [Training from scratch](https://so3lr.github.io/training/from-scratch.md): config, multiple datasets, robust loss, opt-in W&B logging.
 
 ## Reference
 
-- [Python API](https://so3lr.github.io/reference/api/): signatures of the public surface and the model registry.
-- [Datasets](https://so3lr.github.io/reference/datasets/): the Zenodo archive and label conventions.
-- [Changelog](https://so3lr.github.io/reference/changelog/): model releases and package changes, including changes that alter results.
-- [FAQ](https://so3lr.github.io/reference/faq/): cutoffs, precision, engines, drift, common errors.
+- [Python API](https://so3lr.github.io/reference/api.md): signatures of the public surface and the model registry.
+- [Datasets](https://so3lr.github.io/reference/datasets.md): the Zenodo archive and label conventions.
+- [Changelog](https://so3lr.github.io/reference/changelog.md): model releases and package changes, including changes that alter results.
+- [FAQ](https://so3lr.github.io/reference/faq.md): cutoffs, precision, engines, drift, common errors.
 
 ## Optional
 
-- [Examples](https://so3lr.github.io/examples/): runnable notebooks, including a zero-install Colab.
-- [Contributing](https://so3lr.github.io/contributing/): repository layout, the lockfile, tests and CI, adding a model release or a settings key, licence.
-- [How to cite](https://so3lr.github.io/cite/): BibTeX for the SO3LR Tauri preprint and the JACS and SO3krates papers, and how to name the software version and dated model.
+- [Examples](https://so3lr.github.io/examples.md): runnable notebooks, including a zero-install Colab.
+- [Contributing](https://so3lr.github.io/contributing.md): repository layout, the lockfile, tests and CI, adding a model release or a settings key, licence.
+- [How to cite](https://so3lr.github.io/cite.md): BibTeX for the SO3LR Tauri preprint and the JACS and SO3krates papers, and how to name the software version and dated model.
 - [llms-full.txt](https://so3lr.github.io/llms-full.txt): every page concatenated into one file.

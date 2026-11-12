@@ -8,9 +8,9 @@ reproducible, use the dated name, e.g. `so3lr-tauri-m-2606`.
 
 ## Models
 
-### 2606 — current default
+### 2606 { #model-2606 }
 
-Bundled as `so3lr-tauri-s-2606`, `so3lr-tauri-m-2606`, `so3lr-tauri-l-2606`. The
+The current default. Bundled as `so3lr-tauri-s-2606`, `so3lr-tauri-m-2606`, `so3lr-tauri-l-2606`. The
 short names and the no-argument default resolve here.
 
 Each 2606 checkpoint is the matching 2602 checkpoint refined further, with the
@@ -20,7 +20,7 @@ the parent run.
 <!-- TODO: what changed relative to 2602 — training data, accuracy. See
      "Needed from you" in the site README. -->
 
-### 2602
+### 2602 { #model-2602 }
 
 Bundled as `so3lr-tauri-s-2602`, `so3lr-tauri-m-2602`, `so3lr-tauri-l-2602`. First
 release of the s/m/l family.
@@ -33,7 +33,7 @@ Relative to the original model, this generation:
 - uses parameter-free NLH short-range repulsion instead of ZBL
 - covers Z = 1–85 instead of eight biomolecular elements
 
-### Original — `so3lr`
+### Original — `so3lr` { #model-original }
 
 The model published in [JACS 147, 33723 (2025)](https://doi.org/10.1021/jacs.5c09558).
 It is kept as `so3lr` to reproduce published results. It is a separate model

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Concatenate every docs page into site/llms-full.txt.
+"""Concatenate every docs page into site/llms-full.txt, and publish each page's
+Markdown next to its HTML.
 
 The `llms.txt` convention pairs a curated index (hand-written, docs/llms.txt)
-with an optional full dump that can be pasted into a context window in one go.
-This generates the dump.
+with an optional full dump that can be pasted into a context window in one go,
+and serves each page as plain Markdown at its path plus `.md`. This generates
+both: site/llms-full.txt, and site/usage/md.md for docs/usage/md.md, which the
+index links to.
 
 Pages are emitted in nav order, so the file reads in the same sequence as the
 site rather than alphabetically. Run after `mkdocs build`:
@@ -71,6 +74,9 @@ def main() -> int:
         body = f.read_text()
         # strip YAML front matter; it is site plumbing, not content
         body = re.sub(r"\A---\n.*?\n---\n", "", body, flags=re.DOTALL)
+        # the page on its own, at the same relative path as its source, so the
+        # relative links inside it still resolve
+        (SITE / f.relative_to(DOCS)).write_text(body.lstrip())
         parts.append("\n" + "=" * 70)
         parts.append(f"SOURCE: {page_url(f)}")
         parts.append("=" * 70 + "\n")
@@ -79,7 +85,8 @@ def main() -> int:
     out = SITE / "llms-full.txt"
     out.write_text("\n".join(parts) + "\n")
     kb = out.stat().st_size / 1024
-    print(f"wrote {out.relative_to(ROOT)} — {len(pages)} pages, {kb:.0f} KB")
+    print(f"wrote {out.relative_to(ROOT)} — {len(pages)} pages, {kb:.0f} KB, "
+          f"and one .md per page")
     return 0
 
 
