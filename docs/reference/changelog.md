@@ -86,6 +86,14 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   `FlashCalculator(flash_kernels=)` chooses `auto`, `pallas` or `cuda`. See
   [CUDA kernels](../usage/md.md#cuda-kernels).
 - Semi-isotropic NPT on the flash engine.
+- Small periodic boxes on the flash engine. A box under twice `lr_cutoff`
+  across (24 Å at 12 Å) no longer falls back to the neighbour-list engine,
+  which refuses it. Flash sums the long range over the periodic images, and
+  under twice the 4.5 Å short-range cutoff the short range too, in the Pallas
+  and the CUDA kernels. On one A100 with `so3lr-tauri-m`, 64 waters in a
+  12.4 Å box run at 1.5 ms per step, against 15 ms for the neighbour-list
+  engine on the smallest supercell it accepts, and 620 ms for
+  `So3lrCalculator`. See [Box size](../usage/md.md#box-size).
 - The proton-transfer CVs `chargeseparation` and `ionsitedistance`, and
   `r0_multiplier` for `coordinationnumber` (default 1.6, the value used
   before). PySAGES is pinned to a newer commit of the same fork.

@@ -136,7 +136,7 @@ Flash runs only when all of the following hold:
 |---|---|
 | Device | An NVIDIA GPU with compute capability 8.0 or newer, or an AMD MI355X |
 | Model | `so3lr-tauri-s/m/l` (both releases) or the legacy `so3lr` |
-| Box | No box (an isolated molecule), or a periodic orthorhombic box at least 30 Å across at `lr_cutoff` 12 Å (25 Å at 10 Å; 31 Å under NPT) |
+| Box | No box (an isolated molecule), or a periodic orthorhombic box of any size the long range reaches across in at most 16 grid cells: every box down to about 1 Å at `lr_cutoff` 12 Å (see [Box size](#box-size)) |
 | Ensemble | `nve`, `nvt`, `nvt-langevin`, or `npt` (isotropic or semi-isotropic) |
 | Long range | Real space, or PME (`--kspace-electrostatics pme`, `kspace_dispersion: pme`) |
 
@@ -185,9 +185,18 @@ Flash: CUDA kernels not used (a sm_80 GPU (the kernels are written for sm_90)); 
 
 ## Box size
 
-Both engines need every box length to be at least twice `lr_cutoff` (24 Å at
-the default of 12 Å), and flash needs more (see
-[When flash runs](#when-flash-runs)). A shorter box is refused. For a smaller box, you can:
+Flash takes small periodic boxes. Where a box length is under twice
+`lr_cutoff` (24 Å at the default of 12 Å), it sums the long range over every
+periodic image within the cutoff, and where it is under twice the 4.5 Å
+short-range cutoff, the short range too, including an atom's own images. The
+result is the same as for the box repeated into a supercell. The images'
+walk is limited to 16 grid cells each way, so a long-range cutoff far beyond
+the box (for example `--lr-cutoff 1000` in a 12 Å box) is left to the
+neighbour-list engine.
+
+The neighbour-list engine needs every box length to be at least twice
+`lr_cutoff` and refuses a shorter box. Without a GPU that runs flash, for a
+smaller box you can:
 
 - lower `--lr-cutoff` and use `--kspace-electrostatics pme` (plus
   `kspace_dispersion: pme` in a settings file). A cutoff below 10 Å needs

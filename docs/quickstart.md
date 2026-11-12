@@ -49,7 +49,7 @@ writes:
 - `geometry_nvt.log`: energies, temperature and timings;
 - `geometry_nvt_opt.xyz`: the relaxation run before MD.
 
-A large enough periodic box on a recent NVIDIA GPU runs on the fast **flash**
+A periodic orthorhombic box on a recent NVIDIA GPU runs on the fast **flash**
 engine, and anything else on the neighbour-list engine (see
 [Molecular dynamics](usage/md.md)).
 
