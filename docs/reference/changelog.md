@@ -54,8 +54,14 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   and folders. Plain output is automatic when stderr is redirected; direct
   commands, YAML and shell/scheduler launchers remain supported.
 - Per-invocation JSONL journals and resolved-settings YAML beside MD and
-  optimization logs, including in plain and quiet modes. Text logs keep their
+  optimization logs by default, including in plain and quiet modes. Text logs keep their
   numeric MD tables and add run boundaries, artifact paths and final summaries.
+- `SO3LR_JOURNAL=0` disables both per-invocation sidecars while retaining text
+  logs, trajectories, checkpoints and in-memory attached plots. The offline
+  viewer requires an enabled journal.
+- Esc closes saved-run views and the folder overview, or hides attached MD
+  plots without stopping the calculation. `q` retains its existing close/toggle
+  behavior; Esc in guided selection menus cancels setup without exporting.
 
 - `--precision mixed`, now the default: a float32 model around a float64 MD
   state (positions, momenta, box, energy sums). `--precision` takes
@@ -111,15 +117,15 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Bare `so3lr` opens guided setup in an interactive terminal outside recognized
   scheduler jobs; otherwise it prints help. Explicit simulation commands and
   `--settings` do not open the wizard. Help is grouped by purpose; `--help-full`
-  remains an alias for the command overview.
+  shows the overview with additional usage examples.
 - `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
   compatibility alias. Global display/verbosity/color options go before the
-  subcommand. Per-invocation journal and resolved-YAML sidecars remain enabled
-  in plain and quiet modes.
+  subcommand. Plain and quiet modes keep per-invocation journal and resolved-YAML
+  sidecars unless explicitly disabled with `SO3LR_JOURNAL=0`.
 - Optimization's completion message is now `Optimization execution finished.`
   The summary distinguishes reaching the force criterion from exhausting the
   step budget; successful command completion alone does not establish convergence.
-- Help no longer prints the ASCII banner or the former extended example blocks.
+- Help no longer prints the ASCII banner; additional examples use `--help-full`.
   The decorative separator before MD completion is removed, and force-criterion
   diagnostics use significant digits. Numeric MD table columns are preserved.
 
@@ -211,8 +217,13 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   restored when the first handler runs, before cleanup, so a second signal can terminate immediately. Custom
   signal handlers are unchanged; `SIGKILL` cannot be handled.
 - SO3LR worker warnings reach the journal and live console without waiting for
-  an MD reporting boundary. Third-party libraries retain their own handlers;
-  this does not promise global capture of their diagnostics.
+  an MD reporting boundary when journaling is enabled. Scoped live-display
+  redirection also keeps Python output to the current `sys.stderr` above the
+  display. Third-party prebound streams and native stderr writes remain outside
+  that routing, and their diagnostics are not automatically journaled.
+- Hardware-memory reporting preserves termination exceptions instead of
+  swallowing them. Verified traceback preservation also recognizes normal
+  rotating-log rollover; unverifiable logging still keeps the full terminal trace.
 
 - Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
   start instead of taking the input structure's momenta.

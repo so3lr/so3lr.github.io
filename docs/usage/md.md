@@ -32,17 +32,20 @@ For NVE temperature, each energy plot and NPT volume, the guide is a measured
 mean over the latter half of the recorded time span. It is labeled as a
 reference, not a target; long-run binning marks approximate means explicitly.
 Use `e` to change the energy property and up/down to page through plots.
-During MD, `q` switches between graphs and compact status without stopping the
-run; Ctrl+C interrupts the calculation.
+During MD, Esc hides graphs without stopping the run; `q` switches between
+graphs and compact status and can restore them. Ctrl+C interrupts the calculation.
 
 For `.sh` and scheduler jobs, use `so3lr show <output-directory>` in another
 terminal to plot the local metrics journal. The observer works offline and can
-be closed while the simulation continues. Each MD or optimization invocation
+be closed with Esc or `q` while the simulation continues. By default, each MD or optimization invocation
 writes a separate `*.events.jsonl` beside its text log, including when output is
 redirected or `--display plain` or `--quiet` is selected. A separate
 `*.settings.resolved.yaml` records replay settings for the same invocation.
 These files support offline observation and replay independently of the console
-display.
+display. Set `SO3LR_JOURNAL=0` to disable both sidecars for an invocation while
+keeping text logs, trajectories, checkpoints and attached plots. The separate
+viewer then has no journal for that invocation to read; other environment values
+leave journaling enabled.
 The time axis is local to that invocation, including restarted segments.
 With several journals, the viewer starts with a folder overview. Left/right
 visits individual runs and cycles back to the overview; `o` returns directly.

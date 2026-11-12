@@ -21,7 +21,7 @@ molecular dynamics, evaluation, training and parameter tuning.
 
 ```shell
 so3lr --help          # command overview
-so3lr --help-full     # same overview; retained for compatibility
+so3lr --help-full     # command overview with additional usage examples
 so3lr nvt --help      # flags grouped by purpose (-h works too)
 so3lr --version       # installed SO3LR version
 ```
@@ -66,7 +66,8 @@ This refresh uses a frozen text snapshot and a wall
 clock, without querying model arrays or running numerical work. Measured values
 and graphs remain at their latest reporting point.
 During MD, `e` changes the energy plot and up/down changes plot pages in a
-short terminal. Keys are handled at reporting boundaries. `q` toggles between
+short terminal. Keys are handled at reporting boundaries. **Esc** hides the
+plots without stopping MD; pressing Esc again keeps them hidden. `q` toggles between
 plots and compact status; press it again to restore the graphs with the full
 recorded history. MD continues in either view; Ctrl+C still interrupts MD.
 The complete settings and per-cycle data still go to the text
@@ -125,11 +126,15 @@ the full terminal traceback remains available. Unexpected errors from other
 commands also keep their normal traceback.
 
 Warnings logged through SO3LR, including worker-thread warnings, reach the
-journal and terminal without waiting for the next MD cycle. Attached plot state
-still updates on its owner thread. Third-party libraries keep their own logging
-handlers; the journal does not claim to capture all library diagnostics.
+enabled journal and terminal without waiting for the next MD cycle. Attached plot
+state still updates on its owner thread. While the live display is active,
+Python output written to the current `sys.stderr`, including ordinary warnings
+and newly attached logging handlers, is routed through Rich. Third-party handlers
+that already hold another stream, native writes to file descriptor 2 and
+`sys.__stderr__` are not redirected. Libraries keep their own handlers, and the
+journal does not claim to capture all library diagnostics.
 
-Each MD or optimization invocation saves
+By default, each MD or optimization invocation saves
 `<log-stem>.<run-id>.settings.resolved.yaml` alongside its journal, including
 with redirected stderr, `--display plain` or `--quiet`.
 It uses ordinary YAML values and input units (`md_dt` in fs), resolves input paths,
@@ -150,16 +155,27 @@ warnings printed outside the logger.
 
 ## Offline monitoring
 
-Every CLI MD or optimization invocation also creates a unique
+By default, every CLI MD or optimization invocation also creates a unique
 `<log-stem>.<run-id>.events.jsonl` next to its text log. This happens with
 redirected output, `--display plain`,
 and `--quiet` too. The journal records run metadata, phases, accepted-cycle
 samples or the latest optimization measurements, warnings, successful checkpoints
 and completion/failure. Each process owns a separate journal, including
 concurrent replicas in one scheduler job.
-These two sidecar files are intentional even without a live display: the journal
+These two sidecar files support runs without a live display: the journal
 supports offline observation, and the resolved YAML records the replay settings.
-Display controls change console output, not artifact creation.
+Display controls change console output, not artifact creation. To disable both
+sidecars for an invocation, set the environment variable to exactly `0`:
+
+```shell
+SO3LR_JOURNAL=0 so3lr --settings settings.yaml
+```
+
+Unset or any other value keeps the default enabled. This opt-out keeps the text
+log, summaries, trajectories, checkpoints and in-memory attached plots. It writes
+no metrics JSONL or resolved-settings YAML and is noted in the text log; it is
+not reported as a disk failure. `so3lr show` cannot reconstruct that invocation
+without its journal.
 The numeric table columns and trajectory formats are retained; text logs also
 include the identity and final summary blocks described above.
 
@@ -182,7 +198,8 @@ needs a `*.events.jsonl` journal from this CLI; older folders containing only
 the ordinary text log are not parsed as graph data. In live mode it checks
 for new samples every second by default; `--once` produces a static view.
 Use `j`/`k` or left/right to choose a run, `e` to switch the energy plot, and
-`q` to detach. Temperature and the selected energy are stacked vertically;
+**Esc** or `q` to close the viewer, including from the folder overview. Closing
+it leaves the simulation running. Temperature and the selected energy are stacked vertically;
 total energy is selected initially.
 For a folder containing several runs, the first view is an overview with
 each run's reported state, progress, temperature and total energy. Wider
@@ -288,7 +305,9 @@ also shows the effective run length, checkpoint cadence and output files.
 Enter there writes the structure, YAML and shell script, then immediately runs
 MD in this terminal. **Save setup for later** writes those files only.
 Nothing is written before this explicit review choice. Back revisits the prompts
-with the previous answers, and Cancel or Ctrl+C before export writes nothing.
+with the previous answers. Esc in a selection menu cancels setup; use the
+explicit Back choices to revisit an earlier menu. Cancel or Ctrl+C before export
+also writes nothing.
 
 Water64 remains in `tests/test_data` and can be selected manually, but is not
 a featured preset: its 12.4 Å box does not fit the CLI's usual 12 Å real-space
