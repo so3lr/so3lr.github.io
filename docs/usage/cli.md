@@ -142,10 +142,12 @@ continue from it, for example:
 ```text
 Last checkpoint: step 450,000 · restart.npz
 Resume: --restart-load restart.npz (YAML: restart_load_path: restart.npz); relaxation is skipped and the trajectory is appended.
+To finish the original length, also set --md-cycles 5500 (YAML: md_cycles: 5500); md_cycles counts from the checkpoint.
 ```
 
 A restart skips the initial relaxation and appends to an EXTXYZ trajectory; HDF5
-output needs a new output path. Without `restart_save_path` (`--restart-save`)
+output needs a new output path. It runs `md_cycles` more cycles from the
+checkpoint, so the hint gives the cycle count that ends at the original length. Without `restart_save_path` (`--restart-save`)
 no checkpoint exists, and the message says how to make runs resumable. Ctrl+C
 appears on screen as `Interrupted (Ctrl+C)`; the journal keeps the exact
 exception record.
@@ -158,7 +160,8 @@ Progress 45.0% · step 450,000/1,000,000 · 2.31 ns/day · ETA 1d 02:13:00
 ```
 
 Throughput and ETA use wall time since the first MD sample, including output.
-After the journal path, each run also logs `Watch live: so3lr show <run directory>`.
+After the journal path, each run also logs `Watch live: so3lr show <journal>`,
+which opens that run directly.
 
 Warnings logged through SO3LR, including worker-thread warnings, reach the
 enabled journal and terminal without waiting for the next MD cycle. Attached plot
