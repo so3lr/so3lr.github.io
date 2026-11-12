@@ -69,6 +69,17 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Esc closes saved-run views and the folder overview, or hides attached MD
   plots without stopping the calculation. `q` retains its existing close/toggle
   behavior; Esc in guided selection menus cancels setup without exporting.
+- Guided setup asks only the essentials, then **Edit settings…** on the review
+  changes one group at a time. It asks for a trajectory frame interval in ps,
+  reads charge and multiplicity from the XYZ comment line, and explains
+  impossible electron counts. Three example structures ship with the package.
+- One terminal palette across the live view, `so3lr show` and setup (amber
+  accent, cyan energy, violet volume), with taller plots and a progress bar in
+  the live header and in wide run overviews.
+- Plain and batch output logs a `Progress … · ns/day · ETA …` line at every
+  checkpoint and names the `so3lr show` command for the run. Failed or
+  interrupted MD runs end with the last checkpoint and the option to resume
+  from it; runs stopped by Ctrl+C or a signal show as **Interrupted**.
 
 - `--precision mixed`, now the default: a float32 model around a float64 MD
   state (positions, momenta, box, energy sums). `--precision` takes

@@ -14,19 +14,19 @@ model and engine actually selected, device information, completed steps,
 simulated time, and stacked live temperature and **total energy** graphs. NPT also
 plots volume. Speed appears in `ns/day` and `s/atom/step`, with remaining-time
 estimates when timing data is available. Mixed precision is described as
-float32 model calculations with float64 dynamics. A saved-restart message means
+float32 model calculations with float64 dynamics. A checkpoint line means
 that checkpoint writing has completed.
 
 The initial compilation can take longer than subsequent cycles. The Tauri pulse
-and elapsed-time clock refresh twice per second during initialization and compilation using
+and a clock counting time since launch refresh twice per second during initialization and compilation using
 a frozen text snapshot and wall time, without numerical work. Measured values
 and graph samples update only at host reporting points, so a large `md_steps`
 value can leave a graph unchanged for a while. Keyboard controls are also
 handled at reporting boundaries.
 
 Time axes line up across the stacked plots and use the same time bounds.
-Reference guides are solid, muted grey lines behind the data; captions retain
-their exact values while the line positions use terminal-character rows.
+Reference guides are solid, muted lines behind the data; the exact value appears
+on each plot's heading row, while line positions use terminal-character rows.
 Temperature shows the requested thermostat target in NVT, NPT and Langevin.
 For NVE temperature, each energy plot and NPT volume, the guide is a measured
 mean over the latter half of the recorded time span. It is labeled as a
@@ -54,10 +54,17 @@ show step, potential energy and maximum force rather than invented MD samples.
 See [Offline monitoring](cli.md#offline-monitoring) for controls and limitations,
 or [Guided setup](cli.md#guided-setup) to prepare YAML and a shell launcher.
 
-`so3lr start` opens guided setup through Structure, Dynamics and Review. At the final review,
-**Save setup and start MD now** is first and selected by default. **Save setup
-for later** writes only the structure, settings and launcher; no files are
-written before the review choice.
+`so3lr start` opens guided setup through Structure, Dynamics and Review. It
+asks only the essentials first; timestep, seed, relaxation and cutoff start from
+stated defaults that **Edit settings…** on the review can change one group at a
+time. At the final review, **Save setup and start MD now** is first and selected
+by default. **Save setup for later** writes only the structure, settings and
+launcher; no files are written before the review choice.
+
+In plain and batch output, each checkpoint adds a `Progress … · ns/day · ETA …`
+line, and the log names the `so3lr show` command for the run directory. A failed
+or interrupted MD run ends with its last checkpoint and the option to resume
+from it. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
 
 The complete settings, diagnostics and per-cycle table remain in the text
 log. A final summary adds the execution outcome, completed steps/time, warnings,

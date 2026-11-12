@@ -59,8 +59,14 @@ or guided setup. Full commands and YAML runs never open the setup wizard. Speed 
 `ns/day` and `s/atom/step`; the
 latter divides measured seconds per step by the total simulation atom count.
 Mixed precision is labeled `mixed (float32 model; float64 dynamics)`.
+Once MD samples arrive, a three-row header shows the run state and details, a
+progress bar with completed steps and simulated time, and `MD elapsed`, ETA and
+throughput; the plots fill the remaining rows. Colors follow one palette: amber
+marks SO3LR, focus, progress, the temperature trace and the Running state;
+energy is cyan and NPT volume violet. `--no-color` and `NO_COLOR` remove the
+colors, and terminals without Unicode get ASCII glyphs.
 During initialization, compilation and other long stages, the Tauri pulse and
-elapsed-time clock refresh twice per second. The star expands and recedes in
+a clock counting time since launch refresh twice per second. The star expands and recedes in
 place over five seconds; terminals without Unicode use an ASCII pulse.
 This refresh uses a frozen text snapshot and a wall
 clock, without querying model arrays or running numerical work. Measured values
@@ -129,6 +135,30 @@ commands also keep their normal traceback. When preservation is verified, the
 terminal prints `Full traceback:` with the absolute log path. Multiline errors
 use a concise first line in the terminal; the complete diagnostic stays in the
 log and journal. A failed or unverifiable log write keeps the full terminal traceback.
+
+A failed or interrupted MD run ends with its last saved checkpoint and how to
+continue from it, for example:
+
+```text
+Last checkpoint: step 450,000 · restart.npz
+Resume: --restart-load restart.npz (YAML: restart_load_path: restart.npz); relaxation is skipped and the trajectory is appended.
+```
+
+A restart skips the initial relaxation and appends to an EXTXYZ trajectory; HDF5
+output needs a new output path. Without `restart_save_path` (`--restart-save`)
+no checkpoint exists, and the message says how to make runs resumable. Ctrl+C
+appears on screen as `Interrupted (Ctrl+C)`; the journal keeps the exact
+exception record.
+
+Plain and batch output (for example a Slurm `.out` file) adds one progress line
+at every checkpoint, and at least every ten minutes:
+
+```text
+Progress 45.0% · step 450,000/1,000,000 · 2.31 ns/day · ETA 1d 02:13:00
+```
+
+Throughput and ETA use wall time since the first MD sample, including output.
+After the journal path, each run also logs `Watch live: so3lr show <run directory>`.
 
 Warnings logged through SO3LR, including worker-thread warnings, reach the
 enabled journal and terminal without waiting for the next MD cycle. Attached plot
@@ -217,6 +247,9 @@ total energy is selected initially.
 For a folder containing several runs, the first view is an overview with
 each run's reported state, progress and age since its last journal update.
 Age stays visible in narrow views; other columns adapt to the available width.
+Terminals of at least 100 columns (120 with host details) draw a progress bar
+next to each run's percentage. Runs that ended with Ctrl+C or a termination
+signal show as **Interrupted** and are counted apart from failures.
 When present, the recorded host and Slurm job ID help identify batch runs.
 Individual views retain the full origin details. When optimization and MD share a folder, the
 overview labels OPT and MD explicitly. Optimization progress counts its own
@@ -228,8 +261,9 @@ Short terminals show complete plots on pages: use up/down to change pages;
 the footer shows the current page and controls. Full snapshots show all plots.
 These plots use recorded samples, with no extra model evaluations. Temperature
 uses the requested thermostat target for NVT, NPT and Langevin dynamics.
-Reference guides are solid, muted grey lines behind the trajectory. Captions
-retain the exact values; line positions use terminal-character rows.
+Reference guides are solid, muted lines behind the trajectory. The exact value
+appears on the plot's heading row (below the plot in narrow terminals); line
+positions use terminal-character rows.
 NVE has no thermostat: its temperature guide is a measured reference, as are
 the guides for each energy plot and NPT volume. These references are means of
 samples in the latter half of the recorded time span, not target values.
@@ -278,34 +312,48 @@ continues; do not use the viewer as the sole check of a job's health.
 ## Guided setup
 
 Run `so3lr start` to follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
-and start**. Browse directories with the arrow keys and Enter, choose a supplied
-example, or explicitly paste
-a file path. Dynamics, model and review choices also use keyboard menus.
-In a source checkout the examples come from `tests/test_data`: Ala4 (`ac.xyz`)
-and DHA (`dha.xyz`). They are resolved relative to the
-checkout, so launching from another directory still finds them. An installation
-without those test files keeps the file browser and path entry available.
+and start**. Choose one of the bundled examples, browse directories with the
+arrow keys and Enter, or paste a file path. Dynamics, model and review choices
+also use keyboard menus.
 
-For multi-frame XYZ/EXTXYZ input, choose the frame explicitly. Ala4's example
-contains 100 frames. The selected frame is exported into the new run bundle;
-the source is unchanged. If the input includes velocities, choose whether to
-keep them or initialize velocities at the requested temperature. The review
-shows the choice. DHA's input contains a 999.9 Å periodic box; the picker offers
-an explicit choice to keep it or export an isolated molecule.
+Three small examples ship with the package, so they are available in any
+installation: an Ala4 peptide (42 atoms, gas phase), DHA (56 atoms) and a box
+of 64 water molecules (192 atoms, periodic, 12.4 Å). DHA's input contains a
+999.9 Å periodic box; setup offers an explicit choice to keep it or export an
+isolated molecule. The water box is too small for the usual 12 Å cutoff, so
+setup proposes a shorter cutoff with PME (see below).
 
-Next choose ensemble, model, temperature, timestep, duration, output cadence,
-charge/spin, seed, relaxation and cutoff. The model menu presents **M (default)**,
-**S (faster)** and **L (recommended for reactions)** first. Open **Legacy models**
-to see the four older releases; exports retain each model's canonical name.
-The review explains mixed precision as float32 model calculations with float64
-dynamics. For periodic cells, the cutoff must fit the minimum-image neighbor
-list: twice the larger of the model's short-range cutoff and `lr_cutoff` must
-fit the minimum cell height. For **NPT**, setup checks against 97% of that
-height, reserving the backend's initial 3% contraction margin. It applies the
-same check to a cutoff you enter. Fixed-cell ensembles keep the ordinary
-half-cell bound. During MD, each evolving cell is checked against the physical
-half-cell bound. Later contraction can still invalidate a cutoff, and Flash
-has additional cell-grid requirements; the runtime checks both.
+For your own multi-frame XYZ/EXTXYZ input, choose the frame explicitly. The
+selected frame is exported into the new run bundle; the source is unchanged.
+If the input includes velocities, choose whether to keep them or initialize
+velocities at the requested temperature. The review shows the choice.
+
+The first pass asks only the essentials: ensemble, model, temperature (and
+pressure for NPT), duration, how often to save a trajectory frame (in ps),
+total charge, unpaired electrons and the output directory. The duration is
+rounded up to whole frames, and setup says so (for example
+`Duration rounded up to 5.05 ps (101 whole frames)`); the frame interval must be
+a whole number of timesteps. When the XYZ comment line records `charge`,
+`total_charge`, `multiplicity` or `num_unpaired_electrons`, those values become
+the defaults. `spin` is ignored because files disagree on its meaning. An
+impossible combination, such as a neutral radical with no unpaired electron, is
+explained, and setup asks before keeping it. Timestep, random seed, initial
+relaxation and the long-range cutoff start from the defaults that setup prints.
+The default output directory is `so3lr-run`, or the next free name
+(`so3lr-run-2`, ...).
+
+The model menu presents **M (default)**, **S (faster)** and **L (recommended
+for reactions)** first. Open **Legacy models** to see the four older releases;
+exports retain each model's canonical name. The review explains mixed precision
+as float32 model calculations with float64 dynamics. For periodic cells, the
+cutoff must fit the minimum-image neighbor list: twice the larger of the
+model's short-range cutoff and `lr_cutoff` must fit the minimum cell height.
+For **NPT**, setup checks against 97% of that height, reserving the backend's
+initial 3% contraction margin. It applies the same check to a cutoff you enter.
+Fixed-cell ensembles keep the ordinary half-cell bound. During MD, each
+evolving cell is checked against the physical half-cell bound. Later
+contraction can still invalidate a cutoff, and Flash has additional cell-grid
+requirements; the runtime checks both.
 
 When the usual cutoff does not fit, setup proposes a shorter cutoff with PME
 electrostatics and dispersion. The review and saved YAML include both smearing
@@ -319,21 +367,19 @@ and mesh spacing:
 The electrostatic mesh is refined with the narrower smearing, retaining the
 normal spacing-to-smearing ratio. These are starting settings, not a full
 accuracy-tuning result; check convergence for your system. Existing direct
-commands and YAML settings retain their defaults and validation. The review
-also shows the effective run length, checkpoint cadence and output files.
-**Save setup and start MD now** is the first and default review choice. Pressing
-Enter there writes the structure, YAML and shell script, then immediately runs
-MD in this terminal. **Save setup for later** writes those files only.
-Nothing is written before this explicit review choice. Back revisits the prompts
-with the previous answers. Esc in a selection menu cancels setup; use the
-explicit Back choices to revisit an earlier menu. Cancel or Ctrl+C before export
-also writes nothing.
+commands and YAML settings retain their defaults and validation.
 
-Water64 remains in `tests/test_data` and can be selected manually, but is not
-a featured preset: its 12.4 Å box does not fit the CLI's usual 12 Å real-space
-cutoff. Current CLI MD uses minimum-image neighbors with a half-cell cutoff
-limit. The ASE calculator separately supports explicit periodic images and
-can use cutoffs beyond that limit.
+The review groups the run into System, Dynamics and Output. It shows the
+effective run length, trajectory frames, checkpoint cadence and the files that
+setup writes and that the run will add. **Save setup and start MD now** is the
+first and default review choice. Pressing Enter there writes the structure,
+YAML and shell script, then immediately runs MD in this terminal. **Save setup
+for later** writes those files only. **Edit settings…** changes one group
+(temperature and pressure, duration and frame interval, timestep, charge and
+multiplicity, seed and relaxation, cutoff, or output directory) and returns to
+the review. Its first entry starts over, keeping every previous answer as the
+default. Nothing is written before this explicit review choice. Esc in a
+selection menu cancels setup. Cancel or Ctrl+C before export also writes nothing.
 
 The new bundle contains the selected structure, `settings.yaml` and an
 executable `run.sh`. A single-frame input is copied byte-for-byte when no
