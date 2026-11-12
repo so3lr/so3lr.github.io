@@ -100,7 +100,8 @@ The calculator accepts any cell shape, including cells shorter than twice the
 cutoff. With `neighbor_backend="auto"`, it lists every periodic image
 explicitly when a minimum-image list would be wrong (skewed or thin cells), and
 uses the faster minimum-image list otherwise. `"exact"` and `"glp"` force one or
-the other.
+the other. On a GPU, [`FlashCalculator`](../reference/api.md#flashcalculator)
+also takes small orthorhombic cells, much faster.
 
 The explicit list is much faster with
 [matscipy](https://github.com/libAtoms/matscipy) installed:
