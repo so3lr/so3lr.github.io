@@ -27,6 +27,7 @@ read it first.
 - [Quick start](https://so3lr.github.io/quickstart.md): install and run a first simulation.
 - [Installation](https://so3lr.github.io/installation.md): locked uv install, pip into an existing JAX (capped at jax<0.11), optional extras, troubleshooting.
 - [Models](https://so3lr.github.io/models.md): so3lr-tauri-s/m/l-2606 and -2602, the legacy so3lr, supported elements, checksum verification, and why to cite the dated name.
+- [How it works](https://so3lr.github.io/how-it-works.md): the four energy terms (NLH repulsion, SO3krates semi-local energy, electrostatics, dispersion), what the network predicts for each, and their ranges.
 
 ## Running simulations
 

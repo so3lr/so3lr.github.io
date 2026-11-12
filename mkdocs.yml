@@ -122,6 +122,7 @@ nav:
       - Quick start: quickstart.md
       - Installation: installation.md
       - Models: models.md
+      - How it works: how-it-works.md
       - Examples: examples.md
   - Usage:
       - Command line: usage/cli.md
