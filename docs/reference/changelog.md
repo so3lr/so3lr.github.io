@@ -45,7 +45,7 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
-- [Guided MD setup](../usage/cli.md#guided-setup) with arrow-key structure and
+- [`so3lr start`](../usage/cli.md#guided-setup) for guided MD setup with arrow-key structure and
   model menus, explicit review, and a portable structure/YAML/shell-script
   bundle. The first review action saves the bundle and starts MD locally;
   saving for later remains available.
@@ -112,9 +112,16 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   scheduler jobs; otherwise it prints help. Explicit simulation commands and
   `--settings` do not open the wizard. Help is grouped by purpose; `--help-full`
   remains an alias for the command overview.
+- `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
+  compatibility alias. Global display/verbosity/color options go before the
+  subcommand. Per-invocation journal and resolved-YAML sidecars remain enabled
+  in plain and quiet modes.
 - Optimization's completion message is now `Optimization execution finished.`
   The summary distinguishes reaching the force criterion from exhausting the
   step budget; successful command completion alone does not establish convergence.
+- Help no longer prints the ASCII banner or the former extended example blocks.
+  The decorative separator before MD completion is removed, and force-criterion
+  diagnostics use significant digits. Numeric MD table columns are preserved.
 
 - `--flash-mixed` / `flash_mixed` is deprecated in favour of `--precision`:
   on means `mixed` and off `float32`. It still works, with a warning.
@@ -196,9 +203,16 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   initialization, and keeps controls visible in short optimization views.
   Saved-run readers tolerate malformed or excessively nested JSON records.
 - MD/optimization errors retain the actual exception type and cause chain;
-  unexpected errors in other commands retain their traceback. Default
-  `SIGTERM`/`SIGHUP` handling restores the terminal before preserving signal
-  termination. Custom signal handlers are unchanged; `SIGKILL` cannot be handled.
+  their preambles are covered too. Errors are shortened only when the traceback
+  was saved in the current log; logger setup/write failures and unexpected errors
+  in other commands retain the full terminal traceback.
+- Default `SIGTERM`/`SIGHUP` cleanup applies when the UI owns a terminal, including
+  setup and `show`; noninteractive runs retain native termination. Defaults are
+  restored when the first handler runs, before cleanup, so a second signal can terminate immediately. Custom
+  signal handlers are unchanged; `SIGKILL` cannot be handled.
+- SO3LR worker warnings reach the journal and live console without waiting for
+  an MD reporting boundary. Third-party libraries retain their own handlers;
+  this does not promise global capture of their diagnostics.
 
 - Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
   start instead of taking the input structure's momenta.

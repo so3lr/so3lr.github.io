@@ -51,7 +51,7 @@ show step, potential energy and maximum force rather than invented MD samples.
 See [Offline monitoring](cli.md#offline-monitoring) for controls and limitations,
 or [Guided setup](cli.md#guided-setup) to prepare YAML and a shell launcher.
 
-Guided setup moves through Structure, Dynamics and Review. At the final review,
+`so3lr start` opens guided setup through Structure, Dynamics and Review. At the final review,
 **Save setup and start MD now** is first and selected by default. **Save setup
 for later** writes only the structure, settings and launcher; no files are
 written before the review choice.
@@ -60,6 +60,8 @@ The complete settings, diagnostics and per-cycle table remain in the text
 log. A final summary adds the execution outcome, completed steps/time, warnings,
 checkpoint and output paths. A separate resolved YAML file records replayable
 settings. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
+If an MD or optimization preamble fails before logging is ready, or its
+traceback cannot be saved, the full traceback remains visible in the terminal.
 To see ordinary diagnostic output in the terminal as well, use:
 
 ```shell

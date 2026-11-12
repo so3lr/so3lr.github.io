@@ -7,7 +7,7 @@ molecular dynamics, evaluation, training and parameter tuning.
 
 | Command | What it does |
 |---|---|
-| `so3lr init` | Guide MD setup, review, then start now or save a run bundle |
+| `so3lr start` | Guide MD setup, review, then start now or save a run bundle |
 | `so3lr show PATH` | Browse local MD and optimization journals while jobs run, or inspect completed runs |
 | `so3lr opt` | Geometry optimization (FIRE) |
 | `so3lr nvt` | NVT molecular dynamics with the Nosé–Hoover chain thermostat |
@@ -119,8 +119,15 @@ quantities with units, warnings/errors, wall time, the last successful checkpoin
 and saved artifact paths. Unavailable information is not invented.
 
 MD and optimization failures show the actual exception type and cause chain in
-the terminal and journal, with the traceback retained in the text log.
-Unexpected errors from other commands keep their normal traceback.
+the terminal and journal. The terminal error is shortened only after the
+traceback is confirmed in the current text log. If setup or log writing fails,
+the full terminal traceback remains available. Unexpected errors from other
+commands also keep their normal traceback.
+
+Warnings logged through SO3LR, including worker-thread warnings, reach the
+journal and terminal without waiting for the next MD cycle. Attached plot state
+still updates on its owner thread. Third-party libraries keep their own logging
+handlers; the journal does not claim to capture all library diagnostics.
 
 Each MD or optimization invocation saves
 `<log-stem>.<run-id>.settings.resolved.yaml` alongside its journal, including
@@ -225,14 +232,15 @@ Data arrives at accepted MD cycle boundaries, so large `md_steps` can leave a
 chart unchanged for minutes. The displayed state is the last state explicitly
 reported by the producer, not a scheduler or process-liveness check. Sample
 age and checkpoint information help distinguish recent work from saved work.
-Uncatchable termination such as `SIGKILL` can leave the last reported state as
-Running. A journal write
+An externally terminated process can leave its last reported state as Running:
+plain and batch runs retain native signal handling, and `SIGKILL` cannot record
+a final event. A journal write
 failure warns once and disables metrics recording while the calculation
 continues; do not use the viewer as the sole check of a job's health.
 
 ## Guided setup
 
-Run `so3lr init` to follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
+Run `so3lr start` to follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
 and start**. Browse directories with the arrow keys and Enter, choose a supplied
 example, or explicitly paste
 a file path. Dynamics, model and review choices also use keyboard menus.
@@ -258,6 +266,7 @@ list: twice the larger of the model's short-range cutoff and `lr_cutoff` must
 fit the minimum cell height. For **NPT**, setup checks against 97% of that
 height, reserving the backend's initial 3% contraction margin. It applies the
 same check to a cutoff you enter. Fixed-cell ensembles keep the ordinary
+half-cell bound. During MD, each evolving cell is checked against the physical
 half-cell bound. Later contraction can still invalidate a cutoff, and Flash
 has additional cell-grid requirements; the runtime checks both.
 
@@ -301,7 +310,9 @@ A bare `so3lr` opens the same setup only when input and output are terminals,
 `TERM` is not `dumb`, and no recognized scheduler job environment is present.
 Otherwise it prints help. Simulation commands and `--settings` never open
 guided setup.
-`so3lr init` without a terminal gives a clear error instead of waiting for input.
+`so3lr start` without a terminal gives a clear error instead of waiting for input.
+`so3lr init` remains a hidden compatibility alias; new commands and examples
+use `so3lr start`.
 Help, drafting a run, and watching journals do not initialize JAX or load weights.
 
 ## Shared options
@@ -543,11 +554,15 @@ are not written into it.
 | `1` | The run failed; the error is printed to stderr. |
 | `2` | Usage error (unknown flag or model, bad choice, missing input); nothing runs. |
 
-For CLI MD and optimization, default `SIGTERM` and `SIGHUP` handlers unwind the
-display, restore terminal input/cursor state, and record the interruption before
-preserving the native signal exit status. Custom or ignored signal handlers are
-left alone. Cleanup can wait for native numerical code to return control to
-Python; it cannot run after `SIGKILL`.
+When a live display or keyboard owns an attached terminal, default `SIGTERM`
+and `SIGHUP` handlers unwind the UI and restore terminal input/cursor state before
+preserving the native signal exit status. This also covers interactive setup
+and `show`. Plain/quiet/batch runs and forced Rich output without a terminal keep
+native termination. Custom or ignored signal handlers are left alone. Once
+Python handles the first signal, defaults are restored before cleanup so a
+second signal can terminate immediately. Before that handler runs, native
+numerical code may still delay it; `SIGKILL` remains the way to terminate an
+unresponsive process, without UI cleanup.
 
 So you can chain commands in the shell or with scheduler dependencies:
 
