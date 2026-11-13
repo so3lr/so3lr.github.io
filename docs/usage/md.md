@@ -6,6 +6,84 @@ The trajectories can be saved in `.hdf5` or `.xyz` format. In addition,
 checkpoints can be saved as `.npz` files throughout the simulation to restart
 if needed.
 
+## Following a run
+
+In an interactive terminal, the default MD display shows the current stage
+and updates progress at the simulation's reporting points. It includes the
+model and engine actually selected, device information, completed steps,
+simulated time, and stacked live temperature and **total energy** graphs. NPT also
+plots volume. Speed appears in `ns/day` and `s/atom/step`, with remaining-time
+estimates when timing data is available. Mixed precision is described as
+float32 model calculations with float64 dynamics. A checkpoint line means
+that checkpoint writing has completed.
+
+The initial compilation can take longer than subsequent cycles. The Tauri pulse
+and a clock counting time since launch refresh twice per second during initialization and compilation using
+a frozen text snapshot and wall time, without numerical work. Measured values
+and graph samples update only at host reporting points, so a large `md_steps`
+value can leave a graph unchanged for a while. Keyboard controls are also
+handled at reporting boundaries.
+
+Time axes line up across the stacked plots and use the same time bounds.
+Reference guides are solid, muted lines behind the data; the exact value appears
+on each plot's heading row, while line positions use terminal-character rows.
+Temperature shows the requested thermostat target in NVT, NPT and Langevin.
+For NVE temperature, each energy plot and NPT volume, the guide is a measured
+mean over the second half of the recorded time span, labeled `Second-half mean`
+rather than a target; long-run binning marks approximate means explicitly.
+Use `e` to change the energy property and up/down to page through plots.
+During MD, Esc hides graphs without stopping the run; `q` switches between
+graphs and compact status and can restore them. Ctrl+C interrupts the calculation.
+
+For `.sh` and scheduler jobs, use `so3lr show <output-directory>` in another
+terminal to plot the local metrics journal. The observer works offline and can
+be closed with Esc or `q` while the simulation continues. By default, each MD or optimization invocation
+writes a separate `*.events.jsonl` beside its text log, including when output is
+redirected or `--display plain` or `--quiet` is selected. It supports offline
+observation independently of the console display. Set `SO3LR_JOURNAL=0` to
+disable it for an invocation while keeping text logs, trajectories, checkpoints
+and attached plots. The separate
+viewer then has no journal for that invocation to read; other environment values
+leave journaling enabled.
+The time axis is local to that invocation, including restarted segments.
+With several journals, the viewer starts with a folder overview. Left/right
+visits individual runs and cycles back to the overview; `o` returns directly.
+Mixed MD/optimization folders identify each mode, and optimization summaries
+show step, potential energy and maximum force rather than invented MD samples.
+See [Offline monitoring](cli.md#offline-monitoring) for controls and limitations,
+or [Guided setup](cli.md#guided-setup) to prepare YAML and a shell launcher.
+
+`so3lr start` opens guided setup through Structure, Dynamics and Review. It
+asks only the essentials first; timestep, seed, relaxation and cutoff start from
+stated defaults that **Edit settings…** on the review can change one group at a
+time. At the final review, **Save setup and start MD now** is first and selected
+by default. **Save setup for later** writes only the structure, settings and
+launcher; no files are written before the review choice.
+
+In plain and batch output, each checkpoint adds a `Progress … · ns/day · ETA …`
+line, and the log names the `so3lr show` command for the run directory. A failed
+or interrupted MD run ends with its last checkpoint and the option to resume
+from it. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
+
+The complete settings, diagnostics and per-cycle table remain in the text
+log, and every run ends with one closing line on how it finished. See
+[Logs and reproducibility](cli.md#logs-and-reproducibility).
+If an MD or optimization preamble fails before logging is ready, or its
+traceback cannot be saved, the full traceback remains visible in the terminal.
+To see ordinary diagnostic output in the terminal as well, use:
+
+```shell
+so3lr --display plain --settings settings.yaml
+```
+
+Redirected stderr, including ordinary scheduler logs, uses plain output
+automatically. Redirecting stdout alone leaves the live display available;
+an attached `.sh` launcher can still show it. For additional diagnostics
+alongside the live display, use `so3lr --verbose
+--settings settings.yaml`. Display options go before an MD subcommand and
+do not change the simulation settings. See [Terminal display](cli.md#terminal-display)
+for all controls.
+
 ## Ensembles
 
 === "NVT (Nosé–Hoover)"
@@ -58,6 +136,19 @@ A run is `md_cycles × md_steps` steps long, with one frame written per cycle.
 Use many short cycles for frequent output, and a few long cycles for maximum
 throughput.
 
+All periodic CLI MD ensembles require a positive, axis-aligned orthorhombic
+cell. The neighbor-list cutoff cannot exceed half the minimum cell height.
+Guided NPT setup reserves a further 3% initial contraction margin for both the
+short-range and long-range cutoffs; fixed-cell setup keeps the ordinary bound.
+This does not guarantee that every later NPT cell fits, or that Flash's
+additional cell-grid requirements are met. Runtime validation remains active.
+
+For small periodic cells, guided setup proposes PME for both electrostatics and
+dispersion and exports explicit mesh settings. Electrostatics uses 2 Å smearing
+with 1 Å spacing; dispersion keeps its 2 Å smearing and 3 Å spacing defaults.
+These proposals need system-specific convergence checks. Direct commands and
+existing YAML runs are unchanged. See [Guided setup](cli.md#guided-setup).
+
 Velocities or momenta in the input file (as in an EXTXYZ frame from an earlier
 SO3LR trajectory) are used as the initial velocities. Otherwise, velocities
 are drawn at the target temperature.
@@ -66,6 +157,12 @@ By default, the geometry is first relaxed with FIRE, capped at 10 × 10 steps
 from the command line. Raise the cap in a
 [settings file](settings.md#pre-run-relaxation), or skip the relaxation with
 `--no-relax`.
+
+Standalone `so3lr opt` shares the live stage display and journal lifecycle. Its
+latest step, potential energy and maximum force are shown at reporting points.
+The result distinguishes meeting a requested force criterion from finishing
+the step budget; a completed optimization command alone does not establish
+convergence. See [Geometry optimization](cli.md#geometry-optimization-opt).
 
 ### More NVT options
 
@@ -194,7 +291,8 @@ the default of 12 Å), and flash needs more (see
   k-space electrostatics.
 - or use the [ASE calculator](ase.md#small-and-skewed-cells).
 
-The cell must be orthorhombic. Mixed periodicity, such as
+All periodic CLI MD modes require a positive, axis-aligned orthorhombic cell.
+NPT additionally requires periodic boundaries in all three axes. Mixed periodicity, such as
 `pbc=[True, True, False]`, is an error. A structure with a cell but
 `pbc=False` runs in vacuum.
 

@@ -45,6 +45,53 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
+- [`so3lr start`](../usage/cli.md#guided-setup) for guided MD setup with arrow-key structure and
+  model menus, explicit review, and a portable structure/YAML/shell-script
+  bundle. The first review action saves the bundle and starts MD locally;
+  saving for later remains available.
+- Live terminal MD plots and optimization status, plus offline
+  [`so3lr show`](../usage/cli.md#offline-monitoring) views for individual runs
+  and folders. Plain output is automatic when stderr is redirected; direct
+  commands, YAML and shell/scheduler launchers remain supported.
+- Per-invocation JSONL journals beside MD and optimization logs by default,
+  including in plain and quiet modes. Text logs keep their numeric MD tables.
+- `SO3LR_JOURNAL=0` disables the journal while retaining text logs,
+  trajectories, checkpoints and in-memory attached plots. The offline viewer
+  requires an enabled journal.
+- `so3lr --version` prints the installed package version.
+- The terminal interface adds the required dependency `rich>=14,<16`; existing
+  pinned environments must allow a compatible Rich version.
+- Saved-run views show the age of the latest journal update, recorded host and
+  Slurm identity, and qualified stale/history-loading states without querying
+  or signalling the scheduler or producer process.
+- Esc closes saved-run views and the folder overview, or hides attached MD
+  plots without stopping the calculation. `q` retains its existing close/toggle
+  behavior. In `so3lr start` menus, Esc or Backspace goes back one step.
+- Guided setup asks only the essentials, then **Edit settings…** on the review
+  changes one group at a time. It asks for a trajectory frame interval in ps,
+  reads charge and multiplicity from the XYZ comment line, and explains
+  impossible electron counts. Three example structures ship with the package.
+- One terminal palette across the live view, `so3lr show` and setup (amber
+  accent, cyan energy, violet volume), with taller plots and a progress bar in
+  the live header and in wide run overviews.
+- `so3lr start` first asks for a task: molecular dynamics, geometry
+  optimization, dataset evaluation, watching runs, or the commands for
+  fine-tuning, training and k-space tuning.
+- A once-a-day, opt-out release notice in interactive terminals
+  (`SO3LR_NO_UPDATE_CHECK=1`).
+- `eval`, `tune-ewald`, `finetune` and `train` use the live display too, with
+  a progress bar, ETA and result tables, instead of falling back to log lines.
+  `eval` reports binding energies for dimer files without `--save-to`.
+- Optimization graphs: potential energy and log-scale maximum force with the
+  force target, live and in `so3lr show`.
+- Every run ends with one closing line: ✓ met its goal, `!` finished without it,
+  ■ interrupted, ✕ failed. The activity line shows an ETA once a rate is measured.
+- Log files add `◆ SO3LR TAURI · <version> · <date time>` under the logo.
+- Plain and batch output logs a `Progress … · ns/day · ETA …` line at every
+  checkpoint and names the `so3lr show` command for the run. Failed or
+  interrupted MD runs end with the last checkpoint and the option to resume
+  from it; runs stopped by Ctrl+C or a signal show as **Interrupted**.
+
 - `--precision mixed`, now the default: a float32 model around a float64 MD
   state (positions, momenta, box, energy sums). `--precision` takes
   `float32`, `mixed` or `float64` for MD, `opt`, `eval` and `tune-ewald`, on both
@@ -95,6 +142,34 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   the method in the `.pkl`, which the run keeps.
 
 #### Changed
+
+- Bare `so3lr` opens guided setup in an interactive terminal outside recognized
+  scheduler jobs; otherwise it prints help. Explicit simulation commands and
+  `--settings` do not open the wizard. Help is grouped by purpose; `--help-full`
+  shows the overview with additional usage examples.
+- The former every-option `--help-full` output is replaced by that overview;
+  use `so3lr COMMAND --help` for a command's complete options and defaults.
+- Supplying command options without required input, malformed MD YAML, and
+  combining root `--settings` with a subcommand now produce usage errors (exit
+  two). Bare subcommands still show help (exit zero), runtime failures remain
+  nonzero, and optimization execution success does not imply force convergence.
+- `show` uses stable path ordering. `show --once` is a human snapshot without
+  interactive hints or paging controls; its successful exit means rendering
+  succeeded, independently of the recorded run state. Explicit non-journal
+  file inputs are rejected with guidance to the journal directory.
+- Redirected `--display rich` falls back to plain output, avoiding terminal
+  control frames in batch output. Verified failures identify the absolute
+  traceback log path and keep multiline detail in the log.
+- `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
+  compatibility alias. Global display/verbosity/color options go before the
+  subcommand. Plain and quiet modes keep the per-invocation journal unless
+  explicitly disabled with `SO3LR_JOURNAL=0`.
+- Optimization's completion message is now `Optimization execution finished.`
+  The closing line distinguishes reaching the force criterion from exhausting the
+  step budget; successful command completion alone does not establish convergence.
+- Help no longer prints the ASCII banner; additional examples use `--help-full`.
+  The decorative separator before MD completion is removed, and force-criterion
+  diagnostics use significant digits. Numeric MD table columns are preserved.
 
 - `--flash-mixed` / `flash_mixed` is deprecated in favour of `--precision`:
   on means `mixed` and off `float32`. It still works, with a warning.
@@ -163,6 +238,34 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   move to the CUDA kernels (`--flash-kernels pallas` keeps the Pallas ones).
 
 #### Fixed
+
+- Guided setup validates supported periodic cells, reserves the backend's 3%
+  initial NPT contraction margin, and couples the small-cell 2 Å electrostatic
+  smearing to an explicit 1 Å PME mesh spacing. Dispersion keeps its 2 Å
+  smearing and 3 Å mesh spacing. These remain starting proposals rather than
+  convergence guarantees; direct flags and existing YAML defaults are unchanged.
+- Setup exports create files exclusively, recover from malformed XYZ elements,
+  and use the CLI's shared save-buffer default. Logs and journals use consistent
+  float32 energy reporting, and startup warnings target the current invocation.
+- Terminal output supports ASCII fallback, restores state after interrupted
+  initialization, and keeps controls visible in short optimization views.
+  Saved-run readers tolerate malformed or excessively nested JSON records.
+- MD/optimization errors retain the actual exception type and cause chain;
+  their preambles are covered too. Errors are shortened only when the traceback
+  was saved in the current log; logger setup/write failures and unexpected errors
+  in other commands retain the full terminal traceback.
+- Default `SIGTERM`/`SIGHUP` cleanup applies when the UI owns a terminal, including
+  setup and `show`; noninteractive runs retain native termination. Defaults are
+  restored when the first handler runs, before cleanup, so a second signal can terminate immediately. Custom
+  signal handlers are unchanged; `SIGKILL` cannot be handled.
+- SO3LR worker warnings reach the journal and live console without waiting for
+  an MD reporting boundary when journaling is enabled. Scoped live-display
+  redirection also keeps Python output to the current `sys.stderr` above the
+  display. Third-party prebound streams and native stderr writes remain outside
+  that routing, and their diagnostics are not automatically journaled.
+- Hardware-memory reporting preserves termination exceptions instead of
+  swallowing them. Verified traceback preservation also recognizes normal
+  rotating-log rollover; unverifiable logging still keeps the full terminal trace.
 
 - Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
   start instead of taking the input structure's momenta.
