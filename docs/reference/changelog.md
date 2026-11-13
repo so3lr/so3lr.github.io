@@ -53,14 +53,12 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   [`so3lr show`](../usage/cli.md#offline-monitoring) views for individual runs
   and folders. Plain output is automatic when stderr is redirected; direct
   commands, YAML and shell/scheduler launchers remain supported.
-- Per-invocation JSONL journals and resolved-settings YAML beside MD and
-  optimization logs by default, including in plain and quiet modes. Text logs keep their
-  numeric MD tables and add run boundaries, artifact paths and final summaries.
-- `SO3LR_JOURNAL=0` disables both per-invocation sidecars while retaining text
-  logs, trajectories, checkpoints and in-memory attached plots. The offline
-  viewer requires an enabled journal.
-- YAML `operation: optimization` selects the optimization command with its
-  normal option validation. `so3lr --version` prints the installed package version.
+- Per-invocation JSONL journals beside MD and optimization logs by default,
+  including in plain and quiet modes. Text logs keep their numeric MD tables.
+- `SO3LR_JOURNAL=0` disables the journal while retaining text logs,
+  trajectories, checkpoints and in-memory attached plots. The offline viewer
+  requires an enabled journal.
+- `so3lr --version` prints the installed package version.
 - The terminal interface adds the required dependency `rich>=14,<16`; existing
   pinned environments must allow a compatible Rich version.
 - Saved-run views show the age of the latest journal update, recorded host and
@@ -164,10 +162,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   traceback log path and keep multiline detail in the log.
 - `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
   compatibility alias. Global display/verbosity/color options go before the
-  subcommand. Plain and quiet modes keep per-invocation journal and resolved-YAML
-  sidecars unless explicitly disabled with `SO3LR_JOURNAL=0`.
+  subcommand. Plain and quiet modes keep the per-invocation journal unless
+  explicitly disabled with `SO3LR_JOURNAL=0`.
 - Optimization's completion message is now `Optimization execution finished.`
-  The summary distinguishes reaching the force criterion from exhausting the
+  The closing line distinguishes reaching the force criterion from exhausting the
   step budget; successful command completion alone does not establish convergence.
 - Help no longer prints the ASCII banner; additional examples use `--help-full`.
   The decorative separator before MD completion is removed, and force-criterion

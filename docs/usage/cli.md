@@ -126,7 +126,7 @@ reached.
 Every run ends with one closing line, in plain and batch output too:
 
 ```text
-✓ Evaluation finished in 00:03 · 40 structures · binding-energy MAE 1.12 kcal/mol
+✓ Evaluation finished in 00:03 · 20 structures · binding-energy MAE 0.94 kcal/mol
 ! Optimization finished in 00:14: force target not met · max force 0.00635 > 0.005 eV/Å
 ■ MD interrupted at step 220 after 00:15
 ✕ Tuning stopped after 00:01 · ValueError: …
@@ -150,18 +150,12 @@ Set `SO3LR_NO_UPDATE_CHECK=1` to turn it off.
 ## Logs and reproducibility
 
 MD and optimization logs retain their timestamped diagnostics and numeric
-tables, with additional run identity and final summary blocks. A run ID links
-the log to its journal and resolved settings, including when several invocations
-append to a log. Model/backend updates use the compact label
-`Model: ...; backend: ...`. Full run IDs appear in the `BEGIN RUN`, `RUN SUMMARY`
-and `END RUN` markers, journals and artifact paths. Use different `log_file`
-paths for concurrent jobs.
-
-The final summary separates execution status from scientific outcome. For
-example, an optimization can finish its step budget without meeting its force
-criterion. It also reports completed MD steps and physical time, final measured
-quantities with units, warnings/errors, wall time, the last successful checkpoint,
-and saved artifact paths. Unavailable information is not invented.
+tables. Each log opens with the SO3LR banner and a line naming the version and
+start time, e.g. `◆ SO3LR TAURI · v0.2.0 · 2026-11-13 14:02`. Use different
+`log_file` paths for concurrent jobs. Every run ends with the closing line
+described under [Terminal display](#terminal-display), in plain and batch output
+too; it separates finishing from reaching the goal, e.g. an optimization that
+used its step budget without meeting its force criterion.
 
 MD and optimization failures retain the exception type and cause chain in
 the journal. The terminal error is shortened only after the
@@ -208,25 +202,6 @@ that already hold another stream, native writes to file descriptor 2 and
 `sys.__stderr__` are not redirected. Libraries keep their own handlers, and the
 journal does not claim to capture all library diagnostics.
 
-By default, each MD or optimization invocation saves
-`<log-stem>.<run-id>.settings.resolved.yaml` alongside its journal, including
-with redirected stderr, `--display plain` or `--quiet`.
-It uses ordinary YAML values and input units (`md_dt` in fs), resolves input paths,
-and records the selected model, engine and precision when available. To repeat
-a run, copy this file, choose fresh output/log/checkpoint paths, and run:
-
-```shell
-so3lr --settings repeat.yaml
-```
-
-Saved optimization settings include `operation: optimization`; the same command
-then uses the optimization command's normal option validation. Ordinary MD YAML
-files keep their existing behavior. Saved settings retain overwrite protection.
-Input and restart files are referenced, not archived; retain the original input
-and checkpoint contents if exact replay is required. Warning/error totals count
-logging records, including file-only diagnostics, rather than unrelated Python
-warnings printed outside the logger.
-
 ## Offline monitoring
 
 By default, every CLI MD or optimization invocation also creates a unique
@@ -239,22 +214,18 @@ concurrent replicas in one scheduler job. The filename keeps its UUID-based
 run identity; it is not a chronological label. The viewer discovers files by
 the `.events.jsonl` suffix and orders them by path, so appending samples cannot
 move existing runs around. Existing journal filenames continue to work.
-These two sidecar files support runs without a live display: the journal
-supports offline observation, and the resolved YAML records the replay settings.
-Display controls change console output, not artifact creation. To disable both
-sidecars for an invocation, set the environment variable to exactly `0`:
+The journal supports runs without a live display: `so3lr show` reads it.
+Display controls change console output, not artifact creation. To disable the
+journal for an invocation, set the environment variable to exactly `0`:
 
 ```shell
 SO3LR_JOURNAL=0 so3lr --settings settings.yaml
 ```
 
 Unset or any other value keeps the default enabled. This opt-out keeps the text
-log, summaries, trajectories, checkpoints and in-memory attached plots. It writes
-no metrics JSONL or resolved-settings YAML and is noted in the text log; it is
-not reported as a disk failure. `so3lr show` cannot reconstruct that invocation
-without its journal.
-The numeric table columns and trajectory formats are retained; text logs also
-include the identity and final summary blocks described above.
+log, trajectories, checkpoints and in-memory attached plots, and writes no
+journal; it is not reported as a disk failure. `so3lr show` cannot reconstruct
+that invocation without its journal.
 
 ```shell
 # In your ordinary .sh script:
@@ -358,7 +329,7 @@ continues; do not use the viewer as the sole check of a job's health.
 | Task | What setup saves | Run later with |
 |---|---|---|
 | **Run molecular dynamics** (default) | `structure.extxyz`, `settings.yaml`, `run.sh` | `sh run.sh` |
-| **Optimize a geometry** | `structure.extxyz`, `settings.yaml` (`operation: optimization`), `run.sh` | `sh run.sh` |
+| **Optimize a geometry** | `structure.extxyz`, `run.sh` calling `so3lr opt` | `sh run.sh` |
 | **Evaluate a dataset** | `run.sh` calling `so3lr eval` (the dataset is referenced, not copied) | `sh run.sh` |
 | **Watch runs** | nothing; opens `so3lr show` on a folder | — |
 | **Other tasks** | nothing; lists the `finetune`, `train` and `tune-ewald` commands | — |

@@ -60,11 +60,11 @@ binding-energy errors against `benchmark_Eint` (in kcal/mol), computed from the
 full-precision energies:
 
 ```text
-Binding energies (dimer - separated) for 20 dimers, against benchmark_Eint in kcal/mol:
-  MAE 1.117 kcal/mol · RMSE 1.576 kcal/mol · max |error| 4.658 kcal/mol
+Binding energies (dimer - separated) for 10 dimers, against benchmark_Eint in kcal/mol:
+  MAE 0.939 kcal/mol · RMSE 1.180 kcal/mol · max |error| 2.272 kcal/mol
 ```
 
-`so3lr start` → **Evaluate a dataset** includes a 20-dimer SAPT10k example. To
+`so3lr start` → **Evaluate a dataset** includes a 10-dimer SAPT10k example. To
 work with the individual values:
 
 ```python

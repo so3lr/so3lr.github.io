@@ -39,11 +39,10 @@ For `.sh` and scheduler jobs, use `so3lr show <output-directory>` in another
 terminal to plot the local metrics journal. The observer works offline and can
 be closed with Esc or `q` while the simulation continues. By default, each MD or optimization invocation
 writes a separate `*.events.jsonl` beside its text log, including when output is
-redirected or `--display plain` or `--quiet` is selected. A separate
-`*.settings.resolved.yaml` records replay settings for the same invocation.
-These files support offline observation and replay independently of the console
-display. Set `SO3LR_JOURNAL=0` to disable both sidecars for an invocation while
-keeping text logs, trajectories, checkpoints and attached plots. The separate
+redirected or `--display plain` or `--quiet` is selected. It supports offline
+observation independently of the console display. Set `SO3LR_JOURNAL=0` to
+disable it for an invocation while keeping text logs, trajectories, checkpoints
+and attached plots. The separate
 viewer then has no journal for that invocation to read; other environment values
 leave journaling enabled.
 The time axis is local to that invocation, including restarted segments.
@@ -67,9 +66,8 @@ or interrupted MD run ends with its last checkpoint and the option to resume
 from it. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
 
 The complete settings, diagnostics and per-cycle table remain in the text
-log. A final summary adds the execution outcome, completed steps/time, warnings,
-checkpoint and output paths. A separate resolved YAML file records replayable
-settings. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
+log, and every run ends with one closing line on how it finished. See
+[Logs and reproducibility](cli.md#logs-and-reproducibility).
 If an MD or optimization preamble fails before logging is ready, or its
 traceback cannot be saved, the full traceback remains visible in the terminal.
 To see ordinary diagnostic output in the terminal as well, use:
