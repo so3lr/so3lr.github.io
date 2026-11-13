@@ -29,8 +29,8 @@ Reference guides are solid, muted lines behind the data; the exact value appears
 on each plot's heading row, while line positions use terminal-character rows.
 Temperature shows the requested thermostat target in NVT, NPT and Langevin.
 For NVE temperature, each energy plot and NPT volume, the guide is a measured
-mean over the latter half of the recorded time span. It is labeled as a
-reference, not a target; long-run binning marks approximate means explicitly.
+mean over the second half of the recorded time span, labeled `Second-half mean`
+rather than a target; long-run binning marks approximate means explicitly.
 Use `e` to change the energy property and up/down to page through plots.
 During MD, Esc hides graphs without stopping the run; `q` switches between
 graphs and compact status and can restore them. Ctrl+C interrupts the calculation.

@@ -66,7 +66,10 @@ marks SO3LR, focus, progress, the temperature trace and the Running state;
 energy is cyan and NPT volume violet. `--no-color` and `NO_COLOR` remove the
 colors, and terminals without Unicode get ASCII glyphs.
 During initialization, compilation and other long stages, the Tauri pulse and
-a clock counting time since launch refresh twice per second. The star expands and recedes in
+a clock counting time since launch refresh twice per second. Once a rate is
+measured, the same line adds an ETA, e.g. `Running · 00:21 since launch · ETA 07:22`;
+the rate excludes the first unit of work, which usually includes compilation.
+An optimization with a force target shows `ETA ≤ …`: it may converge sooner. The star expands and recedes in
 place over five seconds; terminals without Unicode use an ASCII pulse.
 This refresh uses a frozen text snapshot and a wall
 clock, without querying model arrays or running numerical work. Measured values
@@ -104,12 +107,35 @@ it with a subcommand is a usage error; the settings file is never silently ignor
 live updates; use `--display plain` for output with no terminal redraws.
 These options leave the saved log and simulation settings unchanged.
 
-The live display covers `nvt`, `nvt-langevin`, `npt`, `nve`, MD launched
-with `--settings`, and `opt`, including the standard and Flash engines.
-Optimization shows its latest reported step, potential energy and maximum
-force instead of MD plots. Its result states whether the force criterion was
-met or the step budget was reached. Evaluation, training and tuning retain
-their existing output and progress bars.
+The live display covers every command that computes: `nvt`, `nvt-langevin`,
+`npt`, `nve`, MD launched with `--settings`, `opt`, `eval`, `tune-ewald`,
+`finetune` and `train`, on the standard and Flash engines. Each shows its
+stage, a progress bar with elapsed time, ETA and rate (structures, candidates,
+epochs or optimization steps), and a results table: errors against the dataset
+labels, binding energies and timing for `eval`; the recommended settings and a
+ready-to-run MD command for `tune-ewald`; the latest validation metrics for
+training. Evaluation, tuning and training keep no journal, so `so3lr show` does
+not list them; their full log still goes to the log file.
+
+Optimization adds two graphs once three cycles are recorded: potential energy,
+and maximum force on a log axis with the force target as a dashed line. The
+graphs use the rows the terminal has left and disappear when there are none.
+Its result states whether the force criterion was met or the step budget was
+reached.
+
+Every run ends with one closing line, in plain and batch output too:
+
+```text
+✓ Evaluation finished in 00:03 · 40 structures · binding-energy MAE 1.12 kcal/mol
+! Optimization finished in 00:14: force target not met · max force 0.00635 > 0.005 eV/Å
+■ MD interrupted at step 220 after 00:15
+✕ Tuning stopped after 00:01 · ValueError: …
+```
+
+Green ✓ means the run finished and met its goal; amber `!` that it finished
+without it (an unmet force target, no k-space candidate within the accuracy);
+amber ■ an interruption; red ✕ an error. Resume hints follow the line.
+`--quiet` prints no closing line.
 
 ### Release notices
 
@@ -279,7 +305,8 @@ appears on the plot's heading row (below the plot in narrow terminals); line
 positions use terminal-character rows.
 NVE has no thermostat: its temperature guide is a measured reference, as are
 the guides for each energy plot and NPT volume. These references are means of
-samples in the latter half of the recorded time span, not target values.
+samples in the second half of the recorded time span, labeled
+`Second-half mean`, not target values.
 For long runs, bounded time bins retain sums and counts independently of graph
 decimation; a reference marked approximate uses an estimated contribution
 from the bin crossing the midpoint. Time axes share the same bounds and aligned
@@ -291,7 +318,9 @@ excluding startup and output overhead. Unknown timing or atom counts are
 omitted rather than estimated.
 
 For an optimization journal, `show` displays the latest recorded optimization
-cycle: step count, potential energy, maximum force and any force target. A
+cycle: step count, potential energy, maximum force and any force target, with
+the energy and log-scale force graphs once three cycles are recorded (smaller,
+or none, in a short terminal). A
 completed invocation does not imply convergence. The view distinguishes
 **Force criterion met**, **Step budget reached; force criterion not met**, and
 **Step budget finished (no force target)**.

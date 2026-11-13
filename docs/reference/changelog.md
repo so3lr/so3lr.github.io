@@ -81,6 +81,14 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   fine-tuning, training and k-space tuning.
 - A once-a-day, opt-out release notice in interactive terminals
   (`SO3LR_NO_UPDATE_CHECK=1`).
+- `eval`, `tune-ewald`, `finetune` and `train` use the live display too, with
+  a progress bar, ETA and result tables, instead of falling back to log lines.
+  `eval` reports binding energies for dimer files without `--save-to`.
+- Optimization graphs: potential energy and log-scale maximum force with the
+  force target, live and in `so3lr show`.
+- Every run ends with one closing line: ✓ met its goal, `!` finished without it,
+  ■ interrupted, ✕ failed. The activity line shows an ETA once a rate is measured.
+- Log files add `◆ SO3LR TAURI · <version> · <date time>` under the logo.
 - Plain and batch output logs a `Progress … · ns/day · ETA …` line at every
   checkpoint and names the `so3lr show` command for the run. Failed or
   interrupted MD runs end with the last checkpoint and the option to resume
