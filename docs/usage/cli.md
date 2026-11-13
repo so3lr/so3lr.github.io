@@ -407,8 +407,10 @@ for later** writes those files only. **Edit settings…** changes one group
 (temperature and pressure, duration and frame interval, timestep, charge and
 multiplicity, seed and relaxation, cutoff, or output directory) and returns to
 the review. Its first entry starts over, keeping every previous answer as the
-default. Nothing is written before this explicit review choice. Esc in a
-selection menu cancels setup. Cancel or Ctrl+C before export also writes nothing.
+default. Nothing is written before this explicit review choice. In any menu,
+Esc or Backspace goes back one step: from a task's first question to the task
+menu, and from a review to its settings. Esc at the task menu closes setup;
+Ctrl+C cancels anywhere. Cancel or Ctrl+C before export writes nothing.
 
 The new bundle contains the selected structure, `settings.yaml` and an
 executable `run.sh`. A single-frame input is copied byte-for-byte when no

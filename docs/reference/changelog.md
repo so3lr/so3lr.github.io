@@ -68,7 +68,7 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   or signalling the scheduler or producer process.
 - Esc closes saved-run views and the folder overview, or hides attached MD
   plots without stopping the calculation. `q` retains its existing close/toggle
-  behavior; Esc in guided selection menus cancels setup without exporting.
+  behavior. In `so3lr start` menus, Esc or Backspace goes back one step.
 - Guided setup asks only the essentials, then **Edit settings…** on the review
   changes one group at a time. It asks for a trajectory frame interval in ps,
   reads charge and multiplicity from the XYZ comment line, and explains
