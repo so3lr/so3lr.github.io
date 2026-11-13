@@ -337,8 +337,12 @@ continues; do not use the viewer as the sole check of a job's health.
 Optimization asks for the structure, model, a force threshold (default
 0.05 eV/Å), a step budget (default 1,000), charge and multiplicity; it stops at
 whichever comes first. Evaluation asks for a `.xyz`/`.extxyz` dataset with
-reference energies and forces, the model and the long-range cutoff, and writes
-`predictions.extxyz` and `eval.log` when it runs. Both offer **Save setup and
+reference energies and forces (a bundled example, the file browser, or a pasted
+path), the model and the long-range cutoff (100 Å by default for gas-phase data),
+and writes `predictions.extxyz` and `eval.log` when it runs. The bundled example
+holds 20 SAPT10k dimers as bound/separated pairs; for such files the evaluation
+reports binding energies against the SAPT reference (see
+[Binding energies](../advanced/binding-energies.md)). Both offer **Save setup and
 start now** or **Save setup for later**, like MD.
 
 For molecular dynamics, follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
