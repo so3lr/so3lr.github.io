@@ -76,6 +76,11 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - One terminal palette across the live view, `so3lr show` and setup (amber
   accent, cyan energy, violet volume), with taller plots and a progress bar in
   the live header and in wide run overviews.
+- `so3lr start` first asks for a task: molecular dynamics, geometry
+  optimization, dataset evaluation, watching runs, or the commands for
+  fine-tuning, training and k-space tuning.
+- A once-a-day, opt-out release notice in interactive terminals
+  (`SO3LR_NO_UPDATE_CHECK=1`).
 - Plain and batch output logs a `Progress … · ns/day · ETA …` line at every
   checkpoint and names the `so3lr show` command for the run. Failed or
   interrupted MD runs end with the last checkpoint and the option to resume

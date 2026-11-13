@@ -111,6 +111,16 @@ force instead of MD plots. Its result states whether the force criterion was
 met or the step budget was reached. Evaluation, training and tuning retain
 their existing output and progress bars.
 
+### Release notices
+
+In an interactive terminal, SO3LR checks GitHub at most once a day for a newer
+release and, after a successful command, prints one line such as
+`SO3LR 0.3.0 is available (you have 0.2.0)` with the upgrade command. The check
+runs in the background with a short timeout, caches its answer in
+`~/.cache/so3lr/` (or `$XDG_CACHE_HOME/so3lr/`), and sends no user information.
+It never runs in scheduler or CI jobs, without a terminal, or with `--quiet`.
+Set `SO3LR_NO_UPDATE_CHECK=1` to turn it off.
+
 ## Logs and reproducibility
 
 MD and optimization logs retain their timestamped diagnostics and numeric
@@ -314,7 +324,24 @@ continues; do not use the viewer as the sole check of a job's health.
 
 ## Guided setup
 
-Run `so3lr start` to follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
+`so3lr start` first asks what you would like to do:
+
+| Task | What setup saves | Run later with |
+|---|---|---|
+| **Run molecular dynamics** (default) | `structure.extxyz`, `settings.yaml`, `run.sh` | `sh run.sh` |
+| **Optimize a geometry** | `structure.extxyz`, `settings.yaml` (`operation: optimization`), `run.sh` | `sh run.sh` |
+| **Evaluate a dataset** | `run.sh` calling `so3lr eval` (the dataset is referenced, not copied) | `sh run.sh` |
+| **Watch runs** | nothing; opens `so3lr show` on a folder | — |
+| **Other tasks** | nothing; lists the `finetune`, `train` and `tune-ewald` commands | — |
+
+Optimization asks for the structure, model, a force threshold (default
+0.05 eV/Å), a step budget (default 1,000), charge and multiplicity; it stops at
+whichever comes first. Evaluation asks for a `.xyz`/`.extxyz` dataset with
+reference energies and forces, the model and the long-range cutoff, and writes
+`predictions.extxyz` and `eval.log` when it runs. Both offer **Save setup and
+start now** or **Save setup for later**, like MD.
+
+For molecular dynamics, follow **1/3 Structure**, **2/3 Dynamics**, and **3/3 Review
 and start**. Choose one of the bundled examples, browse directories with the
 arrow keys and Enter, or paste a file path. Dynamics, model and review choices
 also use keyboard menus.
