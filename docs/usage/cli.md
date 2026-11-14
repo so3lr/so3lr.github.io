@@ -8,7 +8,7 @@ molecular dynamics, evaluation, training and parameter tuning.
 | Command | What it does |
 |---|---|
 | `so3lr start` | Guide MD setup, review, then start now or save a run bundle |
-| `so3lr show PATH` | Browse local MD and optimization journals while jobs run, or inspect completed runs |
+| `so3lr show PATH` | Browse local MD, optimization and training journals while jobs run, or inspect completed runs |
 | `so3lr opt` | Geometry optimization (FIRE) |
 | `so3lr nvt` | NVT molecular dynamics with the Nosé–Hoover chain thermostat |
 | `so3lr nvt-langevin` | NVT molecular dynamics with the Langevin thermostat |
@@ -113,15 +113,24 @@ The live display covers every command that computes: `nvt`, `nvt-langevin`,
 stage, a progress bar with elapsed time, ETA and rate (structures, candidates,
 epochs or optimization steps), and a results table: errors against the dataset
 labels, binding energies and timing for `eval`; the recommended settings and a
-ready-to-run MD command for `tune-ewald`; the latest validation metrics for
-training. Evaluation, tuning and training keep no journal, so `so3lr show` does
-not list them; their full log still goes to the log file.
+ready-to-run MD command for `tune-ewald`; the latest validation loss and errors
+(energy and force MAE, with units) for training. Evaluation and tuning keep no
+journal, so `so3lr show` does not list them; their full log still goes to the
+log file.
 
 Optimization adds two graphs once three cycles are recorded: potential energy,
 and maximum force on a log axis with the force target as a dashed line. The
 graphs use the rows the terminal has left and disappear when there are none.
 Its result states whether the force criterion was met or the step budget was
 reached.
+
+`finetune` and `train` keep a journal next to their log file
+(`<workdir>/finetuning.<id>.events.jsonl` by default for `finetune`) and draw
+two graphs once three validations are recorded: validation loss, and the force
+MAE (the energy MAE when the data has no forces), against the training step.
+An axis is logarithmic when its values are positive and fall at least fivefold;
+an adaptive robust loss can be negative and keeps a linear axis. `so3lr show`
+lists training runs as `TRN`, with validated epochs as their progress.
 
 Every run ends with one closing line, in plain and batch output too:
 
