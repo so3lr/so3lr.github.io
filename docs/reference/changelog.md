@@ -8,9 +8,9 @@ reproducible, use the dated name, e.g. `so3lr-tauri-m-2606`.
 
 ## Models
 
-### 2606 — current default
+### 2606 { #model-2606 }
 
-Bundled as `so3lr-tauri-s-2606`, `so3lr-tauri-m-2606`, `so3lr-tauri-l-2606`. The
+The current default. Bundled as `so3lr-tauri-s-2606`, `so3lr-tauri-m-2606`, `so3lr-tauri-l-2606`. The
 short names and the no-argument default resolve here.
 
 Each 2606 checkpoint is the matching 2602 checkpoint refined further, with the
@@ -20,7 +20,7 @@ the parent run.
 <!-- TODO: what changed relative to 2602 — training data, accuracy. See
      "Needed from you" in the site README. -->
 
-### 2602
+### 2602 { #model-2602 }
 
 Bundled as `so3lr-tauri-s-2602`, `so3lr-tauri-m-2602`, `so3lr-tauri-l-2602`. First
 release of the s/m/l family.
@@ -33,7 +33,7 @@ Relative to the original model, this generation:
 - uses parameter-free NLH short-range repulsion instead of ZBL
 - covers Z = 1–85 instead of eight biomolecular elements
 
-### Original — `so3lr`
+### Original — `so3lr` { #model-original }
 
 The model published in [JACS 147, 33723 (2025)](https://doi.org/10.1021/jacs.5c09558).
 It is kept as `so3lr` to reproduce published results. It is a separate model
@@ -93,7 +93,12 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   checkpoint and names the `so3lr show` command for the run. Failed or
   interrupted MD runs end with the last checkpoint and the option to resume
   from it; runs stopped by Ctrl+C or a signal show as **Interrupted**.
-
+- `so3lr tune-ewald` tunes PME on the flash engine whenever flash takes the
+  structure. It takes its charges and timings from flash, so tens of thousands
+  of atoms fit on one GPU: a 32,512-atom POPC bilayer tunes in about 3.5 min on
+  an A100 with `so3lr-tauri-m` or `-l`, where the neighbour-list path ran out of
+  memory. `--engine` / `engine:` (`auto`, `flash`, `standard`) picks the engine,
+  as in MD. Ewald, P3M and the `cutoff` modes still tune on the neighbour lists.
 - `--precision mixed`, now the default: a float32 model around a float64 MD
   state (positions, momenta, box, energy sums). `--precision` takes
   `float32`, `mixed` or `float64` for MD, `opt`, `eval` and `tune-ewald`, on both
@@ -135,6 +140,16 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   `FlashCalculator(flash_kernels=)` chooses `auto`, `pallas` or `cuda`. See
   [CUDA kernels](../usage/md.md#cuda-kernels).
 - Semi-isotropic NPT on the flash engine.
+- Small periodic boxes on the flash engine, down to about 1 Å across. Before,
+  flash needed about 30 Å at the default 12 Å `lr_cutoff`, and a smaller box
+  fell back to the neighbour-list engine, which still refuses boxes under twice
+  `lr_cutoff` (24 Å). Flash sums the long range over the periodic images, and
+  under twice the 4.5 Å short-range cutoff the short range too, in the Pallas
+  and the CUDA kernels. On one A100 with `so3lr-tauri-m`, 64 waters in a
+  12.4 Å box run at 1.5 ms per step with the CUDA kernels (2.0 ms with
+  Pallas), against 15 ms for the neighbour-list engine on the smallest
+  supercell it accepts, and 620 ms for `So3lrCalculator`. See
+  [Box size](../usage/md.md#box-size).
 - The proton-transfer CVs `chargeseparation` and `ionsitedistance`, and
   `r0_multiplier` for `coordinationnumber` (default 1.6, the value used
   before). PySAGES is pinned to a newer commit of the same fork.
@@ -172,7 +187,18 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Help no longer prints the ASCII banner; additional examples use `--help-full`.
   The decorative separator before MD completion is removed, and force-criterion
   diagnostics use significant digits. Numeric MD table columns are preserved.
-
+- `tune-ewald`'s `mesh_lo` / `mesh_hi` now mean 2ⁿ mesh points along the shortest
+  cell vector, the mesh jax-pme builds. They used to give the spacing
+  2*L*/(2ⁿ − 1), which jax-pme padded to 2ⁿ⁺¹ points. The defaults moved from
+  4–6 to 5–7, which tries the same meshes. A settings file that sets these keys
+  now gets meshes half as fine; the log lists the meshes tried.
+- `tune-ewald`'s PME error estimate uses the mesh spacing jax-pme actually
+  builds, after padding the mesh to a power of two. The estimates are about 4–9×
+  lower than before, so coarser meshes now reach a given `accuracy`.
+- `tune-ewald` measures the real-space error on the pairs of up to 2048 sampled
+  atoms, instead of on every neighbour pair.
+- `tune-ewald` recommends the most accurate candidate within `accuracy` whose
+  timing is within 3 % of the fastest, not simply the fastest.
 - `--flash-mixed` / `flash_mixed` is deprecated in favour of `--precision`:
   on means `mixed` and off `float32`. It still works, with a warning.
 - An explicit `--precision float32` now runs float32 throughout. It
@@ -268,7 +294,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Hardware-memory reporting preserves termination exceptions instead of
   swallowing them. Verified traceback preservation also recognizes normal
   rotating-log rollover; unverifiable logging still keeps the full terminal trace.
-
+- `tune-ewald`'s search ranges no longer go one step past their end when the
+  range is not a whole number of steps (`cutoff_lo` 7 with `cutoff_hi` 12 and
+  step 2 tried 6 Å as well).
+- `so3lr tune-ewald` passes `--spin` to the model (the CLI dropped it).
 - Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
   start instead of taking the input structure's momenta.
 - `so3lr tune-ewald --kspace-electrostatics pme` searches with 4 interpolation

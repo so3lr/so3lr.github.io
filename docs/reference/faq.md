@@ -137,10 +137,12 @@
     outputs are mutually exclusive, so run them as separate calculations.
 
 ??? failure "MD refuses my periodic box as too small"
-    Every box length must be at least twice `lr_cutoff` (24 Å at the default
-    12 Å). Lower `--lr-cutoff` and let k-space carry the long range
-    (`--kspace-electrostatics pme`, plus `kspace_dispersion: pme` in a settings
-    file, or dispersion stays truncated), or use the
+    The neighbour-list engine needs every box length to be at least twice
+    `lr_cutoff` (24 Å at the default 12 Å). On a GPU, the flash engine runs
+    smaller orthorhombic boxes over their periodic images (`--engine auto`
+    picks it). Otherwise, lower `--lr-cutoff` and let k-space carry the long
+    range (`--kspace-electrostatics pme`, plus `kspace_dispersion: pme` in a
+    settings file, or dispersion stays truncated), or use the
     [ASE calculator](../usage/ase.md). See [Box size](../usage/md.md#box-size).
 
 ??? failure "Installation fails on a cluster"

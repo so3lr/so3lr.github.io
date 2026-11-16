@@ -57,8 +57,9 @@ cycles (100 when unset, never with `kspace_npt_cycles: null`).
 
 - **Cell shape.** MD runs orthorhombic cells only. The
   [ASE calculator](#from-the-ase-calculator) takes any cell shape.
-- **Box size.** Every box length must be at least twice `lr_cutoff` (24 Å at
-  the default 12 Å). For a smaller box, lower `--lr-cutoff` and set
+- **Box size.** The [flash engine](../usage/md.md#when-flash-runs) takes
+  small boxes. On the neighbour-list engine every box length must be at least
+  twice `lr_cutoff` (24 Å at the default 12 Å); for a smaller box there, lower `--lr-cutoff` and set
   `kspace_dispersion: pme`, because `lr_cutoff` truncates the real-space
   dispersion too. An `lr_cutoff` below 10 Å is accepted only with k-space
   electrostatics on. See [Box size](../usage/md.md#box-size).
@@ -219,8 +220,9 @@ power of two.
 ## Automatic tuning
 
 `so3lr tune-ewald` grid-searches the real-space cutoff, smearing and grid
-resolution, and reports the fastest parameter set that reaches a target force
-accuracy:
+resolution. Of the parameter sets that reach a target force accuracy, it
+recommends the most accurate one that is about as fast as the fastest (see
+below):
 
 ```shell
 so3lr tune-ewald --input water_box.xyz \
@@ -234,6 +236,7 @@ so3lr tune-ewald --input water_box.xyz \
 | `--kspace-electrostatics` | Method to tune: `ewald`, `pme` or `p3m` |
 | `--lr-cutoff` | Upper bound of the cutoff search, Å |
 | `--precision` | Use `float64` for meaningful error bounds |
+| `--engine` | `auto` (default), `flash` or `standard`; see below |
 | `--settings` | Optional YAML with the search ranges below |
 
 The other model flags are shared with the MD commands. The input must have a
@@ -241,6 +244,22 @@ cell, and every cell height must be at least twice `--lr-cutoff`.
 Per-candidate errors and timings go to the log file (`<input>_tune-kspace.log`,
 or `<settings>.log` with `--settings`), and the command prints a ready-to-run
 MD command and the equivalent settings keys.
+
+PME tuning runs on the [flash engine](../usage/md.md#when-flash-runs) whenever
+flash takes the structure. The partial charges come from flash, and each
+candidate is timed with flash force calls, one engine per cutoff and mesh shape.
+Changing the smearing does not change the work. With no per-edge arrays, systems
+of tens of thousands of atoms fit on one GPU. Otherwise, and always for Ewald,
+P3M and the `cutoff` modes, the tuning runs on the neighbour-list potential.
+`--engine standard` forces the neighbour lists. `--engine flash` forces flash and
+fails where flash cannot run. The log says which engine ran and why.
+
+The real-space error is measured on the pairs of up to 2048 sampled atoms (all
+of them in smaller systems). The k-space error uses the analytic estimates,
+with the mesh jax-pme builds (padded to a power of two). Of the candidates
+within `accuracy`, the recommendation is the most accurate one whose timing is
+within 3 % of the fastest. On flash the mesh costs little next to the model, so
+timings of neighbouring candidates differ mostly by noise.
 
 The search ranges are set in a settings file passed with `--settings` (also
 listed in the [settings reference](../usage/settings.md#tune-ewald-search-ranges)):
@@ -251,7 +270,7 @@ listed in the [settings reference](../usage/settings.md#tune-ewald-search-ranges
 | `cutoff_lo`, `cutoff_hi`, `cutoff_it` | `7.0` (`10.0` in the `cutoff` modes), `lr_cutoff`, `2.0` | Real-space cutoff range and step, Å |
 | `smear_lo`, `smear_hi`, `smear_it` | `2.0`, `6.0`, `2.0` | Smearing range and step, Å |
 | `ns_lo`, `ns_hi` | `4`, `8` | Ewald: candidate spacings *L*/*n* for *n* in this range, where *L* is the shortest cell vector |
-| `mesh_lo`, `mesh_hi` | `4`, `6` | PME/P3M: candidate spacings 2*L*/(2ⁿ − 1) for *n* in this range |
+| `mesh_lo`, `mesh_hi` | `5`, `7` | PME/P3M: candidate spacings that give 2ⁿ mesh points along the shortest cell vector, for *n* in this range |
 | `nodes_lo`, `nodes_hi` | `4`, `4` | Interpolation nodes: PME takes only 4, P3M takes 3–5 |
 
 A settings file can also set `kspace_electrostatics: cutoff`, which tunes only
