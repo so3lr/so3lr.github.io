@@ -109,14 +109,16 @@ them in a [settings file](settings.md).
 
 ### Engine
 
-See [MD engines](md.md#md-engines).
+See [MD engines](md.md#md-engines). `opt` and `eval` take these flags too
+(for `eval`, see [Choosing the engine](evaluation.md#choosing-the-engine));
+`tune-ewald` takes `--engine` only.
 
 | Flag | Default | Meaning |
 |---|---|---|
 | `--engine` | `auto` | `auto`, `flash` or `standard`. |
 | `--flash-mode` | `auto` | `fast`, `default`, `lean`, `leanest` or `minimal` (fastest first); `auto` picks the fastest that fits in memory. |
 | `--flash-devices` | `1` | Number of GPUs on one node to run flash on. |
-| `--flash-kernels` | `auto` | `auto`, `pallas` or `cuda`: flash's [CUDA kernels](md.md#cuda-kernels) on an H100/H200 where they apply. |
+| `--flash-kernels` | `auto` | `auto`, `pallas` or `cuda`: flash's [CUDA kernels](md.md#cuda-kernels) on an NVIDIA GPU of compute capability 8.0 or newer that holds the model's tiles, with `nvcc`; `auto` falls back to the Pallas kernels where they do not apply or fit. |
 
 ### Thermostat — `nvt` and `npt`
 
@@ -192,7 +194,8 @@ The main flags are below; see [Dataset evaluation](evaluation.md) for all of the
 | `--log-file` | next to `--save-to` | If nothing is saved, the log goes to the console only. |
 
 `eval` also takes `--model`, `--precision`, `--lr-cutoff`,
-`--dispersion-damping`, the two charge overrides and the k-space flags.
+`--dispersion-damping`, the two charge overrides, the k-space flags and the
+[engine flags](#engine).
 
 ## Training and fine-tuning
 
@@ -335,7 +338,7 @@ These JAX/XLA variables are useful on shared nodes.
 | `CUDA_VISIBLE_DEVICES` | GPUs visible to the process. |
 | `JAX_PLATFORMS=cpu` | Force CPU even when a GPU is available. |
 | `SO3LR_CUDA_CACHE` | Where flash's [CUDA kernels](md.md#cuda-kernels) are built (default `~/.cache/so3lr/flash_cuda`). |
-| `SO3LR_NVCC`, `CUDA_HOME` | Locate `nvcc` for the CUDA kernels when it is not on the `PATH`. |
+| `SO3LR_NVCC`, `CUDA_HOME` | Locate `nvcc` for the CUDA kernels (`SO3LR_NVCC` is the path to `nvcc` itself); tried before the `PATH` and `/usr/local/cuda`. |
 
 If a run is unexpectedly slow, check the backend and device at the start of
 the log.

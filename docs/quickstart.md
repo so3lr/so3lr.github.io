@@ -52,7 +52,8 @@ writes:
 An isolated molecule or a periodic orthorhombic box on a recent NVIDIA GPU or
 an AMD MI355X runs on the fast **flash** engine, and anything else on the
 neighbour-list engine (see
-[Molecular dynamics](usage/md.md)).
+[Molecular dynamics](usage/md.md#when-flash-runs)). On the MI355X, flash needs
+`XLA_FLAGS="--xla_gpu_enable_command_buffer="` in the environment.
 
 The default long-range cutoff of 12 Å is meant for periodic, condensed-phase
 systems; for gas-phase simulations, we suggest using `--lr-cutoff 100`.

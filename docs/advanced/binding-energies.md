@@ -53,6 +53,11 @@ so3lr eval --datafile sapt10k_prepared.xyz --targets energy \
 Use `--lr-cutoff 100` for these gas-phase dimers, and keep the default
 `--batch-size 1`.
 
+These files run on the neighbour-list model, not on the flash engine: in the
+separated frames, monomer B is 10,000 Å away, too far for the cell grid that
+flash lays out around the atoms. `--engine auto` falls back and names the
+structure in its `Engine:` line, and `--engine flash` stops with that reason.
+
 ## Computing the binding energies
 
 ```python

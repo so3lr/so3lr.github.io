@@ -127,6 +127,39 @@ so3lr eval --datafile crystals.extxyz --save-to predictions.extxyz \
 In that case, every structure must be periodic in all three directions. See
 [Long-range electrostatics](../advanced/electrostatics.md) for the parameters.
 
+## Choosing the engine
+
+`so3lr eval` and `so3lr opt` run on the [flash engine](md.md#md-engines)
+wherever it computes what is asked, as MD does, and take the same `--engine`,
+`--flash-mode`, `--flash-kernels` and `--flash-devices` flags. The log's
+`Engine:` line says which engine ran and, after a fallback, why.
+
+Flash evaluates energies and forces only. The default `--targets`
+(`forces,dipole_vec,hirshfeld_ratios`) therefore run on the neighbour-list
+model; ask for `--targets energy,forces` (or one of the two) to use flash:
+
+```shell
+so3lr eval --datafile water_boxes.extxyz --targets energy,forces \
+    --save-to predictions.extxyz
+```
+
+With `--engine auto`, `eval` also falls back to the neighbour-list model when:
+
+- a structure has a box that is not periodic in all three directions or not
+  orthorhombic, or a box too small for its cutoffs or too large for flash's
+  cell grid;
+- a structure with no box is spread out too far for the cell grid that flash
+  lays out around its atoms, for example a dimer with one monomer moved far
+  away (see [Binding energies](../advanced/binding-energies.md#evaluating));
+- the dataset has more than 16 different sets of atoms (atomic numbers in
+  order), since flash builds and compiles an engine for each. The
+  neighbour-list model compiles once for the whole dataset;
+- a setting is one flash declines in MD too, such as Ewald or P3M.
+
+`--engine flash` raises instead of falling back, and runs any number of sets
+of atoms. Flash evaluates one structure at a time, so `--batch-size` applies
+only to the neighbour-list model.
+
 ## Options
 
 | Flag | Default | Meaning |
@@ -144,6 +177,8 @@ In that case, every structure must be periodic in all three directions. See
 | `--charge-equilibration-total-charge` | follows the charge | Charge that charge equilibration conserves to. |
 | `--kspace-electrostatics` | off | `ewald` / `pme` / `p3m`, with `--kspace-smearing` (`4.0`), `--kspace-spacing` (`2.0`) and `--kspace-interp-nodes` (`4`). |
 | `--kspace-dispersion` | off | `ewald` / `pme`, with `--kspace-dispersion-smearing` (`2.0`), `--kspace-dispersion-spacing` (`3.0`) and `--kspace-dispersion-interp-nodes` (`4`). |
+| `--engine` | `auto` | `auto`, `flash` or `standard`; see [Choosing the engine](#choosing-the-engine). |
+| `--flash-mode`, `--flash-kernels`, `--flash-devices` | `auto`, `auto`, `1` | As for [MD](md.md#flash-options). |
 | `--jit-compile` / `--no-jit-compile` | on | Disable when debugging shape errors. |
 | `--overwrite` / `--no-overwrite` | refuse | Replace existing output files. |
 | `--log-file` | `<save-to>` with `.log` | Console only when there is no `--save-to`. |

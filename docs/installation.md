@@ -40,6 +40,22 @@ pip install .
 Without an existing JAX, `pip install .` installs the CPU build. For an NVIDIA
 GPU, use `pip install ".[cuda12]"`.
 
+SO3LR excludes JAX 0.10.2, which computes wrong energies and forces on the CPU
+without an error. An existing 0.10.2 install is moved to 0.10.1. On a GPU,
+install with the `cuda12` extra so that JAX's CUDA plugin moves with it;
+otherwise JAX finds a plugin it cannot use and runs on the CPU.
+
+## CUDA kernels
+
+On an NVIDIA GPU, the flash engine's fastest path runs on
+[CUDA kernels](usage/md.md#cuda-kernels), which SO3LR builds with `nvcc` on
+first use. `nvcc` comes with the CUDA toolkit, not with JAX. SO3LR looks for it
+in `SO3LR_NVCC` (the full path to `nvcc`), then `$CUDA_HOME/bin`, the `PATH`
+and `/usr/local/cuda/bin`. Without it, flash runs on its Pallas kernels: the
+log has no `Flash: CUDA kernels (...)` line, and with a `--flash-mode` given
+it says `Flash: CUDA kernels not used (nvcc not found (set SO3LR_NVCC or
+CUDA_HOME)); Pallas kernels`.
+
 ## Verify it works
 
 Run a short calculation to check that JAX works and which device it uses:
@@ -133,4 +149,10 @@ See [Contributing](contributing.md) for the test layout and the lockfile.
 ??? failure "Importing `jax_md` fails inside `flax`, or PME hangs on CPU"
     JAX was upgraded past SO3LR's supported versions, or an older Flax
     (0.12.0 or earlier) was kept. Fix it with `uv sync --locked`, or
-    `pip install "jax<0.11" "jaxlib<0.11" "flax>=0.12.1,<0.12.9"`.
+
+    ```shell
+    pip install "jax<0.11,!=0.10.2" "jaxlib<0.11,!=0.10.2" "flax>=0.12.1,<0.12.9"
+    ```
+
+    On a GPU, use `"jax[cuda12]<0.11,!=0.10.2"` in place of the first, so that
+    the CUDA plugin follows.

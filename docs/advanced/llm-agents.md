@@ -88,6 +88,11 @@ WILL NOT WORK
 - NPT on a non-periodic structure (it needs a cell). Fully
   anisotropic NPT coupling is rejected; semi-isotropic is
   experimental.
+- Frozen atoms (fixed_atom_indices, mobile_atom_indices,
+  atom_mask_path) with the relaxation before MD or in so3lr opt: an
+  error. Set relax_before_run: false. Flash holds fixed_atom_indices
+  in nve, nvt and nvt-langevin; NPT, mobile_atom_indices and
+  atom_mask_path run on the neighbour-list engine.
 - Observable _grad / _jac suffixes outside So3lrCalculator.
 - calculate_hessian together with calculate_stress, or with
   observable gradients.
@@ -119,7 +124,7 @@ LOG FILE
   may not use the same one:
 
     ```text
-    Engine: neighbour-list potential (flash cannot: it has no fixed atoms)
+    Engine: neighbour-list potential (flash cannot: it has no observables)
     ```
 
     With `--engine flash`, the run fails instead of falling back. See
