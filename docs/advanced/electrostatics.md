@@ -57,8 +57,9 @@ cycles (100 when unset, never with `kspace_npt_cycles: null`).
 
 - **Cell shape.** MD runs orthorhombic cells only. The
   [ASE calculator](#from-the-ase-calculator) takes any cell shape.
-- **Box size.** Every box length must be at least twice `lr_cutoff` (24 Å at
-  the default 12 Å). For a smaller box, lower `--lr-cutoff` and set
+- **Box size.** The [flash engine](../usage/md.md#when-flash-runs) takes
+  small boxes. On the neighbour-list engine every box length must be at least
+  twice `lr_cutoff` (24 Å at the default 12 Å); for a smaller box there, lower `--lr-cutoff` and set
   `kspace_dispersion: pme`, because `lr_cutoff` truncates the real-space
   dispersion too. An `lr_cutoff` below 10 Å is accepted only with k-space
   electrostatics on. See [Box size](../usage/md.md#box-size).

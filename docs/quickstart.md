@@ -49,8 +49,9 @@ writes:
 - `geometry_nvt.log`: energies, temperature and timings;
 - `geometry_nvt_opt.xyz`: the relaxation run before MD.
 
-A large enough periodic box on a recent NVIDIA GPU runs on the fast **flash**
-engine, and anything else on the neighbour-list engine (see
+An isolated molecule or a periodic orthorhombic box on a recent NVIDIA GPU or
+an AMD MI355X runs on the fast **flash** engine, and anything else on the
+neighbour-list engine (see
 [Molecular dynamics](usage/md.md)).
 
 The default long-range cutoff of 12 Å is meant for periodic, condensed-phase

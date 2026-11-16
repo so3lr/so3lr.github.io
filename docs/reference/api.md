@@ -95,8 +95,10 @@ FlashCalculator(
 )
 ```
 
-It takes orthorhombic periodic cells at least twice `lr_cutoff` across, or no
-cell (`pbc=False`), on a GPU where flash runs (see
+It takes orthorhombic periodic cells, including cells shorter than twice the
+cutoffs (summed over their periodic images; see
+[Box size](../usage/md.md#box-size)), or no cell (`pbc=False`), on a GPU where
+flash runs (see
 [When flash runs](../usage/md.md#when-flash-runs)). Anything else raises an
 error that names the reason; `So3lrCalculator` takes any structure. Charge
 and spin come from `atoms.info`, as for `So3lrCalculator`. There is no
