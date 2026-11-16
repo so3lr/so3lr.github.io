@@ -219,8 +219,9 @@ power of two.
 ## Automatic tuning
 
 `so3lr tune-ewald` grid-searches the real-space cutoff, smearing and grid
-resolution, and reports the fastest parameter set that reaches a target force
-accuracy:
+resolution. Of the parameter sets that reach a target force accuracy, it
+recommends the most accurate one that is about as fast as the fastest (see
+below):
 
 ```shell
 so3lr tune-ewald --input water_box.xyz \
