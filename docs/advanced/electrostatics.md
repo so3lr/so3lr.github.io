@@ -71,6 +71,19 @@ cycles (100 when unset, never with `kspace_npt_cycles: null`).
 - **Legacy model.** K-space has not been tested with the original `so3lr`
   model, which was trained with real-space electrostatics.
 
+### Net force
+
+PME, for electrostatics and for dispersion, works on a mesh that is fixed in
+space, so its forces do not sum to zero: a small net force remains. Nothing
+else in the model cancels it, and over an MD run it builds up into a drift of the whole box,
+which a mean-squared displacement then counts as diffusion.
+
+MD and `so3lr opt` therefore subtract the mean force from every atom's force
+whenever a k-space term is on, on both engines, as AMBER's `netfrc` does. The
+energy and the pressure are unchanged. `kspace_remove_net_force: false` in a
+settings file turns this off. Single points keep the model's forces:
+`so3lr eval`, `So3lrCalculator`, `FlashCalculator` and `So3lrEngine`.
+
 ## From the ASE calculator
 
 In Python, the parameter is `kspace_electrostatics`, as on the command line.
@@ -106,7 +119,9 @@ The k-space arguments are ignored for non-periodic systems. The calculator
 handles triclinic and small cells (see
 [Periodic systems](../usage/ase.md#periodic-systems)). PME/P3M interpolate with
 4 nodes, which you can change with `coulomb_kspace_interp_nodes=`. K-space
-dispersion is not available through the calculator; use MD or `so3lr eval`.
+dispersion is not available through `So3lrCalculator`; use
+[`FlashCalculator`](../reference/api.md#flashcalculator) (PME),
+[`So3lrEngine`](../reference/api.md#so3lrengine), MD or `so3lr eval`.
 
 ### Supplying a grid yourself
 

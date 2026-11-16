@@ -3,7 +3,8 @@
 The public Python API is small. Everything below is importable from `so3lr`.
 
 ```python
-from so3lr import So3lrCalculator, FlashCalculator, So3lrPotential, to_jax_md, Graph, So3lr
+from so3lr import (So3lrCalculator, FlashCalculator, So3lrEngine, So3lrPotential,
+                   to_jax_md, Graph, So3lr)
 ```
 
 !!! warning "`mixed` and `float64` need x64 enabled first"
@@ -40,6 +41,7 @@ So3lrCalculator(
     charge_embed_total_charge=None,            # None -> the system's total charge
     charge_equilibration_total_charge=None,    # None -> the system's total charge
     neighbor_backend="auto",                   # 'auto' | 'glp' | 'exact'
+    dtype=None,                                # older spelling of the model's dtype
 )
 ```
 
@@ -57,6 +59,7 @@ Results are stored in `calc.results`:
 | Keyword | Meaning |
 |---|---|
 | `precision` | `float32` or `float64` throughout, or `mixed`: a float32 model with float64 positions, displacements and results. See [Choosing precision](../usage/ase.md#choosing-precision). |
+| `dtype` | The older way to set the model's dtype. `np.float64` alone means `precision="float64"`; `np.float32` alone leaves the precision unset (`mixed` with x64). A `dtype` that contradicts `precision` raises an error. Use `precision`. |
 | `charge_embed_total_charge` | Overrides the total charge the network's charge embedding sees. |
 | `charge_equilibration_total_charge` | Overrides the total charge that charge equilibration conserves. |
 | `neighbor_backend` | `auto` uses explicit periodic images when the minimum image would be wrong; `glp` forces the minimum image, `exact` forces explicit images. The [`matscipy` extra](../installation.md#optional-extras) speeds up the explicit search. |
@@ -103,6 +106,82 @@ flash runs (see
 error that names the reason; `So3lrCalculator` takes any structure. Charge
 and spin come from `atoms.info`, as for `So3lrCalculator`. There is no
 stress.
+
+## `So3lrEngine`
+
+Energy and forces of one fixed set of atoms, call after call: the force
+callback an MD code outside JAX-MD needs (OpenMM, i-PI, LAMMPS, a loop of
+your own). See
+[Custom integrations](../advanced/integrations.md#from-another-md-code).
+
+```text title="signature"
+engine = So3lrEngine(
+    numbers,                                   # atomic numbers, (n_atoms,)
+    model=None,                                # bundled name or path; None -> so3lr-tauri-m-2606
+    *,
+    charge=0.0,                                # total charge, e
+    multiplicity=1,                            # 2S + 1
+    lr_cutoff=12.0,
+    dispersion_damping=2.0,
+    precision=None,                            # as So3lrCalculator
+    kspace_electrostatics=None,                # None | 'ewald' | 'pme' | 'p3m'
+    kspace_smearing=None,                      # None -> 4.0 Å
+    kspace_spacing=None,                       # None -> 2.0 Å
+    kspace_dispersion=None,                    # None | 'ewald' | 'pme'
+    kspace_dispersion_smearing=None,           # None -> 2.0 Å
+    kspace_dispersion_spacing=None,            # None -> 3.0 Å
+    engine="auto",                             # 'auto' | 'flash' | 'standard'
+    skin=0.0,                                  # neighbour-list skin, Å
+    matmul_precision="highest",
+)
+
+energy, forces = engine(positions, box)        # Å, and Å or None -> eV, eV/Å
+```
+
+Everything after `model` is keyword-only. The atoms, charge and spin are
+fixed when the engine is built; the positions and the box change from call to
+call. `positions` is `(n_atoms, 3)` in Å.
+`box` holds the lattice vectors as **rows** (`atoms.cell[:]`), in Å, or is
+`None` (or all zeros) for free space; a box with no volume raises an error.
+The call returns the energy in eV as a `float` and the forces in eV/Å as a
+float64 NumPy array. There is no stress.
+
+For each new box, the engine takes the first of three backends that can
+compute it:
+
+| Backend | Takes |
+|---|---|
+| flash | Orthorhombic boxes, including ones shorter than twice the cutoffs, or no box, on a GPU where [flash runs](../usage/md.md#when-flash-runs). Long range in real space or PME. |
+| neighbour lists (`to_jax_md`) | Orthorhombic boxes whose every length is at least twice the larger cutoff plus `skin`, or no box. The lists are updated on the device and allocated again when they overflow. |
+| exact images (`So3lrCalculator` with `neighbor_backend="exact"`) | Any other box, triclinic or thin. The neighbour list is built on the CPU at every call. |
+
+`engine="auto"` takes that order and falls back for good, with a warning,
+where flash does not import or fails. `"flash"` raises an error where flash
+cannot run, and `"standard"` never uses flash, as `--engine` does for the CLI.
+The `backend` attribute names the backend of the last call. Under a barostat,
+flash is laid out once more with NPT's margin when the box first moves, so
+later boxes within a few per cent compile nothing; a new PME mesh still
+compiles.
+
+| Keyword | Meaning |
+|---|---|
+| `precision` | `float32` or `float64` throughout, or `mixed`: a float32 model with float64 positions and sums. Unset, `mixed` with `jax_enable_x64` and `float32` without. |
+| `kspace_electrostatics` | `ewald`, `pme` or `p3m`; `None` keeps electrostatics in real space up to `lr_cutoff`. Smearing and spacing default to 4.0 Å and 2.0 Å. |
+| `kspace_dispersion` | `pme` or `ewald`; `None` keeps dispersion in real space up to `lr_cutoff`. Smearing and spacing default to 2.0 Å and 3.0 Å. |
+| `kspace_*_smearing`, `kspace_*_spacing` | Only with the matching k-space method; given alone they raise an error. |
+| `engine` | `auto`, `flash` or `standard`, as above. Flash takes PME only, so Ewald and P3M run on the other two backends. |
+| `skin` | Neighbour-list skin, Å. The lists are updated at every call either way. |
+| `matmul_precision` | What the model's matrix products run in; `"highest"` is full float32. |
+
+K-space dispersion is refused on a box that only the exact images take (a
+triclinic or thin cell), since those have no dispersion in k-space.
+
+The forces are the model's: with PME, they keep its small net force (see
+[Net force](../advanced/electrostatics.md#net-force)). Subtract the mean
+force yourself if your integrator does not remove centre-of-mass motion.
+
+The engine pickles as its constructor arguments, so a host that serializes
+its force objects gets a copy that compiles again at its first call.
 
 ## `FlashDomains`
 

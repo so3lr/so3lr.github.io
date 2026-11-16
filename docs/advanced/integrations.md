@@ -1,10 +1,12 @@
 # Custom integrations
 
-This page is for embedding SO3LR into your own simulation code, through the
-potential energy function and the JAX-MD interface. For standard simulations
-use the [CLI](../usage/cli.md), which also runs the faster
-[flash engine](../usage/md.md#md-engines), and for Python-level work use the
-[ASE calculator](../usage/ase.md).
+This page is for embedding SO3LR into your own simulation code: as a force
+callback for another MD code, as the potential energy function, or through the
+JAX-MD interface. `So3lrEngine` runs on the
+[flash engine](../usage/md.md#md-engines) where it can, as the CLI does;
+`So3lrPotential` and `to_jax_md` build the neighbour-list potential. For
+standard simulations use the [CLI](../usage/cli.md), and for Python-level work
+use the [ASE calculator](../usage/ase.md).
 
 ## Which interface should I use?
 
@@ -13,7 +15,44 @@ use the [CLI](../usage/cli.md), which also runs the faster
 | Run standard MD, optimization or evaluation | [The CLI](../usage/cli.md) |
 | Use ASE tooling (optimizers, NEB, vibrations) | [`So3lrCalculator`](../usage/ase.md) |
 | Write a custom JAX-MD simulation | [`to_jax_md`](#driving-jax-md-directly) |
-| Embed SO3LR in a non-JAX-MD code | [`So3lrPotential`](#the-potential-energy-function) |
+| Embed SO3LR in a non-JAX-MD code (OpenMM, i-PI, LAMMPS, your own loop) | [`So3lrEngine`](#from-another-md-code) |
+| Differentiate or transform the energy in JAX | [`So3lrPotential`](#the-potential-energy-function) |
+
+## From another MD code
+
+`So3lrEngine` holds one fixed set of atoms, with its charge and spin, and
+returns the energy and forces for new positions and a new box at each call.
+Positions and box go in as NumPy arrays, and a `float` and a NumPy array come
+out.
+
+```python
+import jax
+
+jax.config.update("jax_enable_x64", True)    # the default precision, mixed, needs it
+
+import numpy as np
+from ase.io import read
+from so3lr import So3lrEngine
+
+atoms = read("water_box.xyz")
+engine = So3lrEngine(
+    atoms.get_atomic_numbers(),
+    model="so3lr-tauri-m",
+    charge=0,
+    multiplicity=1,
+    kspace_electrostatics="pme",
+)
+
+positions = atoms.get_positions()            # Å, (n_atoms, 3)
+box = np.asarray(atoms.cell[:])              # lattice vectors as rows, Å; None for free space
+energy, forces = engine(positions, box)      # eV, eV/Å
+```
+
+For each box it uses the first of the flash engine, the neighbour lists and
+exact periodic images that can compute it. The first call compiles. The forces
+are the model's, including PME's small net force. See the
+[API reference](../reference/api.md#so3lrengine) for the backends, the k-space
+options and their defaults.
 
 ## The potential energy function
 

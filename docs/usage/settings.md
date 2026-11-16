@@ -190,6 +190,7 @@ See [Freezing atoms](md.md#freezing-atoms) for an example.
 | `kspace_spacing` | `2.0` | Grid spacing, Å. |
 | `kspace_interp_nodes` | `4` | Interpolation nodes for PME/P3M. |
 | `kspace_npt_cycles` | `100` | Under NPT, rebuild the grid every N cycles (`null`: never); setting it moves the run off the flash engine. |
+| `kspace_remove_net_force` | `true` | MD and `opt` subtract the mean force whenever a k-space term (electrostatics or dispersion) is on, so the box does not drift. `false` keeps the model's forces and keeps a restart's centre-of-mass motion. Single points always keep the model's forces. See [Net force](../advanced/electrostatics.md#net-force). |
 
 See [Long-range electrostatics](../advanced/electrostatics.md).
 
