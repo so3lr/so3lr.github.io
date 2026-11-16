@@ -109,8 +109,10 @@ network sees the geometry only a few cutoffs around each atom (the total charge
 and spin enter for the whole structure). Electrostatics and dispersion are
 explicit terms with the correct 1/r and 1/r⁶ form instead of being learned from
 data, so they also act between separated molecules. They reach as far as
-`lr_cutoff`: 12 Å by default, so use 100 for isolated molecules, or the whole
-periodic box with [k-space](advanced/electrostatics.md).
+`lr_cutoff`, or over the whole periodic box with
+[k-space](advanced/electrostatics.md): the command line uses PME for both terms
+on periodic structures by default, and an isolated molecule wants
+`--lr-cutoff 100`.
 
 ## The legacy `so3lr` model
 

@@ -24,7 +24,9 @@ an error.
 
 MD cost on the flash engine for periodic liquid water (NVT, PME), from the
 [SO3LR Tauri preprint](https://doi.org/10.48550/arXiv.2611.06237) (Computational
-Performance and Table S25; ns/day at a 1 fs timestep). The legacy `so3lr`
+Performance and Table S25; ns/day at a 1 fs timestep). The A100 numbers were
+measured before the [CUDA kernels](usage/md.md#cuda-kernels), which are faster
+on that GPU. The legacy `so3lr`
 (530k parameters) costs the same as `-m`. Test-set errors are given per subset
 in Fig. 2 and Tables S5–S7 of the preprint, as there is no single overall
 number.
