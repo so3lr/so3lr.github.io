@@ -89,8 +89,9 @@ It refuses a settings file that already sets `restart_load_path`, since the
 original length is then unknown; set `restart_load_path` and `md_cycles` by hand
 there. Without a checkpoint yet, `resume` is a usage error, and
 `resume --or-start` starts the run from the beginning, replacing the outputs of
-any earlier attempt (a file without `restart_save_path` just runs). A run folder's `run.sh` runs `so3lr resume --or-start .`,
-so the same script starts and continues the run. Runs started with flags resume
+any earlier attempt (a file without `restart_save_path` just runs). A run
+folder's `run.sh` runs `so3lr resume --or-start .`, so the same script starts
+and continues the run. Runs started with flags resume
 with `--restart-load` (see [Restarts](md.md#restarts)).
 
 ## Shared options
