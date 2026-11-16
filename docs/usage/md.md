@@ -195,8 +195,9 @@ the box (for example `--lr-cutoff 1000` in a 12 Å box) is left to the
 neighbour-list engine.
 
 The neighbour-list engine needs every box length to be at least twice
-`lr_cutoff` and refuses a shorter box. Without a GPU that runs flash, for a
-smaller box you can:
+`lr_cutoff` and refuses a shorter box. When flash does not run (no supported
+GPU, or a setting it declines, such as Ewald or P3M), for a smaller box you
+can:
 
 - lower `--lr-cutoff` and use `--kspace-electrostatics pme` (plus
   `kspace_dispersion: pme` in a settings file). A cutoff below 10 Å needs
