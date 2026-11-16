@@ -152,9 +152,12 @@
 
 ## Fine-tuning
 
-??? question "My dataset only has forces. Can I fine-tune?"
-    Yes, but use `--strategy freeze_long_range`. With `--strategy full`, the
-    forces improve while electrostatics and dispersion silently degrade. See
+??? question "My dataset only has energies and forces. Can I fine-tune?"
+    Yes, but with `--strategy full` alone the forces improve while
+    electrostatics and dispersion silently degrade, and `freeze_long_range`
+    does not prevent this. Anchor the long-range predictions with
+    `training.long_range_anchor_weights`, or keep them exactly with
+    `--strategy readout_only` and a residual readout. See
     [Fine-tuning](../training/finetuning.md#choosing-a-strategy).
 
 ??? question "How do I check a fine-tune didn't break anything?"

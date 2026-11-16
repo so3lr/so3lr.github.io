@@ -109,6 +109,24 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   for host–guest binding with enhanced sampling.
 - A PySAGES restart warns about every `pysages_input` setting that differs from
   the method in the `.pkl`, which the run keeps.
+- Three fine-tuning recipes that keep the long-range terms intact on data with
+  energies and forces only: `training.long_range_anchor_weights` anchors the
+  charges, a0/C6 ratios and optionally dipoles to the starting model;
+  `--strategy readout_only` with a residual energy readout
+  (`model.energy_residual_mlp_widths`, `energy_residual_inputs`) keeps them
+  exactly; and a per-atom `partial_charges` target, read from an extxyz array,
+  trains on a teacher's predictions. See
+  [Choosing a strategy](../training/finetuning.md#choosing-a-strategy).
+- A fine-tune config may set `model.cutoff_lr` and the k-space keys
+  (`kspace_electrostatics`, `kspace_smearing`, `kspace_spacing`,
+  `kspace_dispersion` and its smearing and spacing) for training on periodic
+  data. They are recorded in `fine_tuning.json` and are not saved with the
+  model. See [Periodic data](../training/finetuning.md#periodic-data).
+- `model.kspace_dispersion: false` keeps dispersion in real space when training
+  with k-space.
+- `training.data_parallel`: training on all local GPUs with a TFDS dataset,
+  one batch per device per optimizer step. See
+  [Multiple GPUs](../training/from-scratch.md#multiple-gpus).
 
 #### Changed
 
@@ -160,6 +178,18 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   fully anisotropic coupling remains unsupported.
 - Documentation and the Colab notebook use the immutable `so3lr-tauri-{s,m,l}-2606`
   names and describe the pinned no-argument default, `so3lr-tauri-m-2606`.
+- `freeze_long_range` is no longer recommended for forces-only fine-tuning: the
+  frozen heads read features that keep training, so the charges and ratios
+  still drift.
+- `so3lr train` and `so3lr finetune` refuse periodic ASE/NPZ data unless
+  `model.cutoff_lr` is set and at most `data.neighbors_lr_cutoff`. Before, the
+  long-range terms were cut off where the pair list ends.
+- Training with k-space sizes the mesh from the longest cell row per axis over
+  all training and validation structures (the first batch with TFDS), not from
+  the first cell.
+- Loading a training workdir without a `params.pkl` restores the checkpoint
+  with the lowest validation loss, or the newest when none saved a loss. Before,
+  it loaded the newest of the three best. Bundled models are unaffected.
 
 #### Changed results and formats
 
@@ -259,6 +289,19 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   production notebook flushes its final HDF5 buffer; every MD notebook fails
   loudly on neighbour-list overflow. The Colab notebook pins its uv bootstrap,
   rejects partially periodic NPT inputs and stops when a step fails.
+- Fine-tuning dropped every `model:` key, so periodic data trained with the
+  pretrained 1000 Å `cutoff_lr`, cut off where the pair list ends, and k-space
+  could not be turned on.
+- Training batches that mix molecules and crystals failed (crystal first) or
+  silently dropped the crystals' long-range image offsets (molecule first).
+- Training with k-space refuses structures that are not periodic in all three
+  directions. They got only the screened real-space Coulomb, without an error.
+- TFDS training saves the steps after the last evaluation. Before, a run that
+  ended between evaluations lost them, and a resume started from the last
+  periodic checkpoint.
+- Training keeps the newest checkpoint as well as the three with the lowest
+  validation loss. Before, a newest checkpoint outside the best three was
+  deleted, and a restart went back to an older step without a warning.
 
 <!-- TODO: backfill earlier package releases from the git history / tags. -->
 

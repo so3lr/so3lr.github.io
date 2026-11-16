@@ -53,6 +53,10 @@ Besides energies and forces, datasets can include these optional labels:
 - `hirshfeld_ratios` / `a0_ratios` / `hirsh_ratios`: volume or
   polarizability ratios, mapped to the key the selected model uses
 - `c6_ratios`: per-atom C6 coefficient ratios
+- `partial_charges`: per-atom partial charges, read from a `partial_charges`
+  array in an extxyz file (not from NPZ or TFDS data), for example
+  [pseudo-labels](../training/finetuning.md#choosing-a-strategy) for
+  fine-tuning
 
 Missing labels give `NaN` metrics in [evaluation](../usage/evaluation.md) and
 are skipped in training.

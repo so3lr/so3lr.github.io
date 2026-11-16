@@ -24,7 +24,11 @@ need. The log is written to `<config>.log` unless you set `--log-file`.
       electrostatic_energy_bool: true
       dispersion_energy_bool: true
       zbl_repulsion_bool: true       # already the default
+      # cutoff_lr: 12.0              # Å; periodic data: required, at most neighbors_lr_cutoff
     ```
+
+    Periodic data also needs `model.cutoff_lr`; see
+    [K-space during training](#k-space-during-training).
 
 The default optimizer is Muon. Its `optimizer_args` are Muon-specific, so
 clear or replace them when you change `optimizer.name`.
@@ -209,20 +213,64 @@ keys are needed.
 
 ## K-space during training
 
-For periodic training data, the model can be trained with reciprocal-space
-long range:
+For a periodic structure, the long-range pair list stops at
+`data.neighbors_lr_cutoff`. Periodic ASE or NPZ data is refused unless
+`model.cutoff_lr` is set and is at most `data.neighbors_lr_cutoff`, so the
+long-range terms switch off smoothly before the list ends, as in MD. Set both
+to the same value, e.g. 12 Å, and train with reciprocal-space long range for
+the tail:
 
 ```yaml
+data:
+  neighbors_lr_cutoff: 12.0    # Å
 model:
+  cutoff_lr: 12.0              # Å
   kspace_electrostatics: pme   # pme / p3m / ewald; null (default) disables
   kspace_smearing: 2.0         # Å
   kspace_spacing: 1.0          # Å
+  # kspace_dispersion: false   # keep dispersion in real space
 ```
 
-The method applies to electrostatics and dispersion alike. A single grid is
-sized from the first periodic cell, so keep the data fully periodic and the
-cells similar in size; a non-periodic structure in the mix is not caught. See
+The method applies to electrostatics and dispersion alike. Dispersion uses the
+electrostatic smearing and mesh unless `kspace_dispersion_smearing` or
+`kspace_dispersion_spacing` is set, and `kspace_dispersion: false` leaves it in
+real space, as MD and `eval` do with `--kspace-dispersion none`.
+
+The mesh is sized from the longest cell row along each axis over all training
+and validation structures, so every cell gets at least the requested spacing.
+With a TFDS dataset only the first batch is scanned, and the log warns that a
+larger cell later in the data gets a coarser mesh.
+
+Every structure must be periodic in all three directions; otherwise training
+stops with an error (with TFDS data, at the batch that holds it). Put
+gas-phase structures in a vacuum box wider than the structure plus twice
+`data.neighbors_lr_cutoff`. See
 [Long-range electrostatics](../advanced/electrostatics.md) for the parameters.
+
+## Multiple GPUs
+
+```yaml
+training:
+  data_parallel: true
+```
+
+With a [TFDS dataset](#tfds-datasets), this trains on all local GPUs: each
+optimizer step takes one batch per device and averages the gradients. With ASE
+or NPZ data, the log warns and training stays on one device.
+
+- The effective batch is the number of devices times one batch, so consider
+  scaling `optimizer.learning_rate`.
+- `eval_every_num_steps` counts optimizer steps, each of which now takes one
+  batch per device.
+- `CUDA_VISIBLE_DEVICES` chooses the GPUs.
+- Checkpoints keep the single-device format, so the workdir loads as usual. A
+  resume on a different number of devices is refused, because the effective
+  batch would change.
+- Leftover batches at the end of an epoch, fewer than the number of devices,
+  are dropped. An epoch with fewer batches than devices stops with an error.
+
+`data_parallel` also works when [fine-tuning](finetuning.md#custom-configuration)
+with a TFDS dataset.
 
 ## Restarts
 
@@ -233,9 +281,11 @@ directory is refused. What a resume restores depends on the loader:
 - **TFDS**: the full training state (optimizer, EMA, epoch, counters, RNG
   key) is restored, and the run continues with the next epoch. Dataset
   settings are not checked, so keep the data directories unchanged while a run
-  is resumable.
+  is resumable. With `data_parallel`, the number of devices must be the same.
 - **ASE / NPZ**: the run continues from the weights and step only, with a
   fresh optimizer, EMA and data order.
+
+Both resume from the newest checkpoint (see [Monitoring](#monitoring)).
 
 ## Weights & Biases logging
 
@@ -256,10 +306,15 @@ never in the YAML file. `log_gradient_values: true` also logs gradient norms.
 
 ## Monitoring
 
-Validation metrics are written to the log at every evaluation. Checkpoints are
-saved under `checkpoints/` in the workdir, and the three with the lowest
-validation loss are kept. You can pass the workdir wherever a model is
-accepted; loading restores the most recent kept checkpoint:
+Validation metrics are written to the log at every evaluation, and a
+checkpoint is saved under `checkpoints/` in the workdir. The three with the
+lowest validation loss are kept, plus always the newest one. A run whose last
+step falls between evaluations is evaluated and saved once more at the end. An
+evaluation with a non-finite loss saves no checkpoint.
+
+You can pass the workdir wherever a model is accepted. Loading restores the
+checkpoint with the lowest validation loss, or the newest one when no
+checkpoint saved a loss:
 
 ```shell
 so3lr eval --datafile test.xyz --model ./my_training_workdir
