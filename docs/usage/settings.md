@@ -30,7 +30,7 @@ log_file: run.log
 # --- model -------------------------------------------------------------
 model: so3lr-tauri-m-2606              # pin the dated name for reproducibility
 precision: mixed                       # float32, mixed or float64
-lr_cutoff: 12.0
+# lr_cutoff: unset = 10 Å with PME on a periodic box, else 12 Å
 dispersion_damping: 2.0
 total_charge: 0
 
@@ -97,7 +97,7 @@ If both an alias and its canonical key are given, the canonical key wins.
 |---|---|---|
 | `model_path` (`model`) | `so3lr-tauri-m-2606` | Bundled name or path. See [Models](../models.md). |
 | `precision` | `mixed` | `float32` or `float64` throughout, or `mixed`: a float32 model around a float64 MD state (positions, momenta, box, energy sums). |
-| `lr_cutoff` | `12.0` | Long-range cutoff in Å; use `100` for gas phase. |
+| `lr_cutoff` | 10 Å with PME on a periodic structure, else 12 Å | Long-range cutoff in Å; use `100` for gas phase. A cell too small for 10 Å gets 0.45 × its smallest height (see [Long-range defaults](cli.md#long-range-defaults)). |
 | `dispersion_damping` | `2.0` | Dispersion switches off starting at `lr_cutoff - dispersion_damping` Å. |
 | `total_charge` | `0` | Total charge of the system. |
 | `num_unpaired_electrons` (`spin`) | `0` | Number of unpaired electrons (multiplicity − 1). |
@@ -185,13 +185,15 @@ See [Freezing atoms](md.md#freezing-atoms) for an example.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `kspace_electrostatics` | `null` | `ewald` / `pme` / `p3m`. |
-| `kspace_smearing` | `4.0` | Smearing width, Å. |
-| `kspace_spacing` | `2.0` | Grid spacing, Å. |
+| `kspace_electrostatics` | `auto` | `auto` (PME on a fully periodic structure, off otherwise) / `none` / `ewald` / `pme` / `p3m`. |
+| `kspace_smearing` | `2.0` | Smearing width, Å. |
+| `kspace_spacing` | `1.55` | Grid spacing, Å: `1.0` below a 10 Å cutoff, and 0.775 × `kspace_smearing` when only the smearing is set. |
 | `kspace_interp_nodes` | `4` | Interpolation nodes for PME/P3M. |
 | `kspace_npt_cycles` | `100` | Under NPT, rebuild the grid every N cycles (`null`: never); setting it moves the run off the flash engine. |
 
-See [Long-range electrostatics](../advanced/electrostatics.md).
+A k-space key left out of the file is `auto`; `none`, or an explicit `null`,
+turns the term off. See [Long-range defaults](cli.md#long-range-defaults) and
+[Long-range electrostatics](../advanced/electrostatics.md).
 
 ## K-space dispersion
 
@@ -199,7 +201,7 @@ The same methods can be applied to dispersion, for dense periodic systems.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `kspace_dispersion` | `null` | `ewald` or `pme`. |
+| `kspace_dispersion` | `auto` | `auto` (PME on a fully periodic structure, off otherwise), `none`, `ewald` or `pme`. |
 | `kspace_dispersion_smearing` | `2.0` | Smearing width for the dispersion sum, Å. |
 | `kspace_dispersion_spacing` | `3.0` | Grid spacing, Å. |
 | `kspace_dispersion_interp_nodes` | `4` | Interpolation nodes. |

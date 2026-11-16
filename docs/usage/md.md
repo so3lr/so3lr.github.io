@@ -8,81 +8,16 @@ if needed.
 
 ## Following a run
 
-In an interactive terminal, the default MD display shows the current stage
-and updates progress at the simulation's reporting points. It includes the
-model and engine actually selected, device information, completed steps,
-simulated time, and stacked live temperature and **total energy** graphs. NPT also
-plots volume. Speed appears in `ns/day` and `s/atom/step`, with remaining-time
-estimates when timing data is available. Mixed precision is described as
-float32 model calculations with float64 dynamics. A checkpoint line means
-that checkpoint writing has completed.
-
-The initial compilation can take longer than subsequent cycles. The Tauri pulse
-and a clock counting time since launch refresh twice per second during initialization and compilation using
-a frozen text snapshot and wall time, without numerical work. Measured values
-and graph samples update only at host reporting points, so a large `md_steps`
-value can leave a graph unchanged for a while. Keyboard controls are also
-handled at reporting boundaries.
-
-Time axes line up across the stacked plots and use the same time bounds.
-Reference guides are solid, muted lines behind the data; the exact value appears
-on each plot's heading row, while line positions use terminal-character rows.
-Temperature shows the requested thermostat target in NVT, NPT and Langevin.
-For NVE temperature, each energy plot and NPT volume, the guide is a measured
-mean over the second half of the recorded time span, labeled `Second-half mean`
-rather than a target; long-run binning marks approximate means explicitly.
-Use `e` to change the energy property and up/down to page through plots.
-During MD, Esc hides graphs without stopping the run; `q` switches between
-graphs and compact status and can restore them. Ctrl+C interrupts the calculation.
-
-For `.sh` and scheduler jobs, use `so3lr show <output-directory>` in another
-terminal to plot the local metrics journal. The observer works offline and can
-be closed with Esc or `q` while the simulation continues. By default, each MD or optimization invocation
-writes a separate `*.events.jsonl` beside its text log, including when output is
-redirected or `--display plain` or `--quiet` is selected. It supports offline
-observation independently of the console display. Set `SO3LR_JOURNAL=0` to
-disable it for an invocation while keeping text logs, trajectories, checkpoints
-and attached plots. The separate
-viewer then has no journal for that invocation to read; other environment values
-leave journaling enabled.
-The time axis is local to that invocation, including restarted segments.
-With several journals, the viewer starts with a folder overview. Left/right
-visits individual runs and cycles back to the overview; `o` returns directly.
-Mixed MD/optimization folders identify each mode, and optimization summaries
-show step, potential energy and maximum force rather than invented MD samples.
-See [Offline monitoring](cli.md#offline-monitoring) for controls and limitations,
-or [Guided setup](cli.md#guided-setup) to prepare YAML and a shell launcher.
-
-`so3lr start` opens guided setup through Structure, Dynamics and Review. It
-asks only the essentials first; timestep, seed, relaxation and cutoff start from
-stated defaults that **Edit settings…** on the review can change one group at a
-time. At the final review, **Save setup and start MD now** is first and selected
-by default. **Save setup for later** writes only the structure, settings and
-launcher; no files are written before the review choice.
-
-In plain and batch output, each checkpoint adds a `Progress … · ns/day · ETA …`
-line, and the log names the `so3lr show` command for the run directory. A failed
-or interrupted MD run ends with its last checkpoint and the option to resume
-from it. See [Logs and reproducibility](cli.md#logs-and-reproducibility).
-
-The complete settings, diagnostics and per-cycle table remain in the text
-log, and every run ends with one closing line on how it finished. See
-[Logs and reproducibility](cli.md#logs-and-reproducibility).
-If an MD or optimization preamble fails before logging is ready, or its
-traceback cannot be saved, the full traceback remains visible in the terminal.
-To see ordinary diagnostic output in the terminal as well, use:
-
-```shell
-so3lr --display plain --settings settings.yaml
-```
-
-Redirected stderr, including ordinary scheduler logs, uses plain output
-automatically. Redirecting stdout alone leaves the live display available;
-an attached `.sh` launcher can still show it. For additional diagnostics
-alongside the live display, use `so3lr --verbose
---settings settings.yaml`. Display options go before an MD subcommand and
-do not change the simulation settings. See [Terminal display](cli.md#terminal-display)
-for all controls.
+In an interactive terminal, MD shows its stage and progress with live
+temperature and **total energy** graphs (NPT adds volume): `e` changes the
+energy plot, Esc hides the graphs while MD continues, and Ctrl+C interrupts.
+With redirected output, as in a scheduler log, it writes plain text with a
+`Progress … · ns/day · ETA …` line at every checkpoint. Every run also writes a
+journal next to its log, so `so3lr show <output-directory>` can follow it from
+another terminal, during the run or afterwards. `so3lr start` sets up a run
+through menus and saves it as a folder whose `run.sh` starts the run, or
+continues it from its checkpoint. See
+[Guided setup and monitoring](terminal-ui.md).
 
 ## Ensembles
 
@@ -136,18 +71,12 @@ A run is `md_cycles × md_steps` steps long, with one frame written per cycle.
 Use many short cycles for frequent output, and a few long cycles for maximum
 throughput.
 
-All periodic CLI MD ensembles require a positive, axis-aligned orthorhombic
-cell. The neighbor-list cutoff cannot exceed half the minimum cell height.
-Guided NPT setup reserves a further 3% initial contraction margin for both the
-short-range and long-range cutoffs; fixed-cell setup keeps the ordinary bound.
-This does not guarantee that every later NPT cell fits, or that Flash's
-additional cell-grid requirements are met. Runtime validation remains active.
-
-For small periodic cells, guided setup proposes PME for both electrostatics and
-dispersion and exports explicit mesh settings. Electrostatics uses 2 Å smearing
-with 1 Å spacing; dispersion keeps its 2 Å smearing and 3 Å spacing defaults.
-These proposals need system-specific convergence checks. Direct commands and
-existing YAML runs are unchanged. See [Guided setup](cli.md#guided-setup).
+Periodic MD needs a positive, axis-aligned orthorhombic cell, and NPT a cell
+periodic along all three axes. A periodic structure gets PME for electrostatics
+and dispersion by default, with a 10 Å cutoff, 2 Å smearing and 1.55 Å mesh, or
+a shorter cutoff and a 1 Å mesh in a cell too small for 10 Å.
+`--kspace-electrostatics none --kspace-dispersion none` keeps both terms in
+real space. See [Long-range defaults](cli.md#long-range-defaults).
 
 Velocities or momenta in the input file (as in an EXTXYZ frame from an earlier
 SO3LR trajectory) are used as the initial velocities. Otherwise, velocities
@@ -158,11 +87,9 @@ from the command line. Raise the cap in a
 [settings file](settings.md#pre-run-relaxation), or skip the relaxation with
 `--no-relax`.
 
-Standalone `so3lr opt` shares the live stage display and journal lifecycle. Its
-latest step, potential energy and maximum force are shown at reporting points.
-The result distinguishes meeting a requested force criterion from finishing
-the step budget; a completed optimization command alone does not establish
-convergence. See [Geometry optimization](cli.md#geometry-optimization-opt).
+A standalone `so3lr opt` shows its latest step, potential energy and maximum
+force as it runs, and says whether the force criterion was met or the step
+budget ran out. See [Geometry optimization](cli.md#geometry-optimization-opt).
 
 ### More NVT options
 
@@ -235,7 +162,7 @@ Flash runs only when all of the following hold:
 | Model | `so3lr-tauri-s/m/l` (both releases) or the legacy `so3lr` |
 | Box | No box (an isolated molecule), or a periodic orthorhombic box of any size the long range reaches across in at most 16 grid cells: every box down to about 1 Å at `lr_cutoff` 12 Å (see [Box size](#box-size)) |
 | Ensemble | `nve`, `nvt`, `nvt-langevin`, or `npt` (isotropic or semi-isotropic) |
-| Long range | Real space, or PME (`--kspace-electrostatics pme`, `kspace_dispersion: pme`) |
+| Long range | Real space, or PME (the default for periodic structures) |
 
 NPT and k-space need a box. The dispersion tail correction,
 `kspace_npt_cycles`, Ewald and P3M, fixed atoms and observables run on the
@@ -283,7 +210,7 @@ Flash: CUDA kernels not used (a sm_80 GPU (the kernels are written for sm_90)); 
 ## Box size
 
 Flash takes small periodic boxes. Where a box length is under twice
-`lr_cutoff` (24 Å at the default of 12 Å), it sums the long range over every
+`lr_cutoff` (20 Å at the 10 Å PME default), it sums the long range over every
 periodic image within the cutoff, and where it is under twice the 4.5 Å
 short-range cutoff, the short range too, including an atom's own images. The
 result is the same as for the box repeated into a supercell. The images'
@@ -292,13 +219,15 @@ the box (for example `--lr-cutoff 1000` in a 12 Å box) is left to the
 neighbour-list engine.
 
 The neighbour-list engine needs every box length to be at least twice
-`lr_cutoff` and refuses a shorter box. When flash does not run (no supported
-GPU, or a setting it declines, such as Ewald or P3M), for a smaller box you
-can:
+`lr_cutoff` and refuses a shorter box. With the
+[long-range defaults](cli.md#long-range-defaults) (PME for both terms, no
+`--lr-cutoff`), a box under 20 Å gets a cutoff of 0.45 × its smallest height,
+which fits. When you set the cutoff and flash does not run (no supported GPU,
+or a setting it declines, such as Ewald or P3M), for a smaller box you can:
 
-- lower `--lr-cutoff` and use `--kspace-electrostatics pme` (plus
-  `kspace_dispersion: pme` in a settings file). A cutoff below 10 Å needs
-  k-space electrostatics.
+- lower `--lr-cutoff` and keep both terms in k-space (`--kspace-electrostatics
+  pme --kspace-dispersion pme`, the default for a periodic structure). A cutoff
+  below 10 Å needs k-space electrostatics.
 - or use the [ASE calculator](ase.md#small-and-skewed-cells).
 
 All periodic CLI MD modes require a positive, axis-aligned orthorhombic cell.
@@ -377,6 +306,11 @@ so3lr nvt --input geometry.xyz --output traj.xyz --temperature 300 \
 The run resumes at the saved cycle and runs `--md-cycles` more, without the
 pre-run relaxation. An EXTXYZ trajectory is appended to. An HDF5 trajectory
 needs a new `--output` path, or `--overwrite`.
+
+A settings-file run that sets `restart_save_path` resumes in one step:
+`so3lr resume settings.yaml` (or the run folder) runs the cycles still missing
+to its `md_cycles`, appends to an EXTXYZ trajectory and writes HDF5 to a new
+file. See [Resuming a run](cli.md#resuming-a-run).
 
 ### What a restart preserves
 

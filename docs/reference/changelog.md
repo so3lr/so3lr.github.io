@@ -45,14 +45,13 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
-- [`so3lr start`](../usage/cli.md#guided-setup) for guided MD setup with arrow-key structure and
+- [`so3lr start`](../usage/terminal-ui.md#guided-setup) for guided MD setup with arrow-key structure and
   model menus, explicit review, and a portable structure/YAML/shell-script
   bundle. The first review action saves the bundle and starts MD locally;
   saving for later remains available.
 - Live terminal MD plots and optimization status, plus offline
-  [`so3lr show`](../usage/cli.md#offline-monitoring) views for individual runs
-  and folders. Plain output is automatic when stderr is redirected; direct
-  commands, YAML and shell/scheduler launchers remain supported.
+  [`so3lr show`](../usage/terminal-ui.md#so3lr-show) views for individual runs
+  and folders. Plain output is automatic when stderr is redirected.
 - Per-invocation JSONL journals beside MD, optimization and training logs by default,
   including in plain and quiet modes. Text logs keep their numeric MD tables.
 - `SO3LR_JOURNAL=0` disables the journal while retaining text logs,
@@ -78,7 +77,8 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   optimization, dataset evaluation, watching runs, or the commands for
   fine-tuning, training and k-space tuning.
 - A once-a-day, opt-out release notice in interactive terminals
-  (`SO3LR_NO_UPDATE_CHECK=1`).
+  (`SO3LR_NO_UPDATE_CHECK` set to anything but empty or `0` turns it off; it
+  never runs in scheduler or CI jobs).
 - `eval`, `tune-ewald`, `finetune` and `train` use the live display too, with
   a progress bar, ETA and result tables, instead of falling back to log lines.
   `eval` reports binding energies for dimer files without `--save-to`.
@@ -157,6 +157,25 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   for host–guest binding with enhanced sampling.
 - A PySAGES restart warns about every `pysages_input` setting that differs from
   the method in the `.pkl`, which the run keeps.
+- [`so3lr resume [PATH] [--or-start]`](../usage/cli.md#resuming-a-run)
+  continues a settings-file MD run (a run folder or a settings file) from its
+  checkpoint for the rest of its `md_cycles`, without relaxation. It appends to
+  an EXTXYZ trajectory, writes HDF5 to a new `<stem>.from_cycle_N.h5`, and
+  carries the PySAGES bias, refusing to start when its file is missing.
+  `--or-start` starts the run when there is no checkpoint yet.
+- `so3lr start --input STRUCTURE` writes the guided MD setup without prompts,
+  for scripts and agents; `--print` prints its `settings.yaml` instead. See
+  [Without prompts](../usage/terminal-ui.md#without-prompts).
+- `so3lr show --json` prints one machine-readable snapshot per run: state,
+  progress, last sample, checkpoint and failure. See
+  [JSON snapshot](../usage/terminal-ui.md#json-snapshot).
+- `--kspace-dispersion`, `--kspace-dispersion-smearing`,
+  `--kspace-dispersion-spacing` and `--kspace-dispersion-interp-nodes` on the MD
+  commands and `opt`, and `auto` and `none` for `--kspace-electrostatics` and
+  `--kspace-dispersion`.
+- A run folder's `run.sh` runs `so3lr resume --or-start .`: it starts the run,
+  or continues it from its checkpoint, from the folder it is in, and works under
+  `sbatch run.sh`.
 
 #### Changed
 
@@ -176,11 +195,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   file inputs are rejected with guidance to the journal directory.
 - Redirected `--display rich` falls back to plain output, avoiding terminal
   control frames in batch output. Verified failures identify the absolute
-  traceback log path and keep multiline detail in the log.
+  traceback log path.
 - `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
-  compatibility alias. Global display/verbosity/color options go before the
-  subcommand. Plain and quiet modes keep the per-invocation journal unless
-  explicitly disabled with `SO3LR_JOURNAL=0`.
+  compatibility alias. Plain and quiet modes keep the per-invocation journal
+  unless explicitly disabled with `SO3LR_JOURNAL=0`.
 - Optimization's completion message is now `Optimization execution finished.`
   The closing line distinguishes reaching the force criterion from exhausting the
   step budget; successful command completion alone does not establish convergence.
@@ -235,6 +253,19 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   fully anisotropic coupling remains unsupported.
 - Documentation and the Colab notebook use the immutable `so3lr-tauri-{s,m,l}-2606`
   names and describe the pinned no-argument default, `so3lr-tauri-m-2606`.
+- `--display`, `--verbose`/`-v`, `--quiet`/`-q` and `--no-color` may also
+  follow the subcommand (`so3lr nvt --input x.xyz -q`).
+- Unknown settings-file keys are dropped after their warning. Kept, they made
+  `--engine auto` fall back to the neighbour-list engine.
+- A slab or wire (mixed periodicity) is a usage error (exit 2) named before
+  anything starts.
+- `tune-ewald`'s MD command and settings for the `cutoff` modes turn k-space off
+  explicitly (`--kspace-electrostatics none --kspace-dispersion none`).
+- On `SIGTERM` or `SIGHUP` (`scancel`, a time limit), batch runs too record the
+  interruption in the journal and print the resume hint before the process ends
+  by the signal.
+- A failed run prints its whole error message, not only the first line.
+- Live plots redraw at most once a second, text views every 0.25 s.
 
 #### Changed results and formats
 
@@ -264,14 +295,21 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   to rounding; `engine: standard` reproduces runs of earlier versions.
 - The same holds for semi-isotropic NPT, and on an H100/H200 for flash runs that
   move to the CUDA kernels (`--flash-kernels pallas` keeps the Pallas ones).
+- The command line (MD, `opt`, `eval`, `so3lr --settings`) uses PME for
+  electrostatics and dispersion on structures periodic along all three axes,
+  with a 10 Å cutoff, 2 Å smearing and a 1.55 Å mesh (dispersion 2 Å and 3 Å).
+  A cell too small for 10 Å gets 0.45 × its smallest height and a 1 Å mesh
+  (MD and `opt`). Before, k-space was off unless asked for and the cutoff was
+  12 Å. `--kspace-electrostatics none --kspace-dispersion none` (or `none` in a
+  settings file) restores real space. With k-space electrostatics asked for
+  explicitly, an unset smearing and mesh are now 2 Å and 1.55 Å instead of 4 Å
+  and 2 Å. Non-periodic runs, `tune-ewald` and the Python calculators are
+  unchanged. See [Long-range defaults](../usage/cli.md#long-range-defaults).
 
 #### Fixed
 
-- Guided setup validates supported periodic cells, reserves the backend's 3%
-  initial NPT contraction margin, and couples the small-cell 2 Å electrostatic
-  smearing to an explicit 1 Å PME mesh spacing. Dispersion keeps its 2 Å
-  smearing and 3 Å mesh spacing. These remain starting proposals rather than
-  convergence guarantees; direct flags and existing YAML defaults are unchanged.
+- Guided setup validates supported periodic cells and reserves the backend's
+  3% initial NPT contraction margin.
 - Setup exports create files exclusively, recover from malformed XYZ elements,
   and use the CLI's shared save-buffer default. Logs and journals use consistent
   float32 energy reporting, and startup warnings target the current invocation.
@@ -282,10 +320,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   their preambles are covered too. Errors are shortened only when the traceback
   was saved in the current log; logger setup/write failures and unexpected errors
   in other commands retain the full terminal traceback.
-- Default `SIGTERM`/`SIGHUP` cleanup applies when the UI owns a terminal, including
-  setup and `show`; noninteractive runs retain native termination. Defaults are
-  restored when the first handler runs, before cleanup, so a second signal can terminate immediately. Custom
-  signal handlers are unchanged; `SIGKILL` cannot be handled.
+- Default `SIGTERM`/`SIGHUP` cleanup restores the terminal in runs, setup and
+  `show`. Defaults are restored when the first handler runs, before cleanup, so
+  a second signal can terminate immediately. Custom signal handlers are
+  unchanged; `SIGKILL` cannot be handled.
 - SO3LR worker warnings reach the journal and live console without waiting for
   an MD reporting boundary when journaling is enabled. Scoped live-display
   redirection also keeps Python output to the current `sys.stderr` above the
@@ -361,6 +399,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   production notebook flushes its final HDF5 buffer; every MD notebook fails
   loudly on neighbour-list overflow. The Colab notebook pins its uv bootstrap,
   rejects partially periodic NPT inputs and stops when a step fails.
+- An existing output is refused before the structure is read or the run's
+  journal opens, so a refused start leaves nothing behind.
+- `md_dt` (`--dt`) must be positive, from the command line and in settings
+  files.
 
 <!-- TODO: backfill earlier package releases from the git history / tags. -->
 
