@@ -45,6 +45,12 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
+- `so3lr tune-ewald` tunes PME on the flash engine whenever flash takes the
+  structure. It takes its charges and timings from flash, so tens of thousands
+  of atoms fit on one GPU: a 32,512-atom POPC bilayer tunes in about 3.5 min on
+  an A100 with `so3lr-tauri-m` or `-l`, where the neighbour-list path ran out of
+  memory. `--engine` / `engine:` (`auto`, `flash`, `standard`) picks the engine,
+  as in MD. Ewald, P3M and the `cutoff` modes still tune on the neighbour lists.
 - `--precision mixed`, now the default: a float32 model around a float64 MD
   state (positions, momenta, box, energy sums). `--precision` takes
   `float32`, `mixed` or `float64` for MD, `opt`, `eval` and `tune-ewald`, on both
@@ -96,6 +102,18 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Changed
 
+- `tune-ewald`'s `mesh_lo` / `mesh_hi` now mean 2ⁿ mesh points along the shortest
+  cell vector, the mesh jax-pme builds. They used to give the spacing
+  2*L*/(2ⁿ − 1), which jax-pme padded to 2ⁿ⁺¹ points. The defaults moved from
+  4–6 to 5–7, which tries the same meshes. A settings file that sets these keys
+  now gets meshes half as fine; the log lists the meshes tried.
+- `tune-ewald`'s PME error estimate uses the mesh spacing jax-pme actually
+  builds, after padding the mesh to a power of two. The estimates are about 4–9×
+  lower than before, so coarser meshes now reach a given `accuracy`.
+- `tune-ewald` measures the real-space error on the pairs of up to 2048 sampled
+  atoms, instead of on every neighbour pair.
+- `tune-ewald` recommends the most accurate candidate within `accuracy` whose
+  timing is within 3 % of the fastest, not simply the fastest.
 - `--flash-mixed` / `flash_mixed` is deprecated in favour of `--precision`:
   on means `mixed` and off `float32`. It still works, with a warning.
 - An explicit `--precision float32` now runs float32 throughout. It
@@ -164,6 +182,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Fixed
 
+- `tune-ewald`'s search ranges no longer go one step past their end when the
+  range is not a whole number of steps (`cutoff_lo` 7 with `cutoff_hi` 12 and
+  step 2 tried 6 Å as well).
+- `so3lr tune-ewald` passes `--spin` to the model (the CLI dropped it).
 - Semi-isotropic NPT on the neighbour-list engine drew new velocities at the
   start instead of taking the input structure's momenta.
 - `so3lr tune-ewald --kspace-electrostatics pme` searches with 4 interpolation

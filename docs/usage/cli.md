@@ -219,8 +219,9 @@ so3lr tune-ewald --input water_box.xyz --kspace-electrostatics pme \
     --lr-cutoff 12.0 --precision float64
 ```
 
-`tune-ewald` also accepts `--jit-compile` / `--no-jit-compile` and
-`--settings`, which reads the shared keys and the
+`tune-ewald` also accepts `--engine` (`auto`, `flash` or `standard`: PME tunes
+on flash whenever flash takes the structure), `--jit-compile` /
+`--no-jit-compile` and `--settings`, which reads the shared keys and the
 [search ranges](settings.md#tune-ewald-search-ranges) from YAML. Its log
 defaults to `<input>_tune-kspace.log`.
 

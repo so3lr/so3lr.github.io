@@ -243,7 +243,7 @@ above, plus these search ranges:
 | `cutoff_lo`, `cutoff_hi`, `cutoff_it` | `7.0` (`10.0` in the `cutoff` modes), `lr_cutoff`, `2.0` | Real-space cutoff range and step, Å. |
 | `smear_lo`, `smear_hi`, `smear_it` | `2.0`, `6.0`, `2.0` | Smearing range and step, Å. |
 | `ns_lo`, `ns_hi` | `4`, `8` | Ewald k-spacing = shortest cell vector / each value in this range. |
-| `mesh_lo`, `mesh_hi` | `4`, `6` | PME/P3M mesh spacing = 2 × shortest cell vector / (2ⁿ − 1) for each *n* in this range. |
+| `mesh_lo`, `mesh_hi` | `5`, `7` | PME/P3M: mesh spacings that give 2ⁿ mesh points along the shortest cell vector, for each *n* in this range (longer vectors get as many or more). |
 | `nodes_lo`, `nodes_hi` | `4`, `4` | Interpolation nodes (PME: 4 only, P3M: 3–5). |
 | `dispersion_damping_lo`, `dispersion_damping_hi`, `dispersion_damping_it` | `2.0`, `4.0`, `1.0` | Damping range and step for the cutoff-only dispersion tuning, Å. |
 
