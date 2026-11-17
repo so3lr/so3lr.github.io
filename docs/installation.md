@@ -51,9 +51,8 @@ On an NVIDIA GPU, the flash engine's fastest path runs on
 [CUDA kernels](usage/md.md#cuda-kernels), which SO3LR builds with `nvcc` on
 first use. `nvcc` comes with the CUDA toolkit, not with JAX. SO3LR looks for it
 in `SO3LR_NVCC` (the full path to `nvcc`), then `$CUDA_HOME/bin`, the `PATH`
-and `/usr/local/cuda/bin`. Without it, flash runs on its Pallas kernels: the
-log has no `Flash: CUDA kernels (...)` line, and with a `--flash-mode` given
-it says `Flash: CUDA kernels not used (nvcc not found (set SO3LR_NVCC or
+and `/usr/local/cuda/bin`. Without it, flash runs on its Pallas kernels, and
+the log says `Flash: CUDA kernels not used (nvcc not found (set SO3LR_NVCC or
 CUDA_HOME)); Pallas kernels`.
 
 ## Verify it works

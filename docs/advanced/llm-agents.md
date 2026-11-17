@@ -90,7 +90,8 @@ WILL NOT WORK
   experimental.
 - Frozen atoms (fixed_atom_indices, mobile_atom_indices,
   atom_mask_path) with the relaxation before MD or in so3lr opt: an
-  error. Set relax_before_run: false. Flash holds fixed_atom_indices
+  error. For MD, set relax_before_run: false (a restart skips the
+  relaxation); so3lr opt takes no frozen atoms. Flash holds fixed_atom_indices
   in nve, nvt and nvt-langevin; NPT, mobile_atom_indices and
   atom_mask_path run on the neighbour-list engine.
 - Observable _grad / _jac suffixes outside So3lrCalculator.

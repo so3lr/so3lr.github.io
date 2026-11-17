@@ -113,12 +113,15 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   per-pair data does not fit in memory, they make it a chunk of rows at a time,
   in the `fast` and `default` memory modes, and `--flash-mode auto` takes the
   fastest that fits. MD of water with PME ran on them up to 16 million atoms
-  with `so3lr-tauri-s/m` and 9 million with `-l` on one GPU, at 2.2–2.8× the
+  with `so3lr-tauri-s/m` and 9 million with `-l` on one large-memory GPU, at
+  2.2–2.8× the
   speed of the Pallas kernels.
 - Flash's CUDA kernels run on any NVIDIA GPU of compute capability 8.0 or
   newer whose shared memory per block holds the model's tiles, which are sized
-  to fit. At 163 KiB per block, a force call is about 2× faster than on the
+  to fit. At 163 KiB per block, a force call is 1.65–2.1× faster than on the
   Pallas kernels; at 99 KiB, `so3lr-tauri-l` stays on the Pallas kernels.
+- `--flash-mode auto` logs why a run is on the Pallas kernels
+  (`Flash: CUDA kernels not used (...)`), as a memory mode given did.
 - The flash engine holds `fixed_atom_indices` in `nve`, `nvt` and
   `nvt-langevin`, for example a solute held in a periodic water box. NPT,
   `mobile_atom_indices` and `atom_mask_path` run on the neighbour-list engine.

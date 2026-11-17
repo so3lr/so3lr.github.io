@@ -112,7 +112,7 @@ two engines, which compute the same energy and forces:
   AMD MI355X with 288 GB). On an NVIDIA GPU of compute capability 8.0 or newer,
   flash runs on [CUDA kernels](#cuda-kernels) where they fit: 1.65–3.3× the
   speed of the Pallas kernels in the measurements, and up to 16 million atoms
-  on one GPU.
+  on one GPU with enough memory (well beyond an A100's 40 GB).
 - **standard**: the jax-md neighbour-list potential, which runs every setting on
   any JAX backend.
 
@@ -202,7 +202,8 @@ Speed-ups over the Pallas kernels on the same GPU, as measured:
 | 163 KiB | `so3lr-tauri-l` force call, 55k / 331k atoms | 2.1× / 1.65× |
 
 In chunks of rows, MD of water with PME ran on the CUDA kernels up to
-16 million atoms with `so3lr-tauri-s/m` and 9 million with `-l` on one GPU, at
+16 million atoms with `so3lr-tauri-s/m` and 9 million with `-l` on one
+compute-capability-9.0 GPU with more than 100 GB of memory, at
 2.5–2.7× (s, m) and 2.2–2.8× (l) the speed of the Pallas kernels.
 
 The log names the kernels and how they hold the per-pair data, `per-pair data
@@ -222,14 +223,16 @@ compiler and JAX version, into `$SO3LR_CUDA_CACHE` (default
 the `PATH` or `/usr/local/cuda`. With `--flash-kernels auto`, a run that the
 kernels do not cover (an AMD or older GPU, tiles that do not fit, another
 model, `float64`, a memory mode of the Pallas kernels' own, no `nvcc`, or too
-little free memory) uses the Pallas kernels. With `--flash-mode auto` this
-shows only as the missing line above; with a memory mode given, or when the
-build fails, the log says why, for example:
+little free memory) uses the Pallas kernels, and the log says why, for
+example:
 
 ```text
 Flash: CUDA kernels not used (nvcc not found (set SO3LR_NVCC or CUDA_HOME)); Pallas kernels
 Flash: CUDA kernels not used (the model's kernels need more shared memory per block than this GPU's 99 KiB); Pallas kernels
 ```
+
+A build that fails logs a warning, `Flash: CUDA kernels not built (...); Pallas
+kernels`.
 
 `--flash-kernels cuda` raises instead, and `pallas` never uses the CUDA kernels.
 
