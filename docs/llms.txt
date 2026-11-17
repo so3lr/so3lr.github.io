@@ -51,8 +51,8 @@ read it first.
 
 ## Training
 
-- [Fine-tuning](https://so3lr.github.io/training/finetuning.md): strategies, and why forces-only data needs `freeze_long_range`.
-- [Training from scratch](https://so3lr.github.io/training/from-scratch.md): config, multiple datasets, robust loss, opt-in W&B logging.
+- [Fine-tuning](https://so3lr.github.io/training/finetuning.md): strategies, and how to keep the long-range terms intact on energy/force-only data (anchors, `readout_only`, pseudo-labels); periodic data.
+- [Training from scratch](https://so3lr.github.io/training/from-scratch.md): config, multiple datasets, robust loss, k-space, multiple GPUs, checkpoints, opt-in W&B logging.
 
 ## Reference
 
