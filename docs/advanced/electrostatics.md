@@ -82,7 +82,9 @@ MD and `so3lr opt` therefore subtract the mean force from every atom's force
 whenever a k-space term is on, on both engines, as AMBER's `netfrc` does. The
 energy and the pressure are unchanged. `kspace_remove_net_force: false` in a
 settings file turns this off. Single points keep the model's forces:
-`so3lr eval`, `So3lrCalculator`, `FlashCalculator` and `So3lrEngine`.
+`so3lr eval`, `So3lrCalculator`, `FlashCalculator` and `So3lrEngine`. In a
+JAX-MD loop of your own, pass `remove_net_force=True` to
+[`to_jax_md`](integrations.md#to_jax_md-arguments).
 
 ## From the ASE calculator
 

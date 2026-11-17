@@ -152,11 +152,13 @@ compute it:
 | Backend | Takes |
 |---|---|
 | flash | Orthorhombic boxes, including ones shorter than twice the cutoffs, or no box, on a GPU where [flash runs](../usage/md.md#when-flash-runs). Long range in real space or PME. |
-| neighbour lists (`to_jax_md`) | Orthorhombic boxes whose every length is at least twice the larger cutoff plus `skin`, or no box. The lists are updated on the device and allocated again when they overflow. |
+| neighbour lists (`to_jax_md`) | Orthorhombic boxes whose every length is at least twice the sum of the larger cutoff and `skin`, or no box. The lists are updated on the device and allocated again when they overflow. |
 | exact images (`So3lrCalculator` with `neighbor_backend="exact"`) | Any other box, triclinic or thin. The neighbour list is built on the CPU at every call. |
 
-`engine="auto"` takes that order and falls back for good, with a warning,
-where flash does not import or fails. `"flash"` raises an error where flash
+`engine="auto"` takes that order. Where flash cannot run here (no supported
+GPU, a setting it declines) or does not import, it is skipped without a
+message; check the `backend` attribute. Where flash fails while running, the
+engine warns and stops using it for good. `"flash"` raises an error where flash
 cannot run, and `"standard"` never uses flash, as `--engine` does for the CLI.
 The `backend` attribute names the backend of the last call. Under a barostat,
 flash is laid out once more with NPT's margin when the box first moves, so
@@ -172,6 +174,10 @@ compiles.
 | `engine` | `auto`, `flash` or `standard`, as above. Flash takes PME only, so Ewald and P3M run on the other two backends. |
 | `skin` | Neighbour-list skin, Å. The lists are updated at every call either way. |
 | `matmul_precision` | What the model's matrix products run in; `"highest"` is full float32. |
+
+Unlike `so3lr md`, the engine does not switch PME on for a periodic box: pass
+`kspace_electrostatics="pme"` (and `kspace_dispersion="pme"`) for the long
+range MD uses by default, and its smearing and spacing to match the CLI's.
 
 K-space dispersion is refused on a box that only the exact images take (a
 triclinic or thin cell), since those have no dispersion in k-space.
@@ -269,6 +275,7 @@ neighbor_fn, neighbor_fn_lr, energy_fn = to_jax_md(
     total_charge=0.0,
     num_unpaired_electrons=0.0,
     precision=None,                  # None -> follow the positions dtype
+    remove_net_force=False,          # True -> forces minus their mean (k-space)
     **neighbor_kwargs,               # forwarded to jax_md.partition.neighbor_list
 )
 ```

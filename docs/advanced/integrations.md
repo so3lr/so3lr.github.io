@@ -211,6 +211,7 @@ print("Forces =", np.array(forces))
 | `fractional_coordinates` | Whether positions are fractional. Defaults to **`True`** and must match your `space` choice. |
 | `total_charge`, `num_unpaired_electrons` | Net charge (e) and spin of the system (default 0). |
 | `precision` | Dtype of the auxiliary arrays. `None` follows the positions. |
+| `remove_net_force` | `True` subtracts the mean force from every atom's force, as MD does with k-space (see [Net force](electrostatics.md#net-force)). Default `False`. |
 
 Anything else is forwarded to `jax_md.partition.neighbor_list`.
 
