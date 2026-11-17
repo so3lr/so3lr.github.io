@@ -313,9 +313,11 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   box was drifting, except with `kspace_remove_net_force: false`,
   `nvt-langevin`, fixed atoms or a restarted PySAGES state. See
   [Restarts](../usage/md.md#what-a-restart-preserves).
-- `freeze_long_range` is no longer recommended for forces-only fine-tuning: the
-  frozen heads read features that keep training, so the charges and ratios
-  still drift.
+- `--strategy freeze_long_range` and its alias `forces_only` are removed. They
+  froze the long-range heads, but the heads read features that keep training,
+  so the charges and ratios still drifted. Asking for either names the
+  [recipes](../training/finetuning.md#choosing-a-strategy) that keep the
+  long-range terms.
 - `so3lr train` and `so3lr finetune` refuse periodic ASE/NPZ data unless
   `model.cutoff_lr` is set and at most `data.neighbors_lr_cutoff`. Before, the
   long-range terms were cut off where the pair list ends.
