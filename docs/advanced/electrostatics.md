@@ -13,40 +13,50 @@ of [torch-pme](https://github.com/lab-cosmo/torch-pme/)).
 ## When you need it
 
 Use k-space electrostatics for periodic systems (bulk liquids, crystals,
-interfaces), especially charged ones. For gas-phase and isolated molecules, set
-`lr_cutoff=100` instead, so that nothing is truncated.
+interfaces), especially charged ones. The command line does this by default:
+`so3lr nvt`, `npt`, `nve`, `opt`, `eval` and `so3lr --settings` use PME for
+electrostatics and dispersion on a structure periodic along all three axes (see
+[Long-range defaults](../usage/cli.md#long-range-defaults)). The ASE calculator
+and `tune-ewald` use k-space only when asked. For gas-phase and isolated
+molecules, set `lr_cutoff=100` instead, so that nothing is truncated.
 
 K-space needs a cell that is periodic along all three axes. Slabs and wires
 (`pbc=[True, True, False]`) are rejected.
 
 ## From the command line
 
+A periodic box needs no flag: PME is on, with a 10 Å cutoff, 2 Å smearing and
+a 1.55 Å mesh. To choose the method or the parameters:
+
 ```shell
 so3lr nvt --input water_box.xyz --temperature 300 --dt 0.5 \
     --md-cycles 100 --md-steps 100 \
     --kspace-electrostatics pme \
-    --kspace-smearing 4.0 \
-    --kspace-spacing 0.5
+    --kspace-smearing 2.0 \
+    --kspace-spacing 1.0
 ```
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--kspace-electrostatics` | off | `ewald`, `pme` or `p3m` |
-| `--kspace-smearing` | `4.0` | Smearing width, Å |
-| `--kspace-spacing` | `2.0` | Grid spacing (PME/P3M) or wavelength (Ewald), Å |
+| `--kspace-electrostatics` | `auto` | `auto` (PME on a fully periodic structure), `none`, `ewald`, `pme` or `p3m` |
+| `--kspace-smearing` | `2.0` | Smearing width, Å |
+| `--kspace-spacing` | `1.55` | Grid spacing (PME/P3M) or wavelength (Ewald), Å; 1 below a 10 Å cutoff, 0.775 × a given smearing |
 | `--kspace-interp-nodes` | `4` | Interpolation nodes for PME/P3M |
 | `--kspace-npt-cycles` | every 100 cycles | Rebuild the grid for the current box every N cycles under NPT |
 
-The MD subcommands, `opt` and `tune-ewald` take all five. `so3lr eval` takes
-the first four (see [below](#from-so3lr-eval)).
+The MD subcommands and `opt` take all five, and `so3lr eval` the first four (see
+[below](#from-so3lr-eval)). `tune-ewald` takes all five, without `auto` and
+`none`, and keeps 4 Å smearing and 2 Å spacing as its defaults.
+`--kspace-electrostatics none --kspace-dispersion none` keeps both terms in real
+space.
 
-The same options can be set in a settings file:
+The same options can be set in a settings file. A key left out is `auto`;
+`none` or an explicit `null` turns the term off:
 
 ```yaml title="settings.yaml"
-lr_cutoff: 12.0
-kspace_electrostatics: pme      # ewald / pme / p3m
-kspace_smearing: 4.0
-kspace_spacing: 0.5
+kspace_electrostatics: pme      # auto / none / ewald / pme / p3m
+kspace_smearing: 2.0
+kspace_spacing: 1.0
 kspace_interp_nodes: 4
 ```
 
@@ -59,10 +69,12 @@ cycles (100 when unset, never with `kspace_npt_cycles: null`).
   [ASE calculator](#from-the-ase-calculator) takes any cell shape.
 - **Box size.** The [flash engine](../usage/md.md#when-flash-runs) takes
   small boxes. On the neighbour-list engine every box length must be at least
-  twice `lr_cutoff` (24 Å at the default 12 Å); for a smaller box there, lower `--lr-cutoff` and set
-  `kspace_dispersion: pme`, because `lr_cutoff` truncates the real-space
-  dispersion too. An `lr_cutoff` below 10 Å is accepted only with k-space
-  electrostatics on. See [Box size](../usage/md.md#box-size).
+  twice `lr_cutoff` (20 Å at the 10 Å PME default). Unless you set
+  `--lr-cutoff`, a smaller periodic box gets a cutoff of 0.45 × its smallest
+  height and a 1 Å mesh, with both terms in k-space. When you lower
+  `--lr-cutoff` yourself, keep dispersion in k-space too, because `lr_cutoff`
+  truncates the real-space dispersion. An `lr_cutoff` below 10 Å is accepted
+  only with k-space electrostatics on. See [Box size](../usage/md.md#box-size).
 - **Engine.** The flash engine runs PME (electrostatics and dispersion) with
   4 interpolation nodes. Ewald, P3M, other node counts, an explicit
   `kspace_npt_cycles` and the dispersion tail correction run on the
@@ -70,6 +82,21 @@ cycles (100 when unset, never with `kspace_npt_cycles: null`).
   [When flash runs](../usage/md.md#when-flash-runs).
 - **Legacy model.** K-space has not been tested with the original `so3lr`
   model, which was trained with real-space electrostatics.
+
+### Net force
+
+PME, for electrostatics and for dispersion, works on a mesh that is fixed in
+space, so its forces do not sum to zero: a small net force remains. Nothing
+else in the model cancels it, and over an MD run it builds up into a drift of the whole box,
+which a mean-squared displacement then counts as diffusion.
+
+MD and `so3lr opt` therefore subtract the mean force from every atom's force
+whenever a k-space term is on, on both engines, as AMBER's `netfrc` does. The
+energy and the pressure are unchanged. `kspace_remove_net_force: false` in a
+settings file turns this off. Single points keep the model's forces:
+`so3lr eval`, `So3lrCalculator`, `FlashCalculator` and `So3lrEngine`. In a
+JAX-MD loop of your own, pass `remove_net_force=True` to
+[`to_jax_md`](integrations.md#to_jax_md-arguments).
 
 ## From the ASE calculator
 
@@ -106,7 +133,9 @@ The k-space arguments are ignored for non-periodic systems. The calculator
 handles triclinic and small cells (see
 [Periodic systems](../usage/ase.md#periodic-systems)). PME/P3M interpolate with
 4 nodes, which you can change with `coulomb_kspace_interp_nodes=`. K-space
-dispersion is not available through the calculator; use MD or `so3lr eval`.
+dispersion is not available through `So3lrCalculator`; use
+[`FlashCalculator`](../reference/api.md#flashcalculator) (PME),
+[`So3lrEngine`](../reference/api.md#so3lrengine), MD or `so3lr eval`.
 
 ### Supplying a grid yourself
 
@@ -184,10 +213,12 @@ The electrostatic contribution to the total energy is the sum of both parts.
 ## From `so3lr eval`
 
 `so3lr eval` takes `--kspace-electrostatics`, `--kspace-smearing`,
-`--kspace-spacing` and `--kspace-interp-nodes`, plus its own k-space
-dispersion flags: `--kspace-dispersion` (`ewald` or `pme`),
+`--kspace-spacing` and `--kspace-interp-nodes`, plus the k-space dispersion
+flags: `--kspace-dispersion` (`auto`, `none`, `ewald` or `pme`),
 `--kspace-dispersion-smearing` (default 2.0 Å), `--kspace-dispersion-spacing`
-(default 3.0 Å) and `--kspace-dispersion-interp-nodes` (default 4).
+(default 3.0 Å) and `--kspace-dispersion-interp-nodes` (default 4). Both terms
+default to PME when every structure in the file is fully periodic, with a 10 Å
+cutoff that is not shortened for small cells.
 
 ```shell
 so3lr eval --datafile crystals.extxyz --lr-cutoff 12 \
@@ -195,8 +226,8 @@ so3lr eval --datafile crystals.extxyz --lr-cutoff 12 \
     --save-to crystals_pred.extxyz
 ```
 
-Every structure in the file must be fully periodic. See
-[Dataset evaluation](../usage/evaluation.md).
+With k-space asked for explicitly, every structure in the file must be fully
+periodic. See [Dataset evaluation](../usage/evaluation.md).
 
 ## Choosing parameters by hand
 
@@ -275,16 +306,21 @@ listed in the [settings reference](../usage/settings.md#tune-ewald-search-ranges
 
 A settings file can also set `kspace_electrostatics: cutoff`, which tunes only
 the real-space `lr_cutoff`, or `kspace_dispersion: cutoff`, which tunes
-`lr_cutoff` and `dispersion_damping` for the dispersion.
+`lr_cutoff` and `dispersion_damping` for the dispersion. The MD command and
+settings these modes print turn k-space off (`--kspace-electrostatics none
+--kspace-dispersion none`), since a periodic structure would otherwise get PME.
 
 ## K-space dispersion
 
 The dispersion term can be treated the same way, which helps in dense periodic
-systems where the r⁻⁶ tail is still significant at the cutoff. In MD it is set
-in a settings file; `so3lr eval` has [flags](#from-so3lr-eval) for it.
+systems where the r⁻⁶ tail is still significant at the cutoff. The command line
+uses PME for it on fully periodic structures by default. The MD commands, `opt`
+and `eval` take `--kspace-dispersion` (`auto`, `none`, `ewald` or `pme`),
+`--kspace-dispersion-smearing`, `--kspace-dispersion-spacing` and
+`--kspace-dispersion-interp-nodes`; the settings keys are:
 
 ```yaml
-kspace_dispersion: pme                  # ewald | pme
+kspace_dispersion: pme                  # auto | none | ewald | pme
 kspace_dispersion_smearing: 2.0         # Å, default 2.0
 kspace_dispersion_spacing: 3.0          # Å, default 3.0
 kspace_dispersion_interp_nodes: 4       # default 4

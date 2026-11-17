@@ -10,13 +10,14 @@
 ??? question "What should `lr_cutoff` be?"
     | System | Setting |
     |---|---|
-    | Periodic / condensed phase | `12.0` (the default) |
+    | Periodic / condensed phase | Leave it unset: 10 Å with PME for electrostatics and dispersion (the command-line default) |
     | Gas phase, isolated molecules | `100` |
-    | Periodic and charged, or cutoff artifacts matter | `12.0` plus [k-space electrostatics](../advanced/electrostatics.md) |
+    | Periodic, in real space only (`--kspace-electrostatics none --kspace-dispersion none`) | `12.0` (the default without k-space) |
 
     At `12.0`, electrostatics and dispersion of an isolated molecule are
     truncated. At `100`, the long-range neighbor list of a large periodic box
-    becomes enormous.
+    becomes enormous. See
+    [Long-range defaults](../usage/cli.md#long-range-defaults).
 
 ??? question "Which model should I use?"
     The default, `so3lr-tauri-m`, is a good place to begin and is the model we
@@ -63,7 +64,10 @@
 
 ??? question "How do I restart a killed job?"
     Save a checkpoint with `--restart-save checkpoint.npz`, then resume with
-    `--restart-load checkpoint.npz`. See
+    `--restart-load checkpoint.npz`. A settings-file run that sets
+    `restart_save_path` resumes with `so3lr resume settings.yaml`, which runs
+    the rest of its `md_cycles`
+    ([Resuming a run](../usage/cli.md#resuming-a-run)). See
     [what a restart preserves](../usage/md.md#what-a-restart-preserves).
 
 ??? question "How do I freeze part of my system?"
@@ -138,11 +142,12 @@
 
 ??? failure "MD refuses my periodic box as too small"
     The neighbour-list engine needs every box length to be at least twice
-    `lr_cutoff` (24 Å at the default 12 Å). On a GPU, the flash engine runs
-    smaller orthorhombic boxes over their periodic images (`--engine auto`
-    picks it). Otherwise, lower `--lr-cutoff` and let k-space carry the long
-    range (`--kspace-electrostatics pme`, plus `kspace_dispersion: pme` in a
-    settings file, or dispersion stays truncated), or use the
+    `lr_cutoff`. On a GPU, the flash engine runs smaller orthorhombic boxes
+    over their periodic images (`--engine auto` picks it). Without
+    `--lr-cutoff`, a small periodic box gets PME for both terms and a cutoff
+    that fits it. Otherwise, lower `--lr-cutoff` and keep k-space for both
+    terms (the default for periodic structures; with `--kspace-dispersion none`
+    dispersion stays truncated), or use the
     [ASE calculator](../usage/ase.md). See [Box size](../usage/md.md#box-size).
 
 ??? failure "Installation fails on a cluster"
@@ -152,9 +157,12 @@
 
 ## Fine-tuning
 
-??? question "My dataset only has forces. Can I fine-tune?"
-    Yes, but use `--strategy freeze_long_range`. With `--strategy full`, the
-    forces improve while electrostatics and dispersion silently degrade. See
+??? question "My dataset only has energies and forces. Can I fine-tune?"
+    Yes, but with `--strategy full` alone the forces improve while
+    electrostatics and dispersion silently degrade, and `freeze_long_range`
+    does not prevent this. Anchor the long-range predictions with
+    `training.long_range_anchor_weights`, or keep them exactly with
+    `--strategy readout_only` and a residual readout. See
     [Fine-tuning](../training/finetuning.md#choosing-a-strategy).
 
 ??? question "How do I check a fine-tune didn't break anything?"

@@ -126,6 +126,7 @@ nav:
       - Examples: examples.md
   - Usage:
       - Command line: usage/cli.md
+      - Guided setup and monitoring: usage/terminal-ui.md
       # Settings file sits with the CLI, not in Reference: it is not an
       # optional deep-dive but the recommended way to drive any long run, and
       # the CLI page defers to it for every flag that has no command-line form.

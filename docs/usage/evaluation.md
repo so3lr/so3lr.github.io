@@ -16,9 +16,10 @@ To evaluate a different bundled model, add `--model so3lr-tauri-s` (or another
 [model name](../models.md)). Without it, the default `so3lr-tauri-m-2606` is
 used.
 
-Labels are assumed to be in eV and Å. The default long-range cutoff of 12 Å is
-meant for periodic, condensed-phase systems. For gas-phase molecules, use
-`--lr-cutoff 100`, otherwise electrostatics and dispersion are truncated.
+Labels are assumed to be in eV and Å. Without a cell, the default long-range
+cutoff is 12 Å; for gas-phase molecules, use `--lr-cutoff 100`, otherwise
+electrostatics and dispersion are truncated. Periodic datasets get PME by
+default (see below).
 
 The legacy `so3lr` model was not trained on energies, so compare only energy
 differences there.
@@ -115,17 +116,23 @@ For more in-depth evaluation using Python, check out the
 
 ## Periodic datasets
 
-Periodic structures are evaluated in real space up to `--lr-cutoff`. Add
-`--kspace-electrostatics` (and optionally `--kspace-dispersion`) for the
-reciprocal-space term:
+When every structure in the file is periodic along all three axes, `eval`
+uses PME for electrostatics and dispersion by default, with a 10 Å cutoff,
+2 Å smearing and a 1.55 Å mesh. Unlike MD, it does not shorten the cutoff for a
+small cell, since it sums over the periodic images. A file that mixes periodic
+and non-periodic structures stays in real space. To choose the parameters, or to
+turn k-space off:
 
 ```shell
 so3lr eval --datafile crystals.extxyz --save-to predictions.extxyz \
-    --kspace-electrostatics pme --kspace-smearing 4.0 --kspace-spacing 0.5
+    --kspace-electrostatics pme --kspace-smearing 2.0 --kspace-spacing 1.0
+so3lr eval --datafile crystals.extxyz --save-to predictions.extxyz \
+    --kspace-electrostatics none --kspace-dispersion none
 ```
 
-In that case, every structure must be periodic in all three directions. See
-[Long-range electrostatics](../advanced/electrostatics.md) for the parameters.
+With k-space asked for explicitly, every structure must be periodic in all
+three directions. See [Long-range defaults](cli.md#long-range-defaults) and
+[Long-range electrostatics](../advanced/electrostatics.md).
 
 ## Choosing the engine
 
@@ -169,14 +176,14 @@ only to the neighbour-list model.
 | `--targets` | `forces,dipole_vec,hirshfeld_ratios` | Comma-separated properties. |
 | `--batch-size` | `1` | Structures per batch. Raise it (16–64 on a GPU) for many small, similarly-sized structures. |
 | `--model` | `so3lr-tauri-m-2606` | Bundled name or path. |
-| `--lr-cutoff` | `12.0` | Use `100` for gas phase. |
+| `--lr-cutoff` | `10.0` with PME, else `12.0` | Use `100` for gas phase. |
 | `--dispersion-damping` | `2.0` | Dispersion switches off from `lr_cutoff - dispersion_damping` Å. |
 | `--precision` | `mixed` | `float32`, `mixed` or `float64`; `float64` for tight comparisons. |
 | `--total-charge`, `--spin` | from file | Override per-structure values. |
 | `--charge-embed-total-charge` | follows the charge | Charge seen by the charge embedding only. |
 | `--charge-equilibration-total-charge` | follows the charge | Charge that charge equilibration conserves to. |
-| `--kspace-electrostatics` | off | `ewald` / `pme` / `p3m`, with `--kspace-smearing` (`4.0`), `--kspace-spacing` (`2.0`) and `--kspace-interp-nodes` (`4`). |
-| `--kspace-dispersion` | off | `ewald` / `pme`, with `--kspace-dispersion-smearing` (`2.0`), `--kspace-dispersion-spacing` (`3.0`) and `--kspace-dispersion-interp-nodes` (`4`). |
+| `--kspace-electrostatics` | `auto` | `auto` (PME when every structure is periodic), `none`, `ewald`, `pme` or `p3m`, with `--kspace-smearing` (`2.0`), `--kspace-spacing` (`1.55`, or 0.775 × a given smearing) and `--kspace-interp-nodes` (`4`). |
+| `--kspace-dispersion` | `auto` | `auto`, `none`, `ewald` or `pme`, with `--kspace-dispersion-smearing` (`2.0`), `--kspace-dispersion-spacing` (`3.0`) and `--kspace-dispersion-interp-nodes` (`4`). |
 | `--engine` | `auto` | `auto`, `flash` or `standard`; see [Choosing the engine](#choosing-the-engine). |
 | `--flash-mode`, `--flash-kernels`, `--flash-devices` | `auto`, `auto`, `1` | As for [MD](md.md#flash-options). |
 | `--jit-compile` / `--no-jit-compile` | on | Disable when debugging shape errors. |

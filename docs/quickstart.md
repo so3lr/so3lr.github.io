@@ -55,8 +55,10 @@ neighbour-list engine (see
 [Molecular dynamics](usage/md.md#when-flash-runs)). On the MI355X, flash needs
 `XLA_FLAGS="--xla_gpu_enable_command_buffer="` in the environment.
 
-The default long-range cutoff of 12 Å is meant for periodic, condensed-phase
-systems; for gas-phase simulations, we suggest using `--lr-cutoff 100`.
+A periodic structure gets PME for electrostatics and dispersion by default,
+with a 10 Å cutoff (`--kspace-electrostatics none --kspace-dispersion none`
+turns it off). Without a cell, the cutoff is 12 Å; for gas-phase simulations,
+we suggest using `--lr-cutoff 100`.
 
 Geometry optimization and the other ensembles work the same way:
 

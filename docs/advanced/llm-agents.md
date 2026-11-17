@@ -24,9 +24,15 @@ UNITS AND DEFAULTS
 - Use dt = 0.5 fs. SO3LR has no SHAKE/RATTLE, so X-H stretches are
   integrated explicitly. Do not use 2 fs.
 - energy_drift_threshold is meV/atom/ps (default 0.1), not eV/atom.
-- --lr-cutoff defaults to 12.0 A, which suits PERIODIC systems. For
-  a molecule in vacuum use 100, or electrostatics and dispersion
-  are truncated.
+- PERIODIC structures (pbc in all three axes) get PME for
+  electrostatics AND dispersion by default in the CLI (MD, opt, eval,
+  --settings), with lr_cutoff 10 A (smaller for a cell under 20 A),
+  2 A smearing, 1.55 A mesh. --kspace-electrostatics none
+  --kspace-dispersion none (YAML: none or explicit null) turns it off;
+  a YAML k-space key left out means auto.
+- Without a cell, --lr-cutoff defaults to 12.0 A. For a molecule in
+  vacuum use 100, or electrostatics and dispersion are truncated.
+- Python calculators and tune-ewald do NOT default to k-space.
 - --langevin-thermo is a dimensionless timescale, NOT gamma:
   gamma = 1 / (md_dt * langevin_thermo).
 - Energies are eV, lengths Angstrom, forces eV/A.
@@ -67,9 +73,8 @@ ON BY DEFAULT (do not try to "enable" these)
 - Adaptive robust loss, when training from scratch.
 
 SILENTLY IGNORED
-- Unknown settings-YAML keys: warning, not error. The run continues
-  with defaults, so a file can be partly inert. An unknown key also
-  makes --engine auto fall back to the neighbour-list engine.
+- Unknown settings-YAML keys: warning, not error. The key is dropped
+  and the run continues with defaults, so a file can be partly inert.
 - Unknown So3lrCalculator kwargs: forwarded into the long-range
   setup, not rejected. A misspelling can look accepted.
 - Fine-tuning ignores use_ema, early_stopping_patience and
@@ -80,11 +85,13 @@ WILL NOT WORK
 - Several GPUs for one simulation, EXCEPT flash with
   --flash-devices N (GPUs of one node). The neighbour-list engine is
   single-device; nothing runs across nodes.
-- CLI MD in a periodic box shorter than 2 x lr_cutoff on any side
-  (24 A at the default 12 A): refused. Lower --lr-cutoff and use
-  --kspace-electrostatics pme plus kspace_dispersion: pme in a
-  settings file (MD has no --kspace-dispersion flag), or use the
-  ASE calculator.
+- On the NEIGHBOUR-LIST engine, a periodic box shorter than
+  2 x lr_cutoff on any side is refused. The flash engine takes
+  small boxes (see md.md#box-size). With no --lr-cutoff given, a
+  small periodic box gets a cutoff that fits it. Otherwise lower
+  --lr-cutoff and keep both terms in k-space (the periodic default),
+  or use the ASE calculator.
+- A slab or wire (mixed pbc) in the CLI: usage error, exit 2.
 - NPT on a non-periodic structure (it needs a cell). Fully
   anisotropic NPT coupling is rejected; semi-isotropic is
   experimental.
