@@ -52,7 +52,8 @@ writes:
 An isolated molecule or a periodic orthorhombic box on a recent NVIDIA GPU or
 an AMD MI355X runs on the fast **flash** engine, and anything else on the
 neighbour-list engine (see
-[Molecular dynamics](usage/md.md)).
+[Molecular dynamics](usage/md.md#when-flash-runs)). On the MI355X, flash needs
+`XLA_FLAGS="--xla_gpu_enable_command_buffer="` in the environment.
 
 A periodic structure gets PME for electrostatics and dispersion by default,
 with a 10 Å cutoff (`--kspace-electrostatics none --kspace-dispersion none`

@@ -130,10 +130,13 @@ Both couplings run on either [engine](#md-engines).
 two engines, which compute the same energy and forces:
 
 - **flash**: fused GPU kernels written in JAX Pallas. On one A100 (40 GB) with
-  `so3lr-tauri-m`, it is 3.7–4.0× faster than the neighbour-list engine and
-  runs systems of up to 2.7 million atoms (9.0 million with the lowest-memory
-  mode, `--flash-mode minimal`, and 84 million on one AMD MI355X with 288 GB).
-  On an H100 or H200, its fastest mode runs on [CUDA kernels](#cuda-kernels).
+  `so3lr-tauri-m`, the Pallas kernels are 3.7–4.0× faster than the
+  neighbour-list engine and run systems of up to 2.7 million atoms (9.0 million
+  with the lowest-memory mode, `--flash-mode minimal`, and 84 million on one
+  AMD MI355X with 288 GB). On an NVIDIA GPU of compute capability 8.0 or newer,
+  flash runs on [CUDA kernels](#cuda-kernels) where they fit: 1.65–3.3× the
+  speed of the Pallas kernels in the measurements, and up to 16 million atoms
+  on one GPU with enough memory (well beyond an A100's 40 GB).
 - **standard**: the jax-md neighbour-list potential, which runs every setting on
   any JAX backend.
 
@@ -143,7 +146,7 @@ engine and the reason:
 
 ```text
 Engine: flash (auto)
-Engine: neighbour-list potential (flash cannot: it has no fixed atoms)
+Engine: neighbour-list potential (flash cannot: it has no observables)
 Engine: neighbour-list potential (--engine standard)
 ```
 
@@ -158,16 +161,25 @@ Flash runs only when all of the following hold:
 
 | | Requirement |
 |---|---|
-| Device | An NVIDIA GPU with compute capability 8.0 or newer, or an AMD MI355X |
+| Device | An NVIDIA GPU with compute capability 8.0 or newer, or an AMD MI355X with the `XLA_FLAGS` setting below |
 | Model | `so3lr-tauri-s/m/l` (both releases) or the legacy `so3lr` |
 | Box | No box (an isolated molecule), or a periodic orthorhombic box of any size the long range reaches across in at most 16 grid cells: every box down to about 1 Å at `lr_cutoff` 12 Å (see [Box size](#box-size)) |
 | Ensemble | `nve`, `nvt`, `nvt-langevin`, or `npt` (isotropic or semi-isotropic) |
 | Long range | Real space, or PME (the default for periodic structures) |
 
 NPT and k-space need a box. The dispersion tail correction,
-`kspace_npt_cycles`, Ewald and P3M, fixed atoms and observables run on the
-neighbour-list engine, and so does enhanced sampling outside the cases listed
-in [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
+`kspace_npt_cycles`, Ewald and P3M, and observables run on the neighbour-list
+engine, and so do fixed atoms outside the cases in
+[Freezing atoms](#freezing-atoms) and enhanced sampling outside the cases
+listed in [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
+
+On the MI355X, flash needs XLA's command buffers turned off before JAX starts;
+without this setting, `--engine auto` falls back to the neighbour-list engine
+and says so:
+
+```shell
+export XLA_FLAGS="--xla_gpu_enable_command_buffer="
+```
 
 ### Flash options
 
@@ -185,25 +197,66 @@ when flash may run (see [environment variables](cli.md#environment-variables)).
 
 ### CUDA kernels
 
-On a GPU of compute capability 9.0 (H100, H200), the `fast` memory mode runs on
-CUDA kernels in place of the Pallas ones, for `so3lr-tauri-s/m/l` and `so3lr`
-in `float32` or `mixed` precision. A force call of `so3lr-tauri-m` is 3.3×
-faster than on the Pallas kernels, at float32-level accuracy, and every sum runs
-in a fixed order. Several GPUs and
-[`FlashDomains`](../reference/api.md#flashdomains) use them too. Other GPUs,
-such as the A100, run the Pallas kernels as before.
+On an NVIDIA GPU of compute capability 8.0 or newer, flash runs
+`so3lr-tauri-s/m/l` and `so3lr` in `float32` or `mixed` precision on CUDA
+kernels in place of the Pallas ones, at float32-level accuracy, with every sum
+in a fixed order. The attention kernels take the largest tiles that fit the
+GPU's shared memory per block. Every model fits at 163 KiB per block (as on
+the A100) or more (227 KiB on the H100 and H200). At 99 KiB per block,
+`so3lr-tauri-s/m` and `so3lr` fit, but `so3lr-tauri-l` does not and runs on
+the Pallas kernels.
+
+With `--flash-mode auto`, the kernels run in the `fast` or the `default`
+(staged) memory mode. Where every layer's per-pair data fits in memory, they
+keep it from the forward pass for the backward. Where it does not, they make
+it again a chunk of rows at a time, which costs 1.2–1.3× per atom and needs
+about the memory of the Pallas kernels' `fast` mode. Flash takes the first of
+these that fits: the per-pair data kept, then chunks in `fast`, then chunks in
+`default`. Where none fits, it runs the Pallas kernels, whose leaner modes
+reach further. Several GPUs and
+[`FlashDomains`](../reference/api.md#flashdomains) use the CUDA kernels too.
+
+Speed-ups over the Pallas kernels on the same GPU, as measured:
+
+| Shared memory per block | Measurement | Speed-up |
+|---|---|---|
+| 227 KiB | `so3lr-tauri-m` force call, 12k–200k atoms | 3.3× |
+| 227 KiB | `so3lr-tauri-l` force call, 12k–55k atoms | 2.7–3.0× |
+| 163 KiB | `so3lr-tauri-m` force call, 55k–1.1 million atoms | 2.0× |
+| 163 KiB | `so3lr-tauri-l` force call, 55k / 331k atoms | 2.1× / 1.65× |
+
+In chunks of rows, MD of water with PME ran on the CUDA kernels up to
+16 million atoms with `so3lr-tauri-s/m` and 9 million with `-l` on one
+compute-capability-9.0 GPU with more than 100 GB of memory, at
+2.5–2.7× (s, m) and 2.2–2.8× (l) the speed of the Pallas kernels.
+
+The log names the kernels and how they hold the per-pair data, `per-pair data
+kept` or `chunks of N rows`, followed by the memory mode:
+
+```text
+Flash: CUDA kernels (TF32 x3 attention, gather-only messages and gradients; per-pair data kept; ~136 KiB/atom)
+Flash: 55296 atoms, memory mode fast (jitted), ~136.0 KiB/atom at peak
+```
+
+Without the `Flash: CUDA kernels (...)` line, the run is on the Pallas
+kernels; the terminal display shows which under `Kernels`.
 
 `nvcc` builds the kernels on first use, once per model, GPU architecture,
 compiler and JAX version, into `$SO3LR_CUDA_CACHE` (default
-`~/.cache/so3lr/flash_cuda`). It is found through `SO3LR_NVCC`, `CUDA_HOME` or
-the `PATH`. With `--flash-kernels auto`, a run that the kernels do not cover
-(another GPU, model, precision or memory mode, no `nvcc`, or too little free
-memory for their per-pair arrays) uses the Pallas kernels, and the log says
-why, for example on an A100:
+`~/.cache/so3lr/flash_cuda`). It is found through `SO3LR_NVCC`, `CUDA_HOME`,
+the `PATH` or `/usr/local/cuda`. With `--flash-kernels auto`, a run that the
+kernels do not cover (an AMD or older GPU, tiles that do not fit, another
+model, `float64`, a memory mode of the Pallas kernels' own, no `nvcc`, or too
+little free memory) uses the Pallas kernels, and the log says why, for
+example:
 
 ```text
-Flash: CUDA kernels not used (a sm_80 GPU (the kernels are written for sm_90)); Pallas kernels
+Flash: CUDA kernels not used (nvcc not found (set SO3LR_NVCC or CUDA_HOME)); Pallas kernels
+Flash: CUDA kernels not used (the model's kernels need more shared memory per block than this GPU's 99 KiB); Pallas kernels
 ```
+
+A build that fails logs a warning, `Flash: CUDA kernels not built (...); Pallas
+kernels`.
 
 `--flash-kernels cuda` raises instead, and `pallas` never uses the CUDA kernels.
 
@@ -350,6 +403,7 @@ model: so3lr-tauri-m
 md_T: 300
 md_cycles: 100
 md_steps: 100
+relax_before_run: false                  # the relaxation does not take constraints
 
 # --- atom constraints (all optional; omit to run unconstrained) ---
 fixed_atom_indices: [0, 1, 2]            # 0-based indices to freeze
@@ -366,6 +420,20 @@ so3lr --settings settings.yaml
 Give either `fixed_atom_indices` or `mobile_atom_indices`, and the complement
 is derived. `cartesian_anchor` pins frozen atoms in real space, which stays
 correct under NPT; the alternative is `fractional`.
+
+The relaxation before MD and `so3lr opt` do not take constraints, so a run
+with frozen atoms needs `relax_before_run: false` unless it restarts from a
+checkpoint; otherwise it stops with an error.
+
+The flash engine holds `fixed_atom_indices` in `nve`, `nvt` and
+`nvt-langevin`: after every step, the frozen atoms go back to their start
+positions with zero momentum. Under NPT, and with `mobile_atom_indices` or
+`atom_mask_path`, `--engine auto` runs the neighbour-list engine instead, and
+the log says why:
+
+```text
+Engine: neighbour-list potential (flash cannot: it holds atoms fixed only in nve, nvt and nvt-langevin (the NPT box moves them))
+```
 
 ## Writing only part of the system
 

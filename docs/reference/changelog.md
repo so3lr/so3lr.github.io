@@ -134,9 +134,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Enhanced sampling on the flash engine: with `--engine auto` on a GPU,
   PySAGES runs on flash in NVT or NVE, on one GPU, in a periodic box. See
   [Enhanced sampling](../advanced/enhanced-sampling.md#engines).
-- CUDA kernels for flash's `fast` memory mode on H100/H200 (compute capability
-  9.0), built with `nvcc` on first use: a `so3lr-tauri-m` force call is 3.3×
-  faster than on the Pallas kernels. `--flash-kernels` / `flash_kernels` /
+- CUDA kernels for flash on NVIDIA GPUs, built with `nvcc` on first use: on a
+  GPU of compute capability 9.0, a `so3lr-tauri-m` force call is 3.3× faster
+  than on the Pallas kernels. `--flash-kernels` / `flash_kernels` /
   `FlashCalculator(flash_kernels=)` chooses `auto`, `pallas` or `cuda`. See
   [CUDA kernels](../usage/md.md#cuda-kernels).
 - Semi-isotropic NPT on the flash engine.
@@ -203,6 +203,22 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - `training.data_parallel`: training on all local GPUs with a TFDS dataset,
   one batch per device per optimizer step. See
   [Multiple GPUs](../training/from-scratch.md#multiple-gpus).
+- Flash's CUDA kernels for systems of millions of atoms: where every layer's
+  per-pair data does not fit in memory, they make it a chunk of rows at a time,
+  in the `fast` and `default` memory modes, and `--flash-mode auto` takes the
+  fastest that fits. MD of water with PME ran on them up to 16 million atoms
+  with `so3lr-tauri-s/m` and 9 million with `-l` on one large-memory GPU, at
+  2.2–2.8× the
+  speed of the Pallas kernels.
+- Flash's CUDA kernels run on any NVIDIA GPU of compute capability 8.0 or
+  newer whose shared memory per block holds the model's tiles, which are sized
+  to fit. At 163 KiB per block, a force call is 1.65–2.1× faster than on the
+  Pallas kernels; at 99 KiB, `so3lr-tauri-l` stays on the Pallas kernels.
+- `--flash-mode auto` logs why a run is on the Pallas kernels
+  (`Flash: CUDA kernels not used (...)`), as a memory mode given did.
+- The flash engine holds `fixed_atom_indices` in `nve`, `nvt` and
+  `nvt-langevin`, for example a solute held in a periodic water box. NPT,
+  `mobile_atom_indices` and `atom_mask_path` run on the neighbour-list engine.
 
 #### Changed
 
@@ -309,6 +325,19 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Loading a training workdir without a `params.pkl` restores the checkpoint
   with the lowest validation loss, or the newest when none saved a loss. Before,
   it loaded the newest of the three best. Bundled models are unaffected.
+- JAX 0.10.2 is excluded (`jax`, `jaxlib` and `jax[cuda12]`): on the CPU it
+  miscompiles the periodic displacements of JAX MD and returns wrong energies
+  and forces without an error. The lock moves to 0.10.1, and an existing
+  0.10.2 install is moved to 0.10.1; install with the `cuda12` extra so the
+  CUDA plugin moves too.
+- JAX MD is pinned to SO3LR's fork rebased onto current upstream JAX MD,
+  which adds `equinox` and `jaxtyping` to the dependencies.
+- Flash sorts the atoms along a space-filling curve in every force call and
+  returns the forces in the input order, so a structure whose atoms come in
+  random order runs as fast as an ordered one.
+- Locked dependencies are updated for current security advisories. The `tfds`
+  extra moves to TensorFlow and TensorBoard 2.21 with a patched setuptools,
+  and the lock moves h5py from 3.16 to 3.14.
 
 #### Changed results and formats
 
@@ -336,8 +365,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - On a GPU, enhanced-sampling runs move to the flash engine under
   `--engine auto`. Their trajectories match the neighbour-list engine's only up
   to rounding; `engine: standard` reproduces runs of earlier versions.
-- The same holds for semi-isotropic NPT, and on an H100/H200 for flash runs that
-  move to the CUDA kernels (`--flash-kernels pallas` keeps the Pallas ones).
+- The same holds for semi-isotropic NPT, and on NVIDIA GPUs of compute
+  capability 8.0 or newer for flash runs that move to the CUDA kernels
+  (`--flash-kernels pallas` keeps the Pallas ones).
 - The command line (MD, `opt`, `eval`, `so3lr --settings`) uses PME for
   electrostatics and dispersion on structures periodic along all three axes,
   with a 10 Å cutoff, 2 Å smearing and a 1.55 Å mesh (dispersion 2 Å and 3 Å).
@@ -472,6 +502,14 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Training keeps the newest checkpoint as well as the three with the lowest
   validation loss. Before, a newest checkpoint outside the best three was
   deleted, and a restart went back to an older step without a warning.
+- `so3lr eval --engine auto` falls back to the neighbour-list model for a
+  structure with no box whose atoms are too spread out for flash's cell grid,
+  such as the separated frame of a dimer file. It previously chose flash and
+  failed during the evaluation. Every such structure is checked, not only the
+  first, and one with no atoms or positions that are not finite is declined.
+- NPT on the neighbour-list engine reallocates a cell list whose box has
+  shrunk below its cells. The run previously went on with a list that missed
+  pairs near the cutoff.
 
 <!-- TODO: backfill earlier package releases from the git history / tags. -->
 
