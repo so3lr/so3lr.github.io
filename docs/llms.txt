@@ -47,7 +47,7 @@ read it first.
 - [Observables](https://so3lr.github.io/advanced/observables.md): energy components, partial charges, embeddings, and which names each interface accepts.
 - [Gradients and Hessians](https://so3lr.github.io/advanced/derivatives.md): second derivatives and observable Jacobians.
 - [Binding energies](https://so3lr.github.io/advanced/binding-energies.md): dimer interaction energies.
-- [Custom integrations](https://so3lr.github.io/advanced/integrations.md): the bare JAX potential and the JAX-MD binding, for embedding SO3LR elsewhere.
+- [Custom integrations](https://so3lr.github.io/advanced/integrations.md): `So3lrEngine`, the energy-and-forces callback for other MD codes (OpenMM, i-PI, LAMMPS, your own loop), on flash where it can run; the bare JAX potential and the JAX-MD binding.
 
 ## Training
 
@@ -56,7 +56,7 @@ read it first.
 
 ## Reference
 
-- [Python API](https://so3lr.github.io/reference/api.md): signatures of the public surface and the model registry.
+- [Python API](https://so3lr.github.io/reference/api.md): signatures of the public surface (`So3lrCalculator`, `FlashCalculator`, `So3lrEngine`, `So3lrPotential`, `to_jax_md`) and the model registry.
 - [Datasets](https://so3lr.github.io/reference/datasets.md): the Zenodo archive and label conventions.
 - [Changelog](https://so3lr.github.io/reference/changelog.md): model releases and package changes, including changes that alter results.
 - [FAQ](https://so3lr.github.io/reference/faq.md): cutoffs, precision, engines, drift, common errors.

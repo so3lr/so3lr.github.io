@@ -329,6 +329,14 @@ keeps positions, momenta, masses and the box, but starts the
 thermostat/barostat state and the cycle counter fresh. An NPT checkpoint
 resumes only with the `npt_coupling` it was written with.
 
+A restart sets the centre-of-mass velocity to zero, with or without k-space,
+so a box that drifted before (from PME's
+[net force](../advanced/electrostatics.md#net-force)) stops drifting. The log
+warns when the drift was larger than 0.1 Å per ns; trajectories written before
+the restart still contain it. The momenta are kept as saved with
+`kspace_remove_net_force: false`, with `nvt-langevin`, with fixed atoms, and
+when a PySAGES state is restarted.
+
 ## Freezing atoms
 
 Any subset of atoms can be held fixed during `nve` / `nvt` / `npt`, for example

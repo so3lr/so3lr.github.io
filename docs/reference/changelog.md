@@ -176,6 +176,15 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - A run folder's `run.sh` runs `so3lr resume --or-start .`: it starts the run,
   or continues it from its checkpoint, from the folder it is in, and works under
   `sbatch run.sh`.
+- `So3lrEngine`: energy and forces of a fixed set of atoms for new positions
+  and a new box at each call, for MD codes outside JAX-MD (OpenMM, i-PI,
+  LAMMPS, your own loop). For each box it runs on flash, the neighbour lists
+  or exact periodic images, whichever is the first that can, and it takes
+  k-space electrostatics (`ewald`, `pme`, `p3m`) and k-space dispersion
+  (`pme`, `ewald`). See the [API reference](api.md#so3lrengine).
+- `kspace_remove_net_force` (default `true`): MD and `opt` subtract the mean
+  force whenever a k-space term is on. See
+  [Net force](../advanced/electrostatics.md#net-force).
 
 #### Changed
 
@@ -266,6 +275,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   by the signal.
 - A failed run prints its whole error message, not only the first line.
 - Live plots redraw at most once a second, text views every 0.25 s.
+- An MD restart sets the centre-of-mass velocity to zero, and warns when the
+  box was drifting, except with `kspace_remove_net_force: false`,
+  `nvt-langevin`, fixed atoms or a restarted PySAGES state. See
+  [Restarts](../usage/md.md#what-a-restart-preserves).
 
 #### Changed results and formats
 
@@ -403,6 +416,19 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   journal opens, so a refused start leaves nothing behind.
 - `md_dt` (`--dt`) must be positive, from the command line and in settings
   files.
+- MD with k-space electrostatics or dispersion drifted as a whole: PME's mesh
+  leaves a small net force, which built up into a centre-of-mass drift that
+  inflated mean-squared displacements. MD and `opt` now remove it, on both
+  engines; `kspace_remove_net_force: false` gives the previous forces.
+- `so3lr opt` and the relaxation before MD ignored `kspace_dispersion` and ran
+  real-space dispersion, while the MD that followed used k-space dispersion.
+- `so3lr tune-ewald` estimated the real-space errors with fixed electrostatic
+  and dispersion scales (4.0 and 1.2) instead of the model's. The 2606 models
+  and `so3lr-tauri-m-2602` have a dispersion scale of 1.0, so their dispersion
+  cutoff errors were estimated for another damping width.
+- A `So3lrCalculator` that evaluated a structure in free space and then in a
+  box reused the free-space neighbour list and returned the free-space energy
+  and forces for the box.
 
 <!-- TODO: backfill earlier package releases from the git history / tags. -->
 
