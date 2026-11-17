@@ -46,16 +46,11 @@ so3lr nvt --input geometry.xyz --model ./so3lr_finetuned
 
 ## Choosing a strategy
 
-!!! warning "Energies and forces alone can silently damage the long-range terms"
-    Energy and force labels cannot tell short-range from long-range energy.
-    With `--strategy full`, the predicted charges, polarizabilities and C6
-    coefficients drift to fit them, and dipoles and interactions outside the
-    training data get worse while the forces still look fine.
-    `freeze_long_range` does not prevent this: it freezes the long-range
-    heads, but they read the message-passing features, which keep training.
-
-On data with energies and forces only, use one of three recipes. They are
-also described at the top of `so3lr/config/finetune.yaml`.
+On data with energies and forces only, use one of three recipes. Such labels
+cannot tell short-range from long-range energy, so `--strategy full` on its own
+lets the predicted charges, polarizabilities and C6 coefficients drift. The
+recipes keep them. They are also described at the top of
+`so3lr/config/finetune.yaml`.
 
 | Recipe | Strategy | Long-range terms |
 |---|---|---|
@@ -128,8 +123,8 @@ non-covalent complexes.
 
 ### All strategies
 
-`full` and `freeze_long_range` train everything except what they freeze. All
-other strategies train only the listed parameters.
+`full` trains everything. All other strategies train only the listed
+parameters.
 
 | Group | Holds |
 |---|---|
@@ -142,7 +137,6 @@ other strategies train only the listed parameters.
 | Strategy | Trains |
 |---|---|
 | `full` | Everything |
-| `freeze_long_range` / `forces_only` | Everything except `observables_0/electrostatic_energy`, `observables_2`, `observables_3` |
 | `obs_0` | All of `observables_0` |
 | `final_mlp` / `freeze_all_but_final_mlp` | Only the energy readout inside `observables_0` |
 | `hirshfeld` | `observables_2` only |
@@ -160,7 +154,7 @@ other strategies train only the listed parameters.
 
 Every strategy that trains the whole `observables_0` also trains the
 partial-charge network. Every strategy that trains a message-passing layer
-changes the features the long-range heads read, `freeze_long_range` included.
+changes the features the long-range heads read.
 Only `final_mlp` and `readout_only` leave the long-range terms exactly as they
 were. On energy/force-only data, use one of the
 [three recipes](#choosing-a-strategy).
