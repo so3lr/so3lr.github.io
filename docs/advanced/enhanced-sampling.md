@@ -309,6 +309,11 @@ Set `restart_pysages_load_path` only together with `restart_load_path`.
 Loading the `.npz` without the `.pkl` restarts the dynamics but discards
 everything the method learned.
 
+[`so3lr resume`](../usage/cli.md#resuming-a-run) sets both for you: it continues
+the dynamics from `restart_save_path` and the bias from
+`restart_pysages_save_path`, and refuses to start when that `.pkl` is missing
+rather than starting a new bias.
+
 A PySAGES restart must stay in the same ensemble, and it continues with the
 method stored in the `.pkl` (CVs, grid, restraints and method arguments).
 Changing `pysages_input` between the runs has no effect; SO3LR logs a warning

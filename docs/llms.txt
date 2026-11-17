@@ -11,9 +11,11 @@
 
 Key facts an agent is likely to get wrong, because they differ from other
 MD codes: pressure is in bar; timesteps are in femtoseconds and should be
-0.5 fs (there is no SHAKE/RATTLE); `lr_cutoff` defaults to 12 Å for periodic
-systems and must be raised to 100 for molecules in vacuum; for CLI MD, a
-periodic box must be at least twice `lr_cutoff` on every side; the default model
+0.5 fs (there is no SHAKE/RATTLE); the command line uses PME for
+electrostatics and dispersion on periodic structures by default, with a 10 Å
+`lr_cutoff` (`none` turns k-space off), while molecules in vacuum default to
+12 Å and must be raised to 100; on the neighbour-list engine, a periodic box
+must be at least twice `lr_cutoff` on every side; the default model
 is the pinned `so3lr-tauri-m-2606`, while `so3lr-tauri-s`/`-m`/`-l` are aliases
 that move between releases; the current models emit `a0_ratios`, and only the
 legacy `so3lr` model emits `hirshfeld_ratios`; pre-MD relaxation frames go to a
@@ -31,7 +33,8 @@ read it first.
 
 ## Running simulations
 
-- [Command line](https://so3lr.github.io/usage/cli.md): every command and flag, exit codes, log file contents, SLURM and GPU environment variables.
+- [Command line](https://so3lr.github.io/usage/cli.md): every command and flag, the long-range defaults, `so3lr resume`, exit codes, log file contents, SLURM and GPU environment variables.
+- [Guided setup and monitoring](https://so3lr.github.io/usage/terminal-ui.md): `so3lr start` (also `--input ... --print` without prompts), run folders and `run.sh`, the live display, run journals, `so3lr show` (`--json` for scripts).
 - [Settings file](https://so3lr.github.io/usage/settings.md): every YAML key with defaults. Features with no command-line flag are set only here.
 - [Molecular dynamics](https://so3lr.github.io/usage/md.md): ensembles, the flash and neighbour-list engines, the box-size rule, trajectory files, restarts, frozen atoms, trajectory subsetting, stability monitoring.
 - [ASE calculator](https://so3lr.github.io/usage/ase.md): the Python interface, `So3lrCalculator`.

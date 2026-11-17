@@ -101,8 +101,8 @@ data:
 `max_force` drops structures with a force component above the value (or
 non-finite forces), and `min_distance` drops structures with two atoms closer
 than the value. Both are applied only by the TFDS loader; with an ASE or NPZ
-source they are ignored with a warning in the log. `finetune.yaml` uses
-`min_distance: 0.25`.
+source they are ignored. The shipped values get a note in the log; values you
+change give a warning. `finetune.yaml` uses `min_distance: 0.25`.
 
 ## Robust loss
 
