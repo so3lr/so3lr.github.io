@@ -160,7 +160,7 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - [`so3lr resume [PATH] [--or-start]`](../usage/cli.md#resuming-a-run)
   continues a settings-file MD run (a run folder or a settings file) from its
   checkpoint for the rest of its `md_cycles`, without relaxation. It appends to
-  an EXTXYZ trajectory, writes HDF5 to a new `<stem>.from_cycle_N.h5`, and
+  an EXTXYZ trajectory, writes HDF5 to a new `<stem>.from_cycle_N.h5` (or `.hdf5`), and
   carries the PySAGES bias, refusing to start when its file is missing.
   `--or-start` starts the run when there is no checkpoint yet.
 - `so3lr start --input STRUCTURE` writes the guided MD setup without prompts,

@@ -125,7 +125,7 @@ turn k-space off:
 
 ```shell
 so3lr eval --datafile crystals.extxyz --save-to predictions.extxyz \
-    --kspace-electrostatics pme --kspace-smearing 4.0 --kspace-spacing 0.5
+    --kspace-electrostatics pme --kspace-smearing 2.0 --kspace-spacing 1.0
 so3lr eval --datafile crystals.extxyz --save-to predictions.extxyz \
     --kspace-electrostatics none --kspace-dispersion none
 ```

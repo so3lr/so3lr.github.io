@@ -61,7 +61,7 @@ full-precision energies:
 
 ```text
 Binding energies (dimer - separated) for 10 dimers, against benchmark_Eint in kcal/mol:
-  MAE 0.939 kcal/mol · RMSE 1.180 kcal/mol · max |error| 2.272 kcal/mol
+  MAE 1.12 kcal/mol · RMSE … kcal/mol · max |error| … kcal/mol
 ```
 
 `so3lr start` → **Evaluate a dataset** includes a 10-dimer SAPT10k example. To

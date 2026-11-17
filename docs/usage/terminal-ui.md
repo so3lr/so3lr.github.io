@@ -62,8 +62,9 @@ The model menu lists **M (default)**, **S (faster)** and **L (recommended for
 reactions)** first; **Legacy models** opens the older releases. The saved
 settings use each model's dated name.
 
-The long-range settings follow the cell, with the same rule as the
-[command line](cli.md#long-range-defaults):
+The long-range settings follow the cell. Periodic cells get the
+[command line's rule](cli.md#long-range-defaults); an isolated structure gets
+100 Å here, where the command line keeps 12 Å:
 
 | Structure | Cutoff | Electrostatics | Dispersion |
 |---|---|---|---|
@@ -170,9 +171,10 @@ guided setup. `so3lr init` is a hidden alias of `so3lr start`.
 
 ## Run bundles
 
-An MD folder holds the reviewed frame as `structure.extxyz` (the input copied
-byte for byte when nothing in it changed), a `settings.yaml` with every setting
-of the run, and an executable `run.sh`. The paths in `settings.yaml` are
+An MD folder holds the reviewed frame as `structure.extxyz` (in guided setup,
+the input copied byte for byte when nothing in it changed), a `settings.yaml`
+with the settings chosen in setup (the rest take their defaults), and an
+executable `run.sh`. The paths in `settings.yaml` are
 relative to the folder:
 
 | File | Written by |
@@ -254,7 +256,7 @@ Keys are handled at reporting points.
 Every run ends with one line, in plain and batch output too:
 
 ```text
-✓ Evaluation finished in 00:03 · 20 structures · binding-energy MAE 0.94 kcal/mol
+✓ Evaluation finished in 00:03 · 20 structures · binding-energy MAE 1.12 kcal/mol
 ! Optimization finished in 00:14: force target not met · max force 0.00635 > 0.005 eV/Å
 ■ MD interrupted at step 220 after 00:15
 ✕ Tuning stopped after 00:01 · ValueError: …
@@ -352,7 +354,7 @@ journal.
 
 A folder with several runs opens on an overview: each run's state, progress
 and the age of its last journal update, with the host and Slurm job ID when
-recorded and a progress bar in terminals at least 100 columns wide. Runs are
+recorded and a progress bar in terminals at least 120 columns wide. Runs are
 labelled `MD`, `OPT` or `TRN`; MD progress counts steps, optimization progress
 its own steps, and training progress finished epochs. Runs stopped by Ctrl+C or
 a termination signal show as **Interrupted**, apart from failures.
@@ -407,7 +409,7 @@ viewer as the only check of a job's health.
       "device_count": 1,
       "ensemble": "nvt",
       "output_file": "trajectory.extxyz",
-      "host": null,
+      "host": "node-01",
       "slurm_job": null,
       "done": 45000,
       "planned": 100000,
@@ -433,10 +435,11 @@ run recorded them. Fields that the journal does not record are `null`.
 ## Batch output
 
 With plain output (a redirected stderr, as in a Slurm `.out` file), MD adds one
-progress line at every checkpoint, and at least every ten minutes:
+progress line at every checkpoint, and at the first reporting point after ten
+minutes without one:
 
 ```text
-Progress 45.0% · step 450,000/1,000,000 · 2.31 ns/day · ETA 1d 02:13:00
+Progress 45.0% · step 450,000/1,000,000 · 2.310 ns/day · ETA 1d 02:13:00
 ```
 
 Throughput and ETA use the wall time since the first MD sample, including

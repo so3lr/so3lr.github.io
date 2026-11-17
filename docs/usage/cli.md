@@ -79,7 +79,7 @@ folder), or a settings file (paths relative to the current directory, as with
 
 - runs the remaining `md_cycles` from the checkpoint, without the relaxation;
 - appends to an EXTXYZ trajectory, even when the file sets `overwrite: true`;
-- writes an HDF5 trajectory to a new file, `<stem>.from_cycle_N.h5` (with
+- writes an HDF5 trajectory to a new file, `<stem>.from_cycle_N` with the original `.h5` or `.hdf5` extension (with
   `-2`, `-3`, ... when that exists);
 - with enhanced sampling, continues the PySAGES bias from
   `restart_pysages_save_path`, and refuses to start when that file is missing;
@@ -126,8 +126,9 @@ be at least 2 × `lr_cutoff` across; flash takes smaller boxes (see
 ### Long-range defaults
 
 Unless you set them, the long-range settings follow the structure. The same rule
-applies to the MD commands, `so3lr --settings`, `opt`, `eval` and
-[`so3lr start`](terminal-ui.md#molecular-dynamics):
+applies to the MD commands, `so3lr --settings`, `opt` and `eval`;
+[`so3lr start`](terminal-ui.md#molecular-dynamics) uses it for periodic
+structures and proposes 100 Å for an isolated one:
 
 | Structure | Electrostatics and dispersion | Cutoff | Smearing and mesh |
 |---|---|---|---|

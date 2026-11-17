@@ -32,8 +32,8 @@ a 1.55 Å mesh. To choose the method or the parameters:
 so3lr nvt --input water_box.xyz --temperature 300 --dt 0.5 \
     --md-cycles 100 --md-steps 100 \
     --kspace-electrostatics pme \
-    --kspace-smearing 4.0 \
-    --kspace-spacing 0.5
+    --kspace-smearing 2.0 \
+    --kspace-spacing 1.0
 ```
 
 | Flag | Default | Meaning |
@@ -55,8 +55,8 @@ The same options can be set in a settings file. A key left out is `auto`;
 
 ```yaml title="settings.yaml"
 kspace_electrostatics: pme      # auto / none / ewald / pme / p3m
-kspace_smearing: 4.0
-kspace_spacing: 0.5
+kspace_smearing: 2.0
+kspace_spacing: 1.0
 kspace_interp_nodes: 4
 ```
 
