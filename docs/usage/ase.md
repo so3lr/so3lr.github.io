@@ -46,6 +46,7 @@ only its relative energies are meaningful.
 | `lr_cutoff` | `12.0` | Long-range cutoff, Å. Use `100` for isolated molecules. |
 | `dispersion_energy_cutoff_lr_damping` | `2.0` | Dispersion switch-off width, Å. |
 | `precision` | `"mixed"` | `"float32"` or `"float64"` throughout, or `"mixed"`: a float32 model with float64 positions and results. Unset, `"mixed"` with `jax_enable_x64`, `"float32"` without. See [Choosing precision](#choosing-precision). |
+| `dtype` | `None` | Older spelling of the model's dtype: `np.float64` alone means `precision="float64"`. A `dtype` that contradicts `precision` raises an error. Prefer `precision`. |
 | `calculate_stress` | `False` | Also return the stress tensor (periodic systems only). |
 | `calculate_hessian` | `False` | Return the Hessian. See [Gradients and Hessians](../advanced/derivatives.md). |
 | `has_aux` | `False` | Expose intermediate quantities in `calc.results["aux"]`. |

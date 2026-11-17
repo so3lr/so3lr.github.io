@@ -6,6 +6,19 @@ The trajectories can be saved in `.hdf5` or `.xyz` format. In addition,
 checkpoints can be saved as `.npz` files throughout the simulation to restart
 if needed.
 
+## Following a run
+
+In an interactive terminal, MD shows its stage and progress with live
+temperature and **total energy** graphs (NPT adds volume): `e` changes the
+energy plot, Esc hides the graphs while MD continues, and Ctrl+C interrupts.
+With redirected output, as in a scheduler log, it writes plain text with a
+`Progress … · ns/day · ETA …` line at every checkpoint. Every run also writes a
+journal next to its log, so `so3lr show <output-directory>` can follow it from
+another terminal, during the run or afterwards. `so3lr start` sets up a run
+through menus and saves it as a folder whose `run.sh` starts the run, or
+continues it from its checkpoint. See
+[Guided setup and monitoring](terminal-ui.md).
+
 ## Ensembles
 
 === "NVT (Nosé–Hoover)"
@@ -58,6 +71,13 @@ A run is `md_cycles × md_steps` steps long, with one frame written per cycle.
 Use many short cycles for frequent output, and a few long cycles for maximum
 throughput.
 
+Periodic MD needs a positive, axis-aligned orthorhombic cell, and NPT a cell
+periodic along all three axes. A periodic structure gets PME for electrostatics
+and dispersion by default, with a 10 Å cutoff, 2 Å smearing and 1.55 Å mesh, or
+a shorter cutoff and a 1 Å mesh in a cell too small for 10 Å.
+`--kspace-electrostatics none --kspace-dispersion none` keeps both terms in
+real space. See [Long-range defaults](cli.md#long-range-defaults).
+
 Velocities or momenta in the input file (as in an EXTXYZ frame from an earlier
 SO3LR trajectory) are used as the initial velocities. Otherwise, velocities
 are drawn at the target temperature.
@@ -66,6 +86,10 @@ By default, the geometry is first relaxed with FIRE, capped at 10 × 10 steps
 from the command line. Raise the cap in a
 [settings file](settings.md#pre-run-relaxation), or skip the relaxation with
 `--no-relax`.
+
+A standalone `so3lr opt` shows its latest step, potential energy and maximum
+force as it runs, and says whether the force criterion was met or the step
+budget ran out. See [Geometry optimization](cli.md#geometry-optimization-opt).
 
 ### More NVT options
 
@@ -138,7 +162,7 @@ Flash runs only when all of the following hold:
 | Model | `so3lr-tauri-s/m/l` (both releases) or the legacy `so3lr` |
 | Box | No box (an isolated molecule), or a periodic orthorhombic box of any size the long range reaches across in at most 16 grid cells: every box down to about 1 Å at `lr_cutoff` 12 Å (see [Box size](#box-size)) |
 | Ensemble | `nve`, `nvt`, `nvt-langevin`, or `npt` (isotropic or semi-isotropic) |
-| Long range | Real space, or PME (`--kspace-electrostatics pme`, `kspace_dispersion: pme`) |
+| Long range | Real space, or PME (the default for periodic structures) |
 
 NPT and k-space need a box. The dispersion tail correction,
 `kspace_npt_cycles`, Ewald and P3M, fixed atoms and observables run on the
@@ -186,7 +210,7 @@ Flash: CUDA kernels not used (a sm_80 GPU (the kernels are written for sm_90)); 
 ## Box size
 
 Flash takes small periodic boxes. Where a box length is under twice
-`lr_cutoff` (24 Å at the default of 12 Å), it sums the long range over every
+`lr_cutoff` (20 Å at the 10 Å PME default), it sums the long range over every
 periodic image within the cutoff, and where it is under twice the 4.5 Å
 short-range cutoff, the short range too, including an atom's own images. The
 result is the same as for the box repeated into a supercell. The images'
@@ -195,16 +219,19 @@ the box (for example `--lr-cutoff 1000` in a 12 Å box) is left to the
 neighbour-list engine.
 
 The neighbour-list engine needs every box length to be at least twice
-`lr_cutoff` and refuses a shorter box. When flash does not run (no supported
-GPU, or a setting it declines, such as Ewald or P3M), for a smaller box you
-can:
+`lr_cutoff` and refuses a shorter box. With the
+[long-range defaults](cli.md#long-range-defaults) (PME for both terms, no
+`--lr-cutoff`), a box under 20 Å gets a cutoff of 0.45 × its smallest height,
+which fits. When you set the cutoff and flash does not run (no supported GPU,
+or a setting it declines, such as Ewald or P3M), for a smaller box you can:
 
-- lower `--lr-cutoff` and use `--kspace-electrostatics pme` (plus
-  `kspace_dispersion: pme` in a settings file). A cutoff below 10 Å needs
-  k-space electrostatics.
+- lower `--lr-cutoff` and keep both terms in k-space (`--kspace-electrostatics
+  pme --kspace-dispersion pme`, the default for a periodic structure). A cutoff
+  below 10 Å needs k-space electrostatics.
 - or use the [ASE calculator](ase.md#small-and-skewed-cells).
 
-The cell must be orthorhombic. Mixed periodicity, such as
+All periodic CLI MD modes require a positive, axis-aligned orthorhombic cell.
+NPT additionally requires periodic boundaries in all three axes. Mixed periodicity, such as
 `pbc=[True, True, False]`, is an error. A structure with a cell but
 `pbc=False` runs in vacuum.
 
@@ -280,6 +307,11 @@ The run resumes at the saved cycle and runs `--md-cycles` more, without the
 pre-run relaxation. An EXTXYZ trajectory is appended to. An HDF5 trajectory
 needs a new `--output` path, or `--overwrite`.
 
+A settings-file run that sets `restart_save_path` resumes in one step:
+`so3lr resume settings.yaml` (or the run folder) runs the cycles still missing
+to its `md_cycles`, appends to an EXTXYZ trajectory and writes HDF5 to a new
+file. See [Resuming a run](cli.md#resuming-a-run).
+
 ### What a restart preserves
 
 The restart will continue the simulation from the exact state where it was
@@ -296,6 +328,14 @@ Loading a checkpoint into a different ensemble, or with `restart_reset: true`,
 keeps positions, momenta, masses and the box, but starts the
 thermostat/barostat state and the cycle counter fresh. An NPT checkpoint
 resumes only with the `npt_coupling` it was written with.
+
+A restart sets the centre-of-mass velocity to zero, with or without k-space,
+so a box that drifted before (from PME's
+[net force](../advanced/electrostatics.md#net-force)) stops drifting. The log
+warns when the drift was larger than 0.1 Å per ns; trajectories written before
+the restart still contain it. The momenta are kept as saved with
+`kspace_remove_net_force: false`, with `nvt-langevin`, with fixed atoms, and
+when a PySAGES state is restarted.
 
 ## Freezing atoms
 

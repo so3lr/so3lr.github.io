@@ -45,6 +45,54 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Added
 
+- [`so3lr start`](../usage/terminal-ui.md#guided-setup) for guided MD setup with arrow-key structure and
+  model menus, explicit review, and a portable structure/YAML/shell-script
+  bundle. The first review action saves the bundle and starts MD locally;
+  saving for later remains available.
+- Live terminal MD plots and optimization status, plus offline
+  [`so3lr show`](../usage/terminal-ui.md#so3lr-show) views for individual runs
+  and folders. Plain output is automatic when stderr is redirected.
+- Per-invocation JSONL journals beside MD, optimization and training logs by default,
+  including in plain and quiet modes. Text logs keep their numeric MD tables.
+- `SO3LR_JOURNAL=0` disables the journal while retaining text logs,
+  trajectories, checkpoints and in-memory attached plots. The offline viewer
+  requires an enabled journal.
+- `so3lr --version` prints the installed package version.
+- The terminal interface adds the required dependency `rich>=14,<16`; existing
+  pinned environments must allow a compatible Rich version.
+- Saved-run views show the age of the latest journal update, recorded host and
+  Slurm identity, and qualified stale/history-loading states without querying
+  or signalling the scheduler or producer process.
+- Esc closes saved-run views and the folder overview, or hides attached MD
+  plots without stopping the calculation. `q` retains its existing close/toggle
+  behavior. In `so3lr start` menus, Esc or Backspace goes back one step.
+- Guided setup asks only the essentials, then **Edit settings…** on the review
+  changes one group at a time. It asks for a trajectory frame interval in ps,
+  reads charge and multiplicity from the XYZ comment line, and explains
+  impossible electron counts. Three example structures ship with the package.
+- One terminal palette across the live view, `so3lr show` and setup (amber
+  accent, cyan energy, violet volume), with taller plots and a progress bar in
+  the live header and in wide run overviews.
+- `so3lr start` first asks for a task: molecular dynamics, geometry
+  optimization, dataset evaluation, watching runs, or the commands for
+  fine-tuning, training and k-space tuning.
+- A once-a-day, opt-out release notice in interactive terminals
+  (`SO3LR_NO_UPDATE_CHECK` set to anything but empty or `0` turns it off; it
+  never runs in scheduler or CI jobs).
+- `eval`, `tune-ewald`, `finetune` and `train` use the live display too, with
+  a progress bar, ETA and result tables, instead of falling back to log lines.
+  `eval` reports binding energies for dimer files without `--save-to`.
+- Optimization graphs: potential energy and log-scale maximum force with the
+  force target, live and in `so3lr show`.
+- Training graphs: validation loss and force MAE per validation, live and in
+  `so3lr show` (`TRN` in the folder overview).
+- Every run ends with one closing line: ✓ met its goal, `!` finished without it,
+  ■ interrupted, ✕ failed. The activity line shows an ETA once a rate is measured.
+- Log files add `◆ SO3LR TAURI · <version> · <date time>` under the logo.
+- Plain and batch output logs a `Progress … · ns/day · ETA …` line at every
+  checkpoint and names the `so3lr show` command for the run. Failed or
+  interrupted MD runs end with the last checkpoint and the option to resume
+  from it; runs stopped by Ctrl+C or a signal show as **Interrupted**.
 - `so3lr tune-ewald` tunes PME on the flash engine whenever flash takes the
   structure. It takes its charges and timings from flash, so tens of thousands
   of atoms fit on one GPU: a 32,512-atom POPC bilayer tunes in about 3.5 min on
@@ -109,6 +157,34 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   for host–guest binding with enhanced sampling.
 - A PySAGES restart warns about every `pysages_input` setting that differs from
   the method in the `.pkl`, which the run keeps.
+- [`so3lr resume [PATH] [--or-start]`](../usage/cli.md#resuming-a-run)
+  continues a settings-file MD run (a run folder or a settings file) from its
+  checkpoint for the rest of its `md_cycles`, without relaxation. It appends to
+  an EXTXYZ trajectory, writes HDF5 to a new `<stem>.from_cycle_N.h5` (or `.hdf5`), and
+  carries the PySAGES bias, refusing to start when its file is missing.
+  `--or-start` starts the run when there is no checkpoint yet.
+- `so3lr start --input STRUCTURE` writes the guided MD setup without prompts,
+  for scripts and agents; `--print` prints its `settings.yaml` instead. See
+  [Without prompts](../usage/terminal-ui.md#without-prompts).
+- `so3lr show --json` prints one machine-readable snapshot per run: state,
+  progress, last sample, checkpoint and failure. See
+  [JSON snapshot](../usage/terminal-ui.md#json-snapshot).
+- `--kspace-dispersion`, `--kspace-dispersion-smearing`,
+  `--kspace-dispersion-spacing` and `--kspace-dispersion-interp-nodes` on the MD
+  commands and `opt`, and `auto` and `none` for `--kspace-electrostatics` and
+  `--kspace-dispersion`.
+- A run folder's `run.sh` runs `so3lr resume --or-start .`: it starts the run,
+  or continues it from its checkpoint, from the folder it is in, and works under
+  `sbatch run.sh`.
+- `So3lrEngine`: energy and forces of a fixed set of atoms for new positions
+  and a new box at each call, for MD codes outside JAX-MD (OpenMM, i-PI,
+  LAMMPS, your own loop). For each box it runs on flash, the neighbour lists
+  or exact periodic images, whichever is the first that can, and it takes
+  k-space electrostatics (`ewald`, `pme`, `p3m`) and k-space dispersion
+  (`pme`, `ewald`). See the [API reference](api.md#so3lrengine).
+- `kspace_remove_net_force` (default `true`): MD and `opt` subtract the mean
+  force whenever a k-space term is on. See
+  [Net force](../advanced/electrostatics.md#net-force).
 - Three fine-tuning recipes that keep the long-range terms intact on data with
   energies and forces only: `training.long_range_anchor_weights` anchors the
   charges, a0/C6 ratios and optionally dipoles to the starting model;
@@ -130,6 +206,32 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Changed
 
+- Bare `so3lr` opens guided setup in an interactive terminal outside recognized
+  scheduler jobs; otherwise it prints help. Explicit simulation commands and
+  `--settings` do not open the wizard. Help is grouped by purpose; `--help-full`
+  shows the overview with additional usage examples.
+- The former every-option `--help-full` output is replaced by that overview;
+  use `so3lr COMMAND --help` for a command's complete options and defaults.
+- Supplying command options without required input, malformed MD YAML, and
+  combining root `--settings` with a subcommand now produce usage errors (exit
+  two). Bare subcommands still show help (exit zero), runtime failures remain
+  nonzero, and optimization execution success does not imply force convergence.
+- `show` uses stable path ordering. `show --once` is a human snapshot without
+  interactive hints or paging controls; its successful exit means rendering
+  succeeded, independently of the recorded run state. Explicit non-journal
+  file inputs are rejected with guidance to the journal directory.
+- Redirected `--display rich` falls back to plain output, avoiding terminal
+  control frames in batch output. Verified failures identify the absolute
+  traceback log path.
+- `so3lr start` is the visible guided-setup command; `so3lr init` remains a hidden
+  compatibility alias. Plain and quiet modes keep the per-invocation journal
+  unless explicitly disabled with `SO3LR_JOURNAL=0`.
+- Optimization's completion message is now `Optimization execution finished.`
+  The closing line distinguishes reaching the force criterion from exhausting the
+  step budget; successful command completion alone does not establish convergence.
+- Help no longer prints the ASCII banner; additional examples use `--help-full`.
+  The decorative separator before MD completion is removed, and force-criterion
+  diagnostics use significant digits. Numeric MD table columns are preserved.
 - `tune-ewald`'s `mesh_lo` / `mesh_hi` now mean 2ⁿ mesh points along the shortest
   cell vector, the mesh jax-pme builds. They used to give the spacing
   2*L*/(2ⁿ − 1), which jax-pme padded to 2ⁿ⁺¹ points. The defaults moved from
@@ -178,6 +280,23 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   fully anisotropic coupling remains unsupported.
 - Documentation and the Colab notebook use the immutable `so3lr-tauri-{s,m,l}-2606`
   names and describe the pinned no-argument default, `so3lr-tauri-m-2606`.
+- `--display`, `--verbose`/`-v`, `--quiet`/`-q` and `--no-color` may also
+  follow the subcommand (`so3lr nvt --input x.xyz -q`).
+- Unknown settings-file keys are dropped after their warning. Kept, they made
+  `--engine auto` fall back to the neighbour-list engine.
+- A slab or wire (mixed periodicity) is a usage error (exit 2) named before
+  anything starts.
+- `tune-ewald`'s MD command and settings for the `cutoff` modes turn k-space off
+  explicitly (`--kspace-electrostatics none --kspace-dispersion none`).
+- On `SIGTERM` or `SIGHUP` (`scancel`, a time limit), batch runs too record the
+  interruption in the journal and print the resume hint before the process ends
+  by the signal.
+- A failed run prints its whole error message, not only the first line.
+- Live plots redraw at most once a second, text views every 0.25 s.
+- An MD restart sets the centre-of-mass velocity to zero, and warns when the
+  box was drifting, except with `kspace_remove_net_force: false`,
+  `nvt-langevin`, fixed atoms or a restarted PySAGES state. See
+  [Restarts](../usage/md.md#what-a-restart-preserves).
 - `freeze_long_range` is no longer recommended for forces-only fine-tuning: the
   frozen heads read features that keep training, so the charges and ratios
   still drift.
@@ -219,9 +338,43 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   to rounding; `engine: standard` reproduces runs of earlier versions.
 - The same holds for semi-isotropic NPT, and on an H100/H200 for flash runs that
   move to the CUDA kernels (`--flash-kernels pallas` keeps the Pallas ones).
+- The command line (MD, `opt`, `eval`, `so3lr --settings`) uses PME for
+  electrostatics and dispersion on structures periodic along all three axes,
+  with a 10 Å cutoff, 2 Å smearing and a 1.55 Å mesh (dispersion 2 Å and 3 Å).
+  A cell too small for 10 Å gets 0.45 × its smallest height and a 1 Å mesh
+  (MD and `opt`). Before, k-space was off unless asked for and the cutoff was
+  12 Å. `--kspace-electrostatics none --kspace-dispersion none` (or `none` in a
+  settings file) restores real space. With k-space electrostatics asked for
+  explicitly, an unset smearing and mesh are now 2 Å and 1.55 Å instead of 4 Å
+  and 2 Å. Non-periodic runs, `tune-ewald` and the Python calculators are
+  unchanged. See [Long-range defaults](../usage/cli.md#long-range-defaults).
 
 #### Fixed
 
+- Guided setup validates supported periodic cells and reserves the backend's
+  3% initial NPT contraction margin.
+- Setup exports create files exclusively, recover from malformed XYZ elements,
+  and use the CLI's shared save-buffer default. Logs and journals use consistent
+  float32 energy reporting, and startup warnings target the current invocation.
+- Terminal output supports ASCII fallback, restores state after interrupted
+  initialization, and keeps controls visible in short optimization views.
+  Saved-run readers tolerate malformed or excessively nested JSON records.
+- MD/optimization errors retain the actual exception type and cause chain;
+  their preambles are covered too. Errors are shortened only when the traceback
+  was saved in the current log; logger setup/write failures and unexpected errors
+  in other commands retain the full terminal traceback.
+- Default `SIGTERM`/`SIGHUP` cleanup restores the terminal in runs, setup and
+  `show`. Defaults are restored when the first handler runs, before cleanup, so
+  a second signal can terminate immediately. Custom signal handlers are
+  unchanged; `SIGKILL` cannot be handled.
+- SO3LR worker warnings reach the journal and live console without waiting for
+  an MD reporting boundary when journaling is enabled. Scoped live-display
+  redirection also keeps Python output to the current `sys.stderr` above the
+  display. Third-party prebound streams and native stderr writes remain outside
+  that routing, and their diagnostics are not automatically journaled.
+- Hardware-memory reporting preserves termination exceptions instead of
+  swallowing them. Verified traceback preservation also recognizes normal
+  rotating-log rollover; unverifiable logging still keeps the full terminal trace.
 - `tune-ewald`'s search ranges no longer go one step past their end when the
   range is not a whole number of steps (`cutoff_lo` 7 with `cutoff_hi` 12 and
   step 2 tried 6 Å as well).
@@ -289,6 +442,23 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   production notebook flushes its final HDF5 buffer; every MD notebook fails
   loudly on neighbour-list overflow. The Colab notebook pins its uv bootstrap,
   rejects partially periodic NPT inputs and stops when a step fails.
+- An existing output is refused before the structure is read or the run's
+  journal opens, so a refused start leaves nothing behind.
+- `md_dt` (`--dt`) must be positive, from the command line and in settings
+  files.
+- MD with k-space electrostatics or dispersion drifted as a whole: PME's mesh
+  leaves a small net force, which built up into a centre-of-mass drift that
+  inflated mean-squared displacements. MD and `opt` now remove it, on both
+  engines; `kspace_remove_net_force: false` gives the previous forces.
+- `so3lr opt` and the relaxation before MD ignored `kspace_dispersion` and ran
+  real-space dispersion, while the MD that followed used k-space dispersion.
+- `so3lr tune-ewald` estimated the real-space errors with fixed electrostatic
+  and dispersion scales (4.0 and 1.2) instead of the model's. The 2606 models
+  and `so3lr-tauri-m-2602` have a dispersion scale of 1.0, so their dispersion
+  cutoff errors were estimated for another damping width.
+- A `So3lrCalculator` that evaluated a structure in free space and then in a
+  box reused the free-space neighbour list and returned the free-space energy
+  and forces for the box.
 - Fine-tuning dropped every `model:` key, so periodic data trained with the
   pretrained 1000 Å `cutoff_lr`, cut off where the pair list ends, and k-space
   could not be turned on.
