@@ -215,7 +215,8 @@ keys are needed.
 
 For a periodic structure, the long-range pair list stops at
 `data.neighbors_lr_cutoff`. Periodic ASE or NPZ data is refused unless
-`model.cutoff_lr` is set and is at most `data.neighbors_lr_cutoff`, so the
+`model.cutoff_lr` is set and is at most `data.neighbors_lr_cutoff` (TFDS data
+is not checked), so the
 long-range terms switch off smoothly before the list ends, as in MD. Set both
 to the same value, e.g. 12 Å, and train with reciprocal-space long range for
 the tail:

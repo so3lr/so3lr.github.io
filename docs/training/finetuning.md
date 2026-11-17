@@ -65,7 +65,8 @@ also described at the top of `so3lr/config/finetune.yaml`.
 
 **Anchors.** A frozen copy of the starting model predicts the charges and
 ratios of every training and validation batch, and the fine-tuned model is
-trained to match them. In your `--config`:
+trained to match them. In your copy of `finetune.yaml` (the file `--config`
+passes replaces it as a whole):
 
 ```yaml
 training:
@@ -80,7 +81,7 @@ training:
 
 **Exact long range.** `readout_only` freezes the message-passing layers and the
 long-range heads, and trains the energy readout plus a new residual readout
-that you add in the config:
+that you add to your copy of `finetune.yaml`:
 
 ```yaml
 model:
@@ -88,13 +89,15 @@ model:
 ```
 
 ```shell
-so3lr finetune --datafile dataset.xyz --config custom_finetune.yaml \
-    --strategy readout_only --num-train 1000 --num-valid 100
+so3lr finetune --datafile dataset.xyz --workdir so3lr_readout \
+    --config custom_finetune.yaml --strategy readout_only \
+    --num-train 1000 --num-valid 100
 ```
 
 The charges, ratios and dipoles stay exactly those of the starting model.
 Without a residual readout, `readout_only` trains the energy readout alone, as
-`final_mlp` does.
+`final_mlp` does, and logs a warning that `observables_0/energy_residual*`
+matches no parameter.
 
 **Pseudo-labels.** This is the anchor recipe run offline, for example with a
 different teacher model. Write the teacher's predictions into the data:
@@ -209,8 +212,9 @@ gives no warning.
 | `model.energy_residual_inputs` | What the residual readout reads: `last` (default) the final-layer features, `all_layers` the features after the embedding and after every message-passing layer. |
 | `training.loss_weights.partial_charges` | Per-atom charges, read from a `partial_charges` array in the data file (see [Datasets](../reference/datasets.md#optional-labels)). |
 
-The residual readout becomes part of the fine-tuned model. It needs ASE or NPZ
-data; with a TFDS dataset it is refused. A strategy that freezes it, such as
+The residual readout becomes part of the fine-tuned model. The flash engine
+does not take a model with one, so MD and `eval` with it run on the
+neighbour-list engine. It needs ASE or NPZ data; with a TFDS dataset it is refused. A strategy that freezes it, such as
 `final_mlp` or `ll_fmlp`, logs a warning, because it would stay zero.
 When you fine-tune a model that already has a residual readout, leave these
 keys out or set the same values.
@@ -218,11 +222,12 @@ keys out or set the same values.
 ### Periodic data
 
 Long-range pairs are built up to `data.neighbors_lr_cutoff` (100 Å in
-`finetune.yaml`). For a molecule this list holds every pair, but for a periodic
+`finetune.yaml`). For a molecule smaller than that, this list holds every
+pair, but for a periodic
 cell it stops at that distance, where the long-range terms would be cut off
 abruptly instead of switched off smoothly as in MD and `eval`. Periodic ASE or
 NPZ data is therefore refused unless `model.cutoff_lr` is set and is at most
-`data.neighbors_lr_cutoff`. Set both to the same value and add the Coulomb tail
+`data.neighbors_lr_cutoff`. TFDS data is not checked: set both yourself. Set both to the same value and add the Coulomb tail
 in k-space:
 
 ```yaml
