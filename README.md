@@ -155,3 +155,17 @@ Several pages mirror what the code actually accepts:
 | `training/from-scratch.md`, `training/finetuning.md` | `so3lr/config/*.yaml` and `run_training` / `run_fine_tuning` in `from_config.py` — these are **separate** loops and honour different keys |
 
 When those change in the code, update the matching table here.
+
+## Preview the GUI link locally
+
+The Pages build adds the static viewer from the public SO3LR code repository to
+`site/gui/`. With the two repositories checked out side by side, preview the
+same layout from the documentation directory:
+
+```sh
+mkdocs build --strict
+cp -R ../so3lr/gui/web site/gui
+python -m http.server 8000 --bind 127.0.0.1 --directory site
+```
+
+Open the documentation homepage and choose **Try SO3LR**.

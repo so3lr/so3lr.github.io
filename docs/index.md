@@ -17,6 +17,8 @@ for short-range repulsion, long-range electrostatics, and dispersion interaction
 See [GitHub](https://github.com/general-molecular-simulations/so3lr).
 </p>
 
+<a class="md-button md-button--primary" href="gui/">Try SO3LR</a>
+
 ## Install
 
 === "uv"

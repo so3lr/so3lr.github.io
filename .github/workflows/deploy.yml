@@ -49,6 +49,18 @@ jobs:
       - name: Generate llms-full.txt
         run: python scripts/build_llms_full.py
 
+      - name: Get the SO3LR viewer
+        uses: actions/checkout@v4
+        with:
+          repository: general-molecular-simulations/so3lr
+          ref: main
+          path: gui-source
+          sparse-checkout: gui/web
+          persist-credentials: false
+
+      - name: Include the viewer at /gui/
+        run: cp -R gui-source/gui/web site/gui
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
