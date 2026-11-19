@@ -16,20 +16,6 @@ mkdocs serve
 
 Open <http://127.0.0.1:8000>. The server live-reloads on save.
 
-### With the GUI
-
-CI copies `gui/web` from the code repository into `site/gui/`; `mkdocs serve`
-does not. To preview the **Explore SO3LR** link, clone the code repository next to
-this one, then build and serve `site/`:
-
-```shell
-mkdocs build --strict
-cp -R ../so3lr/gui/web/. site/gui
-python -m http.server 8000 --bind 127.0.0.1 --directory site
-```
-
-Open <http://127.0.0.1:8000/gui/>.
-
 ## Build
 
 ```shell
@@ -63,8 +49,7 @@ and `DEVELOPERS.md` in the code repository instead — different audience.
 ## Publishing
 
 Every push to `main` runs the checks, builds the site and deploys it with
-`.github/workflows/deploy.yml`. Pull requests run the checks without deploying,
-and a daily rebuild picks up changes to the viewer at `/gui/`. **Settings → Pages → Source** must be set to
+`.github/workflows/deploy.yml`. **Settings → Pages → Source** must be set to
 **GitHub Actions** (one-time setup).
 
 `site_url` in `mkdocs.yml` and the absolute links in `docs/llms.txt` and

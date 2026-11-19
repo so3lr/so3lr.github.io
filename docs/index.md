@@ -14,10 +14,9 @@ SO3LR - pronounced *Solar* - is a pretrained machine-learned force field for
 (bio)molecular simulations. It integrates the fast and stable SO3krates neural
 network for semi-local interactions with universal pairwise force fields designed
 for short-range repulsion, long-range electrostatics, and dispersion interactions.
-See [GitHub](https://github.com/general-molecular-simulations/so3lr).
+See [GitHub](https://github.com/general-molecular-simulations/so3lr), or browse
+example molecules and simulations in the [web viewer](gui/).
 </p>
-
-[Explore SO3LR](gui/){ .md-button .md-button--primary }
 
 ## Install
 
@@ -95,7 +94,8 @@ See [Installation](installation.md) for optional extras.
     ```
 
 Try SO3LR without any local installation using our
-[Colab notebook :material-open-in-new:](https://colab.research.google.com/github/general-molecular-simulations/so3lr/blob/main/examples/so3lr_colab_example.ipynb){ target=_blank }.
+[Colab notebook :material-open-in-new:](https://colab.research.google.com/github/general-molecular-simulations/so3lr/blob/main/examples/so3lr_colab_example.ipynb){ target=_blank },
+or browse examples in the [web viewer](gui/).
 
 ## Where to go next
 

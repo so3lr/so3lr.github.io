@@ -3,16 +3,18 @@ name: Deploy docs
 on:
   push:
     branches: [main]
-  # Pull requests run the build and checks but never deploy.
-  pull_request:
-  # The viewer at /gui/ comes from the code repository's main branch, which
-  # does not trigger this workflow; a daily rebuild picks up its changes.
-  schedule:
-    - cron: "0 4 * * *"
   workflow_dispatch:
 
+# Allow GITHUB_TOKEN to deploy to GitHub Pages.
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; don't cancel a run that is mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -47,41 +49,13 @@ jobs:
       - name: Generate llms-full.txt
         run: python scripts/build_llms_full.py
 
-      - name: Get the SO3LR viewer
-        uses: actions/checkout@v4
-        with:
-          repository: general-molecular-simulations/so3lr
-          ref: main
-          path: gui-source
-          sparse-checkout: gui/web
-          persist-credentials: false
-
-      # Skip rather than fail when the viewer is missing, so the docs still
-      # deploy; the warning shows on the run summary.
-      - name: Include the viewer at /gui/
-        run: |
-          if [ -f gui-source/gui/web/index.html ]; then
-            cp -R gui-source/gui/web site/gui
-          else
-            echo "::warning::gui/web/index.html not found in so3lr main; /gui/ is not published"
-          fi
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
-    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
-    # Allow GITHUB_TOKEN to deploy to GitHub Pages.
-    permissions:
-      pages: write
-      id-token: write
-    # One deployment at a time; don't cancel a run that is mid-publish.
-    concurrency:
-      group: pages
-      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
