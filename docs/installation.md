@@ -1,8 +1,8 @@
 # Installation
 
 Try SO3LR without any local installation using our
-[Colab notebook :material-open-in-new:](https://colab.research.google.com/github/general-molecular-simulations/so3lr/blob/main/examples/so3lr_colab_example.ipynb){ target=_blank },
-or the [light web version](../gui/).
+[light web version](../gui/) or
+[Colab notebook :material-open-in-new:](https://colab.research.google.com/github/general-molecular-simulations/so3lr/blob/main/examples/so3lr_colab_example.ipynb){ target=_blank }.
 
 ## Requirements
 
