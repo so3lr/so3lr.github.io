@@ -24,6 +24,12 @@ which needs no local installation and runs on a free GPU.
 | [`production_run.ipynb`](https://github.com/general-molecular-simulations/so3lr/blob/main/examples/production_run.ipynb) | Nosé–Hoover NPT arranged as a production run, with buffered HDF5 output in the layout the CLI writes. |
 | [`evaluate_so3lr_on_dataset.ipynb`](https://github.com/general-molecular-simulations/so3lr/blob/main/examples/evaluate_so3lr_on_dataset.ipynb) | Batched evaluation over a dataset with `jraph.dynamically_batch`, which avoids JIT recompilation. |
 
+## Tutorials
+
+| Tutorial | What it covers |
+|---|---|
+| [IR spectra with MARS](tutorials/ir-spectra-mars.md) | Harmonic and MD infrared spectra of Ac-Ala<sub>5</sub>-LysH<sup>+</sup> with SO3LR Tauri and ff19SB through [MARS](https://github.com/TCPUniLU/mars), compared with experiment. |
+
 ## Bundled data
 
 `examples/data/` contains the small input files the notebooks use:

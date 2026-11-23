@@ -40,6 +40,10 @@ read it first.
 - [ASE calculator](https://so3lr.github.io/usage/ase.md): the Python interface, `So3lrCalculator`.
 - [Dataset evaluation](https://so3lr.github.io/usage/evaluation.md): `so3lr eval`, metrics and prediction output.
 
+## Tutorials
+
+- [IR spectra with MARS](https://so3lr.github.io/tutorials/ir-spectra-mars.md): harmonic and MD (dipole autocorrelation) IR of Ac-Ala5-LysH+ with SO3LR Tauri and ff19SB through MARS, compared with the IRMPD experiment.
+
 ## Advanced
 
 - [Long-range electrostatics](https://so3lr.github.io/advanced/electrostatics.md): Ewald, PME and P3M; the two differently-scoped k-space arguments.

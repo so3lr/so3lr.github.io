@@ -50,6 +50,9 @@ eigenvalues = np.linalg.eigvalsh(h2d)
     `mixed`) the low-frequency eigenvalues are dominated by noise. `float64`
     also needs `jax_enable_x64`, as above, or the calculator raises an error.
 
+For complete IR spectra, harmonic or from MD, see the
+[IR spectra with MARS](../tutorials/ir-spectra-mars.md) tutorial.
+
 ### Subsystem Hessians
 
 Full Hessians scale as O(N²) in memory. For large systems, restrict the
