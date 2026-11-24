@@ -112,6 +112,7 @@ extra:
 #
 #   Getting started — read once, roughly in order
 #   Usage           — what you do on an ordinary day
+#   Tutorials       — worked case studies, start to finish
 #   Advanced        — optional specialist capabilities
 #   Training        — adapting the model
 #   Reference       — lookup, not reading
@@ -134,6 +135,8 @@ nav:
       - Molecular dynamics: usage/md.md
       - ASE calculator: usage/ase.md
       - Dataset evaluation: usage/evaluation.md
+  - Tutorials:
+      - "IR spectra with MARS": tutorials/ir-spectra-mars.md
   - Advanced:
       - Long-range electrostatics: advanced/electrostatics.md
       - Enhanced sampling: advanced/enhanced-sampling.md
