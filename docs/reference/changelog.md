@@ -349,6 +349,10 @@ with the SO3LR Tauri models.
 
 #### Changed results and formats
 
+- Clash protection: when atoms come unrealistically close, the physical
+  repulsion term takes over instead of the neural network giving unphysical
+  energies or forces. Normal structures are not affected. This applies to all
+  models, including `so3lr`.
 - PME/P3M on non-orthogonal cells now passes the lattice vectors as rows, as
   jaxpme expects. Results on triclinic cells change (0.03–0.09 eV/Å in forces on
   triclinic MOFs). `Graph.cell` must hold the lattice as columns (`atoms.cell.T`),
@@ -392,6 +396,7 @@ with the SO3LR Tauri models.
 
 #### Fixed
 
+- Pressure is documented and logged in bar; it was labelled atm.
 - Guided setup validates supported periodic cells and reserves the backend's
   3% initial NPT contraction margin.
 - Setup exports create files exclusively, recover from malformed XYZ elements,

@@ -111,7 +111,8 @@ explicit terms with the correct 1/r and 1/r⁶ form instead of being learned fro
 data, so they also act between separated molecules. They reach as far as
 `lr_cutoff`, or over the whole periodic box with
 [k-space](advanced/electrostatics.md): the command line uses PME for both terms
-on periodic structures by default, and an isolated molecule wants
+on periodic structures by default (the original `so3lr` model stays in real
+space), and an isolated molecule wants
 `--lr-cutoff 100`.
 
 ## The legacy `so3lr` model

@@ -47,7 +47,7 @@ Without an existing JAX, `pip install .` installs the CPU build.
 SO3LR excludes JAX 0.10.2, which computes wrong energies and forces on the CPU
 without an error. An existing 0.10.2 install is moved to 0.10.1. On a GPU,
 install with the `cuda12` extra so that JAX's CUDA plugin moves with it;
-otherwise JAX finds a plugin it cannot use and runs on the CPU.
+otherwise JAX finds a 0.10.2 plugin it cannot use and runs on the CPU.
 
 ## CUDA kernels
 
