@@ -13,17 +13,17 @@ reproducible, use the dated name, e.g. `so3lr-tauri-m-2606`.
 The current default. Bundled as `so3lr-tauri-s-2606`, `so3lr-tauri-m-2606`, `so3lr-tauri-l-2606`. The
 short names and the no-argument default resolve here.
 
-Each 2606 checkpoint is the matching 2602 checkpoint refined further, with the
-same architecture. The `fine_tuning.json` file in each model directory names
-the parent run.
-
-<!-- TODO: what changed relative to 2602 — training data, accuracy. See
-     "Needed from you" in the site README. -->
+The final models after Stage 5 of training, used in the
+[SO3LR Tauri preprint](https://doi.org/10.48550/arXiv.2611.06237). Each 2606
+checkpoint is the matching 2602 checkpoint refined further, with the same
+architecture. The `fine_tuning.json` file in each model directory names the
+parent run.
 
 ### 2602 { #model-2602 }
 
 Bundled as `so3lr-tauri-s-2602`, `so3lr-tauri-m-2602`, `so3lr-tauri-l-2602`. First
-release of the s/m/l family.
+release of the s/m/l family: the models after Stage 4 of training (see the
+[preprint](https://doi.org/10.48550/arXiv.2611.06237)).
 
 Relative to the original model, this generation:
 
