@@ -26,7 +26,10 @@ K-space needs a cell that is periodic along all three axes. Slabs and wires
 ## From the command line
 
 A periodic box needs no flag: PME is on, with a 10 Å cutoff, 2 Å smearing and
-a 1.55 Å mesh. To choose the method or the parameters:
+a 1.55 Å mesh. The original `so3lr` model is the exception: it stays in real
+space at 12 Å unless you name a k-space method (see
+[Long-range defaults](../usage/cli.md#long-range-defaults)). To choose the
+method or the parameters:
 
 ```shell
 so3lr nvt --input water_box.xyz --temperature 300 --dt 0.5 \
@@ -38,7 +41,7 @@ so3lr nvt --input water_box.xyz --temperature 300 --dt 0.5 \
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--kspace-electrostatics` | `auto` | `auto` (PME on a fully periodic structure), `none`, `ewald`, `pme` or `p3m` |
+| `--kspace-electrostatics` | `auto` | `auto` (PME on a fully periodic structure; off for the original `so3lr` model), `none`, `ewald`, `pme` or `p3m` |
 | `--kspace-smearing` | `2.0` | Smearing width, Å |
 | `--kspace-spacing` | `1.55` | Grid spacing (PME/P3M) or wavelength (Ewald), Å; 1 below a 10 Å cutoff, 0.775 × a given smearing |
 | `--kspace-interp-nodes` | `4` | Interpolation nodes for PME/P3M |
@@ -218,7 +221,8 @@ flags: `--kspace-dispersion` (`auto`, `none`, `ewald` or `pme`),
 `--kspace-dispersion-smearing` (default 2.0 Å), `--kspace-dispersion-spacing`
 (default 3.0 Å) and `--kspace-dispersion-interp-nodes` (default 4). Both terms
 default to PME when every structure in the file is fully periodic, with a 10 Å
-cutoff that is not shortened for small cells.
+cutoff that is not shortened for small cells (the original `so3lr` model stays
+in real space).
 
 ```shell
 so3lr eval --datafile crystals.extxyz --lr-cutoff 12 \
@@ -314,8 +318,9 @@ settings these modes print turn k-space off (`--kspace-electrostatics none
 
 The dispersion term can be treated the same way, which helps in dense periodic
 systems where the r⁻⁶ tail is still significant at the cutoff. The command line
-uses PME for it on fully periodic structures by default. The MD commands, `opt`
-and `eval` take `--kspace-dispersion` (`auto`, `none`, `ewald` or `pme`),
+uses PME for it on fully periodic structures by default, except for the
+original `so3lr` model. The MD commands, `opt` and `eval` take
+`--kspace-dispersion` (`auto`, `none`, `ewald` or `pme`),
 `--kspace-dispersion-smearing`, `--kspace-dispersion-spacing` and
 `--kspace-dispersion-interp-nodes`; the settings keys are:
 

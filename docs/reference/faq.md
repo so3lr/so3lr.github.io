@@ -10,7 +10,7 @@
 ??? question "What should `lr_cutoff` be?"
     | System | Setting |
     |---|---|
-    | Periodic / condensed phase | Leave it unset: 10 Å with PME for electrostatics and dispersion (the command-line default) |
+    | Periodic / condensed phase | Leave it unset: 10 Å with PME for electrostatics and dispersion (the command-line default; the original `so3lr` model gets 12 Å in real space) |
     | Gas phase, isolated molecules | `100` |
     | Periodic, in real space only (`--kspace-electrostatics none --kspace-dispersion none`) | `12.0` (the default without k-space) |
 

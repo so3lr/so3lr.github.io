@@ -41,7 +41,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 ## Package
 
-### Unreleased — on `main`
+### 0.2.0 — 2026-11-24 { #v0-2-0 }
+
+The [v0.2.0 release](https://github.com/general-molecular-simulations/so3lr/releases/tag/v0.2.0),
+with the SO3LR Tauri models.
 
 #### Added
 
@@ -245,6 +248,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Optimization's completion message is now `Optimization execution finished.`
   The closing line distinguishes reaching the force criterion from exhausting the
   step budget; successful command completion alone does not establish convergence.
+- `so3lr --help` opens with a runnable 1 ps NVT example and groups the
+  commands by task; every help screen ends with a link to this site.
+  `so3lr --version` prints `SO3LR v<version>`.
 - Help no longer prints the ASCII banner; additional examples use `--help-full`.
   The decorative separator before MD completion is removed, and force-criterion
   diagnostics use significant digits. Numeric MD table columns are preserved.
@@ -370,7 +376,8 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - The same holds for semi-isotropic NPT, and on NVIDIA GPUs of compute
   capability 8.0 or newer for flash runs that move to the CUDA kernels
   (`--flash-kernels pallas` keeps the Pallas ones).
-- The command line (MD, `opt`, `eval`, `so3lr --settings`) uses PME for
+- For the SO3LR Tauri models, the command line (MD, `opt`, `eval`,
+  `so3lr --settings`) uses PME for
   electrostatics and dispersion on structures periodic along all three axes,
   with a 10 Å cutoff, 2 Å smearing and a 1.55 Å mesh (dispersion 2 Å and 3 Å).
   A cell too small for 10 Å gets 0.45 × its smallest height and a 1 Å mesh
@@ -379,7 +386,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   settings file) restores real space. With k-space electrostatics asked for
   explicitly, an unset smearing and mesh are now 2 Å and 1.55 Å instead of 4 Å
   and 2 Å. Non-periodic runs, `tune-ewald` and the Python calculators are
-  unchanged. See [Long-range defaults](../usage/cli.md#long-range-defaults).
+  unchanged, and so is the original `so3lr` model (and models fine-tuned from
+  it), which keeps real space at 12 Å unless a k-space method is named. See
+  [Long-range defaults](../usage/cli.md#long-range-defaults).
 
 #### Fixed
 

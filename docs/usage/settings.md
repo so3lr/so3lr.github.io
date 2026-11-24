@@ -185,7 +185,7 @@ See [Freezing atoms](md.md#freezing-atoms) for an example.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `kspace_electrostatics` | `auto` | `auto` (PME on a fully periodic structure, off otherwise) / `none` / `ewald` / `pme` / `p3m`. |
+| `kspace_electrostatics` | `auto` | `auto` (PME on a fully periodic structure, off otherwise and for the original `so3lr` model) / `none` / `ewald` / `pme` / `p3m`. |
 | `kspace_smearing` | `2.0` | Smearing width, Å. |
 | `kspace_spacing` | `1.55` | Grid spacing, Å: `1.0` below a 10 Å cutoff, and 0.775 × `kspace_smearing` when only the smearing is set. |
 | `kspace_interp_nodes` | `4` | Interpolation nodes for PME/P3M. |
@@ -202,7 +202,7 @@ The same methods can be applied to dispersion, for dense periodic systems.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `kspace_dispersion` | `auto` | `auto` (PME on a fully periodic structure, off otherwise), `none`, `ewald` or `pme`. |
+| `kspace_dispersion` | `auto` | `auto` (PME on a fully periodic structure, off otherwise and for the original `so3lr` model), `none`, `ewald` or `pme`. |
 | `kspace_dispersion_smearing` | `2.0` | Smearing width for the dispersion sum, Å. |
 | `kspace_dispersion_spacing` | `3.0` | Grid spacing, Å. |
 | `kspace_dispersion_interp_nodes` | `4` | Interpolation nodes. |
@@ -238,7 +238,8 @@ See [Enhanced sampling](../advanced/enhanced-sampling.md).
 ## tune-ewald search ranges
 
 `so3lr tune-ewald --settings tune.yaml` reads the model and k-space keys
-above, plus these search ranges:
+above (`auto` means PME there, since `tune-ewald` takes periodic structures
+only), plus these search ranges:
 
 | Key | Default | Meaning |
 |---|---|---|

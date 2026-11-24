@@ -30,6 +30,8 @@ UNITS AND DEFAULTS
   2 A smearing, 1.55 A mesh. --kspace-electrostatics none
   --kspace-dispersion none (YAML: none or explicit null) turns it off;
   a YAML k-space key left out means auto.
+- Exception: for the original so3lr model (and models fine-tuned
+  from it) auto keeps real space with lr_cutoff 12 A, as in v0.1.0.
 - Without a cell, --lr-cutoff defaults to 12.0 A. For a molecule in
   vacuum use 100, or electrostatics and dispersion are truncated.
 - Python calculators and tune-ewald do NOT default to k-space.
