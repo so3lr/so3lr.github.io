@@ -19,7 +19,7 @@ used.
 Labels are assumed to be in eV and Å. Without a cell, the default long-range
 cutoff is 12 Å; for gas-phase molecules, use `--lr-cutoff 100`, otherwise
 electrostatics and dispersion are truncated. Periodic datasets get PME by
-default (see below).
+default, except with the original `so3lr` model (see below).
 
 The legacy `so3lr` model was not trained on energies, so compare only energy
 differences there.
@@ -120,7 +120,8 @@ When every structure in the file is periodic along all three axes, `eval`
 uses PME for electrostatics and dispersion by default, with a 10 Å cutoff,
 2 Å smearing and a 1.55 Å mesh. Unlike MD, it does not shorten the cutoff for a
 small cell, since it sums over the periodic images. A file that mixes periodic
-and non-periodic structures stays in real space. To choose the parameters, or to
+and non-periodic structures stays in real space, and so does the original
+`so3lr` model, at 12 Å. To choose the parameters, or to
 turn k-space off:
 
 ```shell
@@ -182,7 +183,7 @@ only to the neighbour-list model.
 | `--total-charge`, `--spin` | from file | Override per-structure values. |
 | `--charge-embed-total-charge` | follows the charge | Charge seen by the charge embedding only. |
 | `--charge-equilibration-total-charge` | follows the charge | Charge that charge equilibration conserves to. |
-| `--kspace-electrostatics` | `auto` | `auto` (PME when every structure is periodic), `none`, `ewald`, `pme` or `p3m`, with `--kspace-smearing` (`2.0`), `--kspace-spacing` (`1.55`, or 0.775 × a given smearing) and `--kspace-interp-nodes` (`4`). |
+| `--kspace-electrostatics` | `auto` | `auto` (PME when every structure is periodic; off for the original `so3lr` model), `none`, `ewald`, `pme` or `p3m`, with `--kspace-smearing` (`2.0`), `--kspace-spacing` (`1.55`, or 0.775 × a given smearing) and `--kspace-interp-nodes` (`4`). |
 | `--kspace-dispersion` | `auto` | `auto`, `none`, `ewald` or `pme`, with `--kspace-dispersion-smearing` (`2.0`), `--kspace-dispersion-spacing` (`3.0`) and `--kspace-dispersion-interp-nodes` (`4`). |
 | `--engine` | `auto` | `auto`, `flash` or `standard`; see [Choosing the engine](#choosing-the-engine). |
 | `--flash-mode`, `--flash-kernels`, `--flash-devices` | `auto`, `auto`, `1` | As for [MD](md.md#flash-options). |

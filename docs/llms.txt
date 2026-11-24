@@ -13,7 +13,8 @@ Key facts an agent is likely to get wrong, because they differ from other
 MD codes: pressure is in bar; timesteps are in femtoseconds and should be
 0.5 fs (there is no SHAKE/RATTLE); the command line uses PME for
 electrostatics and dispersion on periodic structures by default, with a 10 Å
-`lr_cutoff` (`none` turns k-space off), while molecules in vacuum default to
+`lr_cutoff` (`none` turns k-space off; the original `so3lr` model keeps real
+space at 12 Å), while molecules in vacuum default to
 12 Å and must be raised to 100; on the neighbour-list engine, a periodic box
 must be at least twice `lr_cutoff` on every side; the default model
 is the pinned `so3lr-tauri-m-2606`, while `so3lr-tauri-s`/`-m`/`-l` are aliases

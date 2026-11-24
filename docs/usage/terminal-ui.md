@@ -71,6 +71,11 @@ The long-range settings follow the cell. Periodic cells get the
 | Isolated (no periodic cell) | 100 Å | real space | real space |
 | Periodic, cell fits a 10 Å cutoff | 10 Å | PME, 2 Å smearing, 1.55 Å mesh | PME, 2 Å smearing, 3 Å mesh |
 | Periodic, smaller cell | 0.45 × the cell height, rounded down to 0.1 Å, at least the model's short-range cutoff | PME, 2 Å smearing, 1 Å mesh | PME, 2 Å smearing, 3 Å mesh |
+| Periodic, original `so3lr` model | 12 Å | real space | real space |
+
+For the original `so3lr` model, setup does not shrink the cutoff to fit a
+small cell: a cell under 24 Å high is refused, with a hint to use a larger cell
+or a SO3LR Tauri model.
 
 These are starting settings, not a tuning result; check convergence for your
 system. A cutoff you enter must fit the cell: twice the larger of the model's
@@ -158,7 +163,7 @@ instead of writing a folder. Every option of the guided MD setup has a flag
 | `--total-charge`, `--spin` | from the file, else `0` | Charge and unpaired electrons. An impossible combination gives a warning. |
 | `--seed` | `52` | RNG seed. |
 | `--relax` / `--no-relax` | `--relax` | Relax the geometry before MD. |
-| `--lr-cutoff` | from the cell | 10 Å for a periodic structure (fitted to a small cell), 100 Å for an isolated one. |
+| `--lr-cutoff` | from the cell | 10 Å for a periodic structure (fitted to a small cell; 12 Å without k-space for the original `so3lr` model), 100 Å for an isolated one. |
 | `--keep-velocities` | off | Keep the velocities stored in the file. |
 | `--output-dir` | `so3lr-run`, ... | New run folder. |
 | `--print` | off | Print the settings instead of writing a folder. |

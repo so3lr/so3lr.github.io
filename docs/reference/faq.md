@@ -10,7 +10,7 @@
 ??? question "What should `lr_cutoff` be?"
     | System | Setting |
     |---|---|
-    | Periodic / condensed phase | Leave it unset: 10 Å with PME for electrostatics and dispersion (the command-line default) |
+    | Periodic / condensed phase | Leave it unset: 10 Å with PME for electrostatics and dispersion (the command-line default; the original `so3lr` model gets 12 Å in real space) |
     | Gas phase, isolated molecules | `100` |
     | Periodic, in real space only (`--kspace-electrostatics none --kspace-dispersion none`) | `12.0` (the default without k-space) |
 
@@ -145,7 +145,8 @@
     `lr_cutoff`. On a GPU, the flash engine runs smaller orthorhombic boxes
     over their periodic images (`--engine auto` picks it). Without
     `--lr-cutoff`, a small periodic box gets PME for both terms and a cutoff
-    that fits it. Otherwise, lower `--lr-cutoff` and keep k-space for both
+    that fits it (with the original `so3lr` model it keeps 12 Å in real space).
+    Otherwise, lower `--lr-cutoff` and keep k-space for both
     terms (the default for periodic structures; with `--kspace-dispersion none`
     dispersion stays truncated), or use the
     [ASE calculator](../usage/ase.md). See [Box size](../usage/md.md#box-size).

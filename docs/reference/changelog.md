@@ -13,17 +13,17 @@ reproducible, use the dated name, e.g. `so3lr-tauri-m-2606`.
 The current default. Bundled as `so3lr-tauri-s-2606`, `so3lr-tauri-m-2606`, `so3lr-tauri-l-2606`. The
 short names and the no-argument default resolve here.
 
-Each 2606 checkpoint is the matching 2602 checkpoint refined further, with the
-same architecture. The `fine_tuning.json` file in each model directory names
-the parent run.
-
-<!-- TODO: what changed relative to 2602 — training data, accuracy. See
-     "Needed from you" in the site README. -->
+The final models after Stage 5 of training, used in the
+[SO3LR Tauri preprint](https://doi.org/10.48550/arXiv.2611.06237). Each 2606
+checkpoint is the matching 2602 checkpoint refined further, with the same
+architecture. The `fine_tuning.json` file in each model directory names the
+parent run.
 
 ### 2602 { #model-2602 }
 
 Bundled as `so3lr-tauri-s-2602`, `so3lr-tauri-m-2602`, `so3lr-tauri-l-2602`. First
-release of the s/m/l family.
+release of the s/m/l family: the models after Stage 4 of training (see the
+[preprint](https://doi.org/10.48550/arXiv.2611.06237)).
 
 Relative to the original model, this generation:
 
@@ -41,7 +41,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 ## Package
 
-### Unreleased — on `main`
+### 0.2.0 — 2026-11-24 { #v0-2-0 }
+
+The [v0.2.0 release](https://github.com/general-molecular-simulations/so3lr/releases/tag/v0.2.0),
+with the SO3LR Tauri models.
 
 #### Added
 
@@ -245,6 +248,9 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - Optimization's completion message is now `Optimization execution finished.`
   The closing line distinguishes reaching the force criterion from exhausting the
   step budget; successful command completion alone does not establish convergence.
+- `so3lr --help` opens with a runnable 1 ps NVT example and groups the
+  commands by task; every help screen ends with a link to this site.
+  `so3lr --version` prints `SO3LR v<version>`.
 - Help no longer prints the ASCII banner; additional examples use `--help-full`.
   The decorative separator before MD completion is removed, and force-criterion
   diagnostics use significant digits. Numeric MD table columns are preserved.
@@ -343,6 +349,10 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 
 #### Changed results and formats
 
+- Clash protection: when atoms come unrealistically close, the physical
+  repulsion term takes over instead of the neural network giving unphysical
+  energies or forces. Normal structures are not affected. This applies to all
+  models, including `so3lr`.
 - PME/P3M on non-orthogonal cells now passes the lattice vectors as rows, as
   jaxpme expects. Results on triclinic cells change (0.03–0.09 eV/Å in forces on
   triclinic MOFs). `Graph.cell` must hold the lattice as columns (`atoms.cell.T`),
@@ -370,7 +380,8 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
 - The same holds for semi-isotropic NPT, and on NVIDIA GPUs of compute
   capability 8.0 or newer for flash runs that move to the CUDA kernels
   (`--flash-kernels pallas` keeps the Pallas ones).
-- The command line (MD, `opt`, `eval`, `so3lr --settings`) uses PME for
+- For the SO3LR Tauri models, the command line (MD, `opt`, `eval`,
+  `so3lr --settings`) uses PME for
   electrostatics and dispersion on structures periodic along all three axes,
   with a 10 Å cutoff, 2 Å smearing and a 1.55 Å mesh (dispersion 2 Å and 3 Å).
   A cell too small for 10 Å gets 0.45 × its smallest height and a 1 Å mesh
@@ -379,10 +390,13 @@ from the s/m/l family (see [Legacy SO3LR model](../models.md#legacy-so3lr-model)
   settings file) restores real space. With k-space electrostatics asked for
   explicitly, an unset smearing and mesh are now 2 Å and 1.55 Å instead of 4 Å
   and 2 Å. Non-periodic runs, `tune-ewald` and the Python calculators are
-  unchanged. See [Long-range defaults](../usage/cli.md#long-range-defaults).
+  unchanged, and so is the original `so3lr` model (and models fine-tuned from
+  it), which keeps real space at 12 Å unless a k-space method is named. See
+  [Long-range defaults](../usage/cli.md#long-range-defaults).
 
 #### Fixed
 
+- Pressure is documented and logged in bar; it was labelled atm.
 - Guided setup validates supported periodic cells and reserves the backend's
   3% initial NPT contraction margin.
 - Setup exports create files exclusively, recover from malformed XYZ elements,

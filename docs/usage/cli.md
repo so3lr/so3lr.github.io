@@ -125,19 +125,26 @@ be at least 2 × `lr_cutoff` across; flash takes smaller boxes (see
 
 ### Long-range defaults
 
-Unless you set them, the long-range settings follow the structure. The same rule
-applies to the MD commands, `so3lr --settings`, `opt` and `eval`;
+Unless you set them, the long-range settings follow the structure and the
+model. The same rule applies to the MD commands, `so3lr --settings`, `opt` and
+`eval`;
 [`so3lr start`](terminal-ui.md#molecular-dynamics) uses it for periodic
 structures and proposes 100 Å for an isolated one:
 
 | Structure | Electrostatics and dispersion | Cutoff | Smearing and mesh |
 |---|---|---|---|
 | Periodic along all three axes | PME for both | 10 Å; in a cell too small for that, 0.45 × the smallest cell height (rounded down to 0.1 Å, at least the model's short-range cutoff) | Electrostatics 2 Å and 1.55 Å (1 Å below a 10 Å cutoff); dispersion 2 Å and 3 Å |
+| Periodic, original `so3lr` model | real space | 12 Å, not fitted to a small cell | — |
 | Not periodic | real space | 12 Å; use `--lr-cutoff 100` for molecules in vacuum | — |
 
 - `--kspace-electrostatics` and `--kspace-dispersion` default to `auto`: PME on
   a fully periodic structure, off otherwise. `none` turns a term off, and a
   method name (`ewald`, `pme`, `p3m`) chooses one.
+- For the original `so3lr` model, and models fine-tuned from it, `auto` stays
+  off: that model was trained with real-space long range, and v0.1.0 ran periodic
+  structures that way. A method you name still applies. With
+  `--kspace-electrostatics pme` alone, dispersion stays in real space and the
+  cutoff at 12 Å; with both terms set to `pme`, the PME defaults above apply.
 - The 10 Å cutoff and the fit to a small cell apply only with both terms in
   k-space and no `--lr-cutoff`. With real-space dispersion, the cutoff stays at
   12 Å (or what you set), so dispersion is not cut short.
@@ -155,6 +162,12 @@ The log says what was chosen, for example:
 
 ```text
 Long range: PME electrostatics and PME dispersion (the default for periodic structures); 10 Å cutoff, 2 Å smearing and 1.55 Å mesh spacing
+```
+
+or, for the original model:
+
+```text
+Long range: real-space electrostatics and dispersion up to 12 Å (the original so3lr model runs without k-space)
 ```
 
 `tune-ewald` and the Python calculators keep their own defaults: a 12 Å cutoff

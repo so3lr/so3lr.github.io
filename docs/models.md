@@ -48,6 +48,11 @@ from so3lr import So3lrCalculator
 So3lrCalculator(model="so3lr")
 ```
 
+It was trained with real-space long range, so on the command line it runs
+periodic structures in real space at 12 Å, as in v0.1.0, where the SO3LR Tauri
+models get PME (see [Long-range defaults](usage/cli.md#long-range-defaults)).
+Models fine-tuned from it are treated the same way.
+
 ## Names and versions
 
 Names follow `so3lr-tauri-<size>[-<release>]`, where `<size>` is `s`, `m` or

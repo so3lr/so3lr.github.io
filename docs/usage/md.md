@@ -76,7 +76,8 @@ periodic along all three axes. A periodic structure gets PME for electrostatics
 and dispersion by default, with a 10 Å cutoff, 2 Å smearing and 1.55 Å mesh, or
 a shorter cutoff and a 1 Å mesh in a cell too small for 10 Å.
 `--kspace-electrostatics none --kspace-dispersion none` keeps both terms in
-real space. See [Long-range defaults](cli.md#long-range-defaults).
+real space, which is the default for the original `so3lr` model (12 Å). See
+[Long-range defaults](cli.md#long-range-defaults).
 
 Velocities or momenta in the input file (as in an EXTXYZ frame from an earlier
 SO3LR trajectory) are used as the initial velocities. Otherwise, velocities

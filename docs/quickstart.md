@@ -58,7 +58,8 @@ neighbour-list engine (see
 
 A periodic structure gets PME for electrostatics and dispersion by default,
 with a 10 Å cutoff (`--kspace-electrostatics none --kspace-dispersion none`
-turns it off). Without a cell, the cutoff is 12 Å; for gas-phase simulations,
+turns it off). The original `so3lr` model keeps real space at 12 Å, as in v0.1.0.
+Without a cell, the cutoff is 12 Å; for gas-phase simulations,
 we suggest using `--lr-cutoff 100`.
 
 Geometry optimization and the other ensembles work the same way:
@@ -73,7 +74,7 @@ Each command can be run with `--help` to see all available options:
 
 ```shell
 so3lr --help          # command overview
-so3lr --help-full     # every command with examples
+so3lr --help-full     # command overview with more examples
 so3lr nvt --help      # flags for one command
 ```
 

@@ -29,22 +29,25 @@ More details about JAX installation can be found [here](https://docs.jax.dev/en/
 
 ## Install with pip
 
-If JAX is already installed on your cluster (CUDA or ROCm), install SO3LR into
-that environment:
+If JAX is already installed on your cluster, install SO3LR into that
+environment. On an NVIDIA GPU, use the `cuda12` extra:
 
 ```shell
 git clone https://github.com/general-molecular-simulations/so3lr.git
 cd so3lr
-pip install .
+pip install ".[cuda12]"   # ROCm or CPU: pip install .
 ```
 
-Without an existing JAX, `pip install .` installs the CPU build. For an NVIDIA
-GPU, use `pip install ".[cuda12]"`.
+SO3LR needs JAX below 0.11, so pip moves a newer JAX down to 0.10.1. Without
+the `cuda12` extra, JAX's CUDA plugin stays at the newer version: pip reports
+no conflict and `jax.devices()` still lists the GPU, but every MD command
+fails within seconds with `No FFI handler registered for cusolver_syevd_ffi`.
+Without an existing JAX, `pip install .` installs the CPU build.
 
 SO3LR excludes JAX 0.10.2, which computes wrong energies and forces on the CPU
 without an error. An existing 0.10.2 install is moved to 0.10.1. On a GPU,
 install with the `cuda12` extra so that JAX's CUDA plugin moves with it;
-otherwise JAX finds a plugin it cannot use and runs on the CPU.
+otherwise JAX finds a 0.10.2 plugin it cannot use and runs on the CPU.
 
 ## CUDA kernels
 
@@ -134,6 +137,11 @@ See [Contributing](contributing.md) for the test layout and the lockfile.
     ```
 
     Then run `uv sync --locked --extra cuda12`, or `pip install ".[cuda12]"`.
+
+??? failure "MD fails with `No FFI handler registered for cusolver_syevd_ffi`"
+    JAX's CUDA plugin is newer than JAX: a plain `pip install .` moved JAX
+    down to SO3LR's range and left the plugin behind. From the checkout, run
+    `pip install ".[cuda12]"` so that the plugin matches.
 
 ??? failure "Out of memory on GPU"
     JAX reserves most of the GPU memory at start-up, which often causes this
